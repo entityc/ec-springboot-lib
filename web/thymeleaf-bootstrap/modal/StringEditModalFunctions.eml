@@ -1,0 +1,86 @@
+$[D summary, main "Contains functions for adding a modal dialog for inputing a string value."]
+$[function insertStringEditModalHTML
+  D "Inserts the HTML code needed to create a string input dialog." 
+  (adminUrlPrefix
+   D "The admin console's url prefix (e.g., `admin`)" ,
+   entity
+   D "The entity associated with the string being inputted. The specific attribute (field) can be"
+   D "set at runtime." ,
+   entityDtoClassName
+   D "This is simply the DTO class name for the entity." 
+  )
+]
+        <div class="modal fade" id="stringEditModal" tabindex="-1" role="dialog" aria-labelledby="stringEditModalLabel" aria-hidden="true">
+          <div class="modal-dialog modal-xl" role="document">
+            <form th:action="@{/${adminUrlPrefix}/${entity|domain:APIPath|name}/{id}/update(id=${$}{${entityDtoClassName}.id})}" method="post">
+				<input id="string-edit-field-ident" name="edit-field-ident" type="hidden"/>
+                <div class="modal-content">
+                  <div class="modal-header">
+                    <h5 class="modal-title" id="stringEditModalLabel">Edit Text</h5>
+                    <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
+                      <span aria-hidden="true">&times;</span>
+                    </button>
+                  </div>
+                  <div class="modal-body">
+                      <div class="form-group">
+                        <textarea class="form-control" name="edit-field-value"></textarea>
+                      </div>
+                  </div>
+                  <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <input type="submit"  class="btn btn-primary" value="Save" />
+                  </div>
+                </div>
+            </form>
+          </div>
+        </div>
+$[/function]
+$[function insertStringEditModalScript
+  D "Inserts the Javascript portion of the string input dialog." 
+  (domainEntity
+   D "This should be the same entity as used for the HTML portion and in the AdminUI domain." 
+  )
+]
+<script>
+var stringEditModal = document.getElementById('stringEditModal')
+stringEditModal.addEventListener('show.bs.modal', function (event) {
+  // Button that triggered the modal
+  var button = event.relatedTarget
+  var fieldName = button.getAttribute('data-bs-field-name')
+  var fieldTitle = button.getAttribute('data-bs-field-title')
+  var fieldValue = button.getAttribute('data-bs-field-value');
+  var modalFieldIdent = document.getElementById('string-edit-field-ident')
+  var modalTitle = stringEditModal.querySelector('.modal-title')
+  var modalBodyInput = stringEditModal.querySelector('.modal-body textarea')
+  modalFieldIdent.value = fieldName
+  modalTitle.textContent = 'Edit ' + fieldTitle
+  modalBodyInput.value = fieldValue
+    $[let any = false]
+    $[let first = true]
+    $[foreach attribute in domainEntity.getFlatDeclaredAttributeList()]
+        $[if !attribute.hasTag("markdown")]$[continue]$[/if]
+  ${first ? "if (":"|| "}fieldName == '${attribute.name}'
+        $[let first = false]
+        $[let any = true]
+    $[/foreach]
+    $[if any]
+  ) {
+      markdownEditor = new InscrybMDE({ element: modalBodyInput });
+  }
+    $[/if]
+})
+stringEditModal.addEventListener('shown.bs.modal', function (event) {
+  if (markdownEditor != null) {
+      markdownEditor.toEditor();
+  }
+})
+stringEditModal.addEventListener('hide.bs.modal', function (event) {
+  if (markdownEditor != null) {
+      markdownEditor.toTextArea();
+  }
+})
+stringEditModal.addEventListener('hidden.bs.modal', function (event) {
+  markdownEditor = null;
+})
+</script>
+$[/function]

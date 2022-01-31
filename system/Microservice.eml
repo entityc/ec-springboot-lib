@@ -1,0 +1,13 @@
+$[D summary "Generates the core microservice."]
+$[D "Generates the following microservice classes: Model, DTO, Mapper, Repository, and"]
+$[D "Service. The database code generation can be done using the builtin Postgres transform."]
+
+$[import "system/SpringBootApplicationPublisher"]
+$[import "exception/ExceptionTemplate"]
+$[import "util/UtilsTemplate"]
+$[import "model/ModelTemplate"]
+$[import "repository/RepositoryPublisher"]
+$[import "dto/DtoTemplate"]
+$[import "mapper/MapperTemplate"]
+$[import "service/ServicePublisher"]
+$[import "controller/ControllerPublisher"]

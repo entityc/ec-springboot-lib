@@ -1,0 +1,49 @@
+domain Security (${appName}) {
+
+    enum Role {
+        T "role"
+        ViewOnly { T "role:default" }
+        Editor { T "role:editor" }
+        Administrator { T "role:admin" }
+    }
+
+    entity User {
+        T "user"
+        T "access:write:user"
+        T "access:write:role:admin"
+        T "access:read:role:admin"
+        attributes {
+            roles {
+                T "access:write:role:admin"
+            }
+            firstName {
+                T "name:first"
+            }
+            lastName {
+                T "name:last"
+            }
+            email {
+                T "login:username"
+                T "email"
+            }
+            enabled {
+                T "login:enabled"
+                T "access:write:role:admin"
+            }
+            encodedPassword {
+                T "login:password"
+            }
+        }
+        relationships {
+        }
+    }
+
+    entity ${entityName} {
+        T "access:write:role:editor"
+        relationships {
+            createdUser {
+                T "user:created"
+            }
+        }
+    }
+}

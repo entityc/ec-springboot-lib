@@ -1,0 +1,39 @@
+module platform {
+
+    D "This module contains entities associated with a base platform on which functionality is built."
+
+    enum Role {
+        D "Represents a type of access in the system."
+        ViewOnly      = 1 { D "Is only allowed to view data." }
+        Editor        = 2 { D "Is allowed to view, modify and create data." }
+        Administrator = 3 { D "Is allowed to modify users." }
+    }
+
+    entity User {
+
+        D "Represents a user in the system."
+
+        primarykey uuid userId
+
+        attributes {
+            many Role roles { D "The roles assigned to a user." }
+            string firstName {
+                D "The user's first (given) name."
+            }
+            string lastName {
+                D "The user's last (family) name."
+            }
+            string email {
+                D "The user's Email address that is also their username."
+            }
+            string encodedPassword {
+                D "The user's password encoded so not in plain text."
+            }
+            boolean enabled = false {
+                D "If set the user is allowed to login, otherwise they cannot log in."
+            }
+            creation date createdOn { D "When the user account was created." }
+            modification date modifiedOn { D "When the user account was last modified." }
+        }
+    }
+}

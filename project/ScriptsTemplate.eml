@@ -1,0 +1,7 @@
+$[file ifdoesnotexist "" "build" "sh"]
+mvn clean package spring-boot:repackage
+$[/file]
+$[file ifdoesnotexist "" "run" "sh"]
+./build.sh
+mvn spring-boot:run
+$[/file]

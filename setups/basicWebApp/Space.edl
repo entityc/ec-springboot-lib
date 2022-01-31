@@ -1,0 +1,81 @@
+space ${appName} {
+
+    namespace ${appBasePackage}
+
+    D "<Brief description of application goes here.>"
+
+    metadata {
+        "microserviceIdentifier" : "${appName|dashes|lowercase}",
+        "microserviceTitle" : "${appName|title}",
+        "microserviceName" : "${appName}",
+        "basePackage" : "${appBasePackage}",
+$[if appBaseUrlPath != null]
+        "appBaseUrlPath" : "${appBaseUrlPath}",
+$[/if]
+    }
+
+    /**
+      Entities
+     */
+    repository LocalEntities {
+        type local
+        path "src/ec/entities"
+    }
+
+    import Platform, App from LocalEntities
+
+$[let setupRepo = space.getRepository("SetupRepo")]
+    /**
+      Templates
+     */
+    repository ServerTemplates {
+        type github
+        organization "${setupRepo.organization}"
+        name "${setupRepo.repoName}"
+        path "templates/server/springboot"
+        tag "${repoTag}"
+    }
+    // Templates are imported in Configuration.edl
+
+    /**
+      Domains
+     */
+    repository DomainRepo {
+        type github
+        organization "${setupRepo.organization}"
+        name "${setupRepo.repoName}"
+        path "domains"
+        tag "${repoTag}"
+    }
+    // Microservice
+    import DTO, JSONDTO, DTOMapper, Model, Repository, Service, Database, Controller, Security, Utils, Exception from DomainRepo
+    // Web
+    import AdminUI, WebUserUI, StaticLocalization from DomainRepo
+
+    repository LocalDomains {
+        type local
+        path "src/ec/domains"
+    }
+    import SpecializedDomains, SecurityDomain, AdminUIDomain from LocalDomains
+
+    /**
+      Languages
+     */
+    repository LanguageRepo {
+        type github
+        organization "${setupRepo.organization}"
+        name "${setupRepo.repoName}"
+        path "languages"
+        tag "${repoTag}"
+    }
+    import Java, Markdown from LanguageRepo
+
+    /**
+      Authors
+     */
+    repository LocalAuthors {
+        type local
+        path "src/ec/authors"
+    }
+
+}

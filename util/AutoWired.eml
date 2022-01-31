@@ -1,0 +1,86 @@
+$[D summary "Helps to generate constructor based @Autowired code."]
+$[function addAutoWired
+  D "Helps send up imports and constructor parameters for auto-wired variables to services or"
+  D "repositories."
+  D "
+To use this function you must embed four receivers in your code:
+
+| Receive | Description |
+| --- | --- |
+| `imports` | Place this where Java import statements are located. |
+| `memberDecl` | Place this where member declarations are made inside the containing class. |
+| `constructorArgs` | Place this inline with the constructor arguments. |
+| `constructorAssigns` | Place this inside the constructor block to perform the necessary assignments.|
+
+For example, the following code might be used in conjunction with this function:
+
+```
+$[receive distinct imports]
+
+public class ${className} {
+
+$[receive distinct memberDecl]
+
+    @Autowired
+    public ${className}(
+$[receive distinct constructorArgs]
+    ) {
+$[receive distinct constructorAssigns]
+    }
+$[let autoWiredDomainEntities = @[]@]
+```
+" 
+  (domainEntity
+   D "The domain entity representing what is to be auto wired." ,
+   autoWiredDomainEntities
+   D "This is used by this function to keep track of what has already been auto wired. This allows it"
+   D "to eliminate duplicates and helps with code formatting." 
+  )
+]
+    $[let firstAutoWired = autoWiredDomainEntities.isEmpty()]
+    $[if ! autoWiredDomainEntities.contains(domainEntity|fullname)]
+        $[do autoWiredDomainEntities.add(domainEntity|fullname)]
+        $[let variableName = domainEntity|name|uncapitalize]
+$[send imports]
+import ${domainEntity|fullname};
+$[/send]
+$[send memberDecl]
+    private final ${domainEntity|name} ${variableName};
+$[/send]
+$[send constructorArgs]${firstAutoWired ? "        ":",
+        "}${domainEntity|name} ${variableName}$[/send]
+$[send constructorAssigns]
+        this.${variableName} = ${variableName};
+$[/send]
+    $[/if]
+$[/function]
+$[function addAutoWiredClass
+  D "Helps send up imports and constructor parameters for auto-wired variables to services or"
+  D "repositories. This is just like `addAutoWired` except that it access just a class name and package name."
+  (package
+   D "The package of the class to auto wire." ,
+   className
+   D "The name of the class to auto wire." ,
+   autoWiredDomainEntities
+   D "This is used by this function to keep track of what has already been auto wired. This allows it"
+   D "to eliminate duplicates and helps with code formatting."
+  )
+]
+    $[let classFullname = package + "." + className]
+    $[let firstAutoWired = autoWiredDomainEntities.isEmpty()]
+    $[if ! autoWiredDomainEntities.contains(classFullname)]
+        $[do autoWiredDomainEntities.add(classFullname)]
+        $[let variableName = className|uncapitalize]
+$[send imports]
+import ${classFullname};
+$[/send]
+$[send memberDecl]
+    private final ${className} ${variableName};
+$[/send]
+$[send constructorArgs]${firstAutoWired ? "        ":",
+        "}${className} ${variableName}$[/send]
+$[send constructorAssigns]
+        this.${variableName} = ${variableName};
+$[/send]
+    $[/if]
+$[/function]

@@ -1,0 +1,27 @@
+$[D summary, main "This setup template will establish a basic web application that contains an REST API, web"]
+$[D summary, main "admin portal and simple custom web page."]
+$[D ""]
+$[D "After this template runs, you will have a directory containing the necessary entity compiler input"]
+$[D "files to generate the application."]
+
+$[let entityName = (#entityName:"Widget")]
+$[let appName = (#appName:"BasicApp")]
+$[let apiPrefixNamespace = (#apiPrefixNamespace:"myapp")]
+$[let appBasePackage = (#appBasePackage:"com.example.myapp")]
+$[let repoTag = "v0.18.12"]
+
+$[* Entities *]
+$[install "entities/App.edl" "entities"]
+$[install "entities/Platform.edl" "entities"]
+
+$[* Domains *]
+$[install "domains/AdminUIDomain.edl" "domains"]
+$[install "domains/SecurityDomain.edl" "domains"]
+$[install "domains/SpecializedDomains.edl" "domains"]
+
+$[* Authors *]
+$[install "authors/PomAuthor.eml" "authors"]
+
+$[* Base *]
+$[install "basicWebApp/Configuration.edl" ""]
+$[install "basicWebApp/Space.edl" ""]

@@ -1,0 +1,24 @@
+$[domain StaticLocalization]
+$[D summary, main "This template simply generates the `Messages_en.properties` file for each of the entity"]
+$[D summary, main "and attribute titles."]
+$[file "resources" "Messages_en" "properties"]
+    $[foreach entity in space.entities]
+# ${entity|title}
+        $[foreach attribute in entity.attributes]
+     $[let attributeLoc = attribute|domain]
+$[if attributeLoc.hasTag("lang:en")]
+${entity|domain|name}.${attribute|domain|name}=${attributeLoc.tagValue("lang:en")}
+$[else]
+${entity|domain|name}.${attribute|domain|name}=${attribute|name|title}
+$[/if]
+        $[/foreach]
+        $[foreach relationship in entity.relationships]
+     $[let relationshipLoc = relationship|domain]
+$[if relationshipLoc.hasTag("lang:en")]
+${entity|domain|name}.${relationship|domain|name}=${relationshipLoc.tagValue("lang:en")}
+$[else]
+${entity|domain|name}.${relationship|domain|name}=${relationship|name|title}
+$[/if]
+        $[/foreach]
+    $[/foreach]
+$[/file]

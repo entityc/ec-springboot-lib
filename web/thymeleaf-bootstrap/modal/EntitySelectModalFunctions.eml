@@ -1,0 +1,77 @@
+$[D summary, main "Contains functions for adding a modal dialog for selecting an object of a specified entity."]
+$[function insertEntitySelectModalHTML
+  (adminUrlPrefix
+   D "The admin console's url prefix (e.g., `admin`)" ,
+   entity
+   D "This is the entity to which the selection is being assigned. The specific relationship"
+   D "should also be passed in this argument list." ,
+   entityDtoClassName
+   D "This is simply the DTO class name for the entity." ,
+   relationship
+   D "The selection is being performed with respect to a relationship. So the objects being"
+   D "selected from are objects of the relationship's **to** entity." 
+  )]
+        <div class="modal fade" id="${relationship.name}_EditModal" tabindex="-1" role="dialog" aria-labelledby="${relationship.name}_EditModalLabel" aria-hidden="true">
+          <div class="modal-dialog modal-sm" role="document">
+            <form th:action="@{/${adminUrlPrefix}/${entity|domain:APIPath|name}/{id}/update(id=${$}{${entityDtoClassName}.id})}" method="post">
+				<input id="${relationship.name|dashes}-edit-field-ident" name="edit-field-ident" type="hidden"/>
+                <div class="modal-content">
+                  <div class="modal-header">
+                    <h5 class="modal-title" id="${relationship.name}_EditModalLabel">Edit Field</h5>
+                    <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
+                      <span aria-hidden="true">&times;</span>
+                    </button>
+                  </div>
+                  <div class="modal-body">
+                      <div class="form-group">
+                      <select id="edit-field-value" name="edit-field-value">
+    $[capture optionDisplayExpr]selectDtoObject.${(relationship|domain:AdminUI).tagValue("display:attribute")}$[/capture]
+    $[if (relationship|domain:AdminUI).hasTag("display:attribute:abbr")]
+        $[capture optionDisplayExpr]#strings.abbreviate(${optionDisplayExpr},${(relationship|domain:AdminUI).tagValue("display:attribute:abbr")})$[/capture]
+    $[/if]
+                          <option th:each="selectDtoObject : ${$}{${relationship.to.entity|domain:JSONDTO|name|uncapitalize}List}" th:value="${$}{selectDtoObject.id}" th:text="${$}{${optionDisplayExpr}}"
+                            th:selected="${$}{${entityDtoClassName}.${relationship|domain:JSONDTO|name} != null && selectDtoObject.id==${entityDtoClassName}.${relationship|domain:JSONDTO|name}.id}"></option>
+                      </select>
+                      </div>
+                  </div>
+                  <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <input type="submit"  class="btn btn-primary" value="Save" />
+                  </div>
+                </div>
+            </form>
+          </div>
+        </div>
+$[/function]
+$[function insertEntitySelectModalScript
+  D "Inserts the Javascript portion of the entity object select input dialog." 
+  (relationship
+   D "The selection is being performed with respect to a relationship. So the objects being"
+   D "selected from are objects of the relationship's **to** entity." 
+  )
+]
+<script>
+var ${relationship.name}_EditModal = document.getElementById('${relationship.name}_EditModal')
+${relationship.name}_EditModal.addEventListener('show.bs.modal', function (event) {
+  // Button that triggered the modal
+  var button = event.relatedTarget
+  var fieldName = button.getAttribute('data-bs-field-name')
+  var fieldTitle = button.getAttribute('data-bs-field-title')
+  var enumItems = button.getAttribute('data-bs-field-value');
+  var modalFieldIdent = document.getElementById('${relationship.name|dashes}-edit-field-ident')
+  var modalTitle = ${relationship.name}_EditModal.querySelector('.modal-title')
+  var modalBodySelect = ${relationship.name}_EditModal.querySelector('.modal-body select')
+  modalFieldIdent.value = fieldName
+  modalTitle.textContent = 'Edit ' + fieldTitle
+  for ( var i = 0, len = modalBodySelect.options.length; i < len; i++ ) {
+      var opt = modalBodySelect.options[i]
+      for (var j = 0, listLen = enumItems.length; j < listLen; j++) {
+          if (enumItems[j] == opt.value) {
+            opt.selected = true
+            break
+          }
+      }
+  }
+})
+</script>
+$[/function]

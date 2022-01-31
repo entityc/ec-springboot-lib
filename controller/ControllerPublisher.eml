@@ -1,0 +1,139 @@
+$[language java]
+$[domain Controller]
+$[D summary "This generates a controller class that has many normal CRUD operations along with asset"]
+$[D summary "upload operations."]
+$[D "This template is responsible for generating the Controller classes of the micro-service."]
+$[D "These classes essentially define endpoints, perform some security/permission checks,"]
+$[D "then ultimately call methods on Service classes that service the endpoints."]
+
+$[import "controller/json/CreateAuthor"]
+$[import "controller/json/UpdateAuthor"]
+$[import "controller/json/GetAuthor"]
+$[import "controller/json/DeleteAuthor"]
+$[import "controller/json/AssetAuthor"]
+$[import "controller/json/AssociationAuthor"]
+$[import "util/AutoWired"]
+
+$[publisher org.entitycompiler.springboot.controller]
+    $[let apiPathPrefix = "/" + ((space|domain:APIPath).domain.namespace|path)]
+    $[let exceptionNamespace = (space.domain("Exception")).namespace]
+    $[let utilsNamespace = (space.domain("Utils")).namespace]
+    $[let securityNamespace = (space.domain("Security")).namespace]
+
+    $[foreach module in space.modules if !module.isIncluded]
+        $[foreach entity in module.entities if !entity.isSecondary && !entity.isImplicit && !entity.isExtern && !entity.isTransient]
+            $[let domainEntity = entity|domain]
+            $[if domainEntity.hasTag("rest:none")]$[continue]$[/if]
+            $[let domainModule = entity.module|domain]
+            $[if domainModule.hasTag("rest:none")]$[continue]$[/if]
+            $[let className = entity|domain|name]
+            $[let modelName = entity|domain:Model|name]
+            $[let serviceClassName = entity|domain:Service|name]
+            $[let dtoClassName = entity|domain:JSONDTO|name]
+            $[file domain.namespace|path entity|domain|name "java"]
+//
+// This Controller class is responsible for implementing the API endpoint for entity:
+//
+//   Name:        ${entity.name}
+                $[if entity.hasDescription]
+//   Description: ${entity.description|wrap}
+                $[/if]
+                $[if entity.hasTags]
+//   Tags:        [${entity.tagsSeparatedBy("][")}]
+                $[/if]
+//
+// THIS FILE IS GENERATED. DO NOT EDIT!!
+//
+package ${domain.namespace};
+
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+import org.springframework.beans.factory.annotation.Autowired;
+import javax.annotation.PostConstruct;
+
+import org.modelmapper.ModelMapper;
+import ${utilsNamespace}.ResourceUtils;
+import ${exceptionNamespace}.ServiceException;
+import ${exceptionNamespace}.EntityNotFoundException;
+import ${exceptionNamespace}.ValidationException;
+                $[if securityNamespace != null]
+import ${securityNamespace}.UserDetailsMapper;
+                $[/if]
+
+import java.util.HashMap;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
+
+import ${entity|domain:Model|fullname};
+import ${entity|domain:Service|fullname};
+import ${entity|domain:DTOMapper|fullname};
+import ${entity|domain:JSONDTO|fullname};
+$[receive distinct imports]
+
+@RestController
+@RequestMapping(value = "${apiPathPrefix}/${entity|domain:APIPath|name}")
+public class ${className} {
+
+    @Autowired
+    public ModelMapper mapper;
+
+                $[if securityNamespace != null]
+    @Autowired
+    public UserDetailsMapper userDetailsMapper;
+
+                $[/if]
+    @PostConstruct
+    private void postConstruct() {
+        mapper.getConfiguration().setAmbiguityIgnored(true);
+    }
+
+$[outlet members
+  D "Member variables can be placed here."
+]
+$[/outlet]
+                $[let service = entity|domain:Service|name|uncapitalize]
+                $[let pbMapper = entity|domain:DTOMapper|name|uncapitalize]
+$[receive distinct memberDecl]
+
+    @Autowired
+    public ${className}(
+$[receive distinct constructorArgs]
+    ) {
+$[receive distinct constructorAssigns]
+    }
+                $[let autoWiredDomainEntities = @[]@]
+                $[call addAutoWired(domainEntity: entity|domain:Service)]
+                $[call addAutoWired(domainEntity: entity|domain:DTOMapper)]
+
+$[* TODO: We can effectively move this to where the endpoint is created and its needed *]
+                $[if (entity|domain).hasTag("parent:service") && entity.hasParentRelationship]
+                    $[let parentEntity = entity.singleParentRelationship.to.entity]
+                    $[call addAutoWired(domainEntity: parentEntity|domain:Service)]
+$[send imports]
+import ${parentEntity|domain:Model|fullname};
+$[/send]
+                $[/if]
+$[outlet methods
+  D "Methods can be placed here."
+]
+$[/outlet]
+
+}
+            $[/file]
+        $[/foreach]
+    $[/foreach]
+    $[file domain.namespace|path "README" "md"]
+# Controller Classes
+
+The classes in this directory are Controller classes as part of the Spring Framework.
+
+## Generated by
+
+Entity Compiler v${compiler.version}
+
+Template: `${__template.name}`
+
+    $[/file]
+$[/publisher]

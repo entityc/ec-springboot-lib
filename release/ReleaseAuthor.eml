@@ -1,0 +1,140 @@
+$[import "security/SecurityFunctions"]
+$[author to org.entitycompiler.springboot.service.update]
+    $[author to outlet aboveSave]
+        $[let versionWithIsLock = false]
+        $[if entity.hasTag("release:version")]
+            $[let binderRelationship = entity.relationshipToEntityTagged("release:binder")]
+            $[if binderRelationship != null && binderRelationship.to.isMany]
+                $[let binderEntity = binderRelationship.to.entity]
+                $[let topReleaseRelationship = binderEntity.relationshipToEntityTagged("release:top")]
+                $[if topReleaseRelationship != null]
+                    $[let topReleaseEntity = topReleaseRelationship.to.entity]
+                    $[if topReleaseEntity.hasAttributeTagged("release:lock")]
+                        $[let versionWithIsLock = true]
+                    $[/if]
+                $[/if]
+            $[/if]
+        $[/if]
+    $[/author]
+    $[author to outlet saveTop]
+        $[import "util/AutoWired"]
+        $[if versionWithIsLock]
+$[send imports]
+import ${exceptionNamespace}.UnauthorizedException;
+$[/send]
+            Boolean isLocked = ${repositoryVariableName}.is${entity|domain:Model|name}Locked(object.getId());
+            if (isLocked != null && isLocked) {
+                throw new UnauthorizedException("The parent ${topReleaseEntity.name|words} object is locked.");
+            }
+        $[elseif entity.hasTag("release:top") && entity.hasAttributeTagged("release:lock")]
+            $[let lockAttribute = entity.attributeTagged("release:lock")]
+$[send imports]
+import ${exceptionNamespace}.UnauthorizedException;
+$[/send]
+            if (object.getId() != null) {
+                // throw an an exception if an attempt to modify a locked object.
+                Optional<${responseModelName}> checkObjectOptional = ${repositoryVariableName}.findById(object.getId());
+                if (checkObjectOptional.isPresent() && checkObjectOptional.get().is${lockAttribute|domain:Model|name|capitalize}()) {
+                    throw new UnauthorizedException("This ${entity|name|words} object is locked.");
+                }
+            }
+        $[elseif entity.hasTag("release:binder") && entity.hasPrimaryParentRelationship && entity.primaryParentRelationship.to.entity.hasAttributeTagged("release:lock")]
+$[send imports]
+import ${exceptionNamespace}.UnauthorizedException;
+import ${exceptionNamespace}.ValidationException;
+$[/send]
+            $[let parentEntity = entity.primaryParentRelationship.to.entity]
+            $[let lockAttribute = parentEntity.attributeTagged("release:lock")]
+            $[if parentEntity.name != entity.name]
+                $[call addAutoWired(domainEntity:parentEntity|domain:Repository)]
+$[send imports]
+import ${parentEntity|domain:Model|fullname};
+$[/send]
+            $[/if]
+            if (object.get${entity.primaryParentRelationship|domain:Model|name|capitalize}Id() == null) {
+                throw new ValidationException("Reference to the ${entity.primaryParentRelationship.to.entity.name|words} object was null.");
+            }
+            // need to throw an exception if the parent ${entity.primaryParentRelationship.to.entity.name} object is locked.
+            Optional<${parentEntity|domain:Model|name}> parentObjectOptional = ${parentEntity|domain:Repository|name|uncapitalize}.findById(object.get${entity.primaryParentRelationship|domain:Model|name|capitalize}Id());
+            if (parentObjectOptional.isPresent() && parentObjectOptional.get().is${lockAttribute|domain:Model|name|capitalize}()) {
+                throw new UnauthorizedException("The parent ${parentEntity|name|words} object is locked.");
+            }
+        $[/if]
+    $[/author]
+$[/author]
+
+$[author to org.entitycompiler.springboot.controller]
+    $[author to outlet methods]
+        $[if entity.hasTag("release:top")]
+            $[let isReleaseType = false]
+            $[foreach relationship in entity.relationships]
+                $[if relationship.to.entity.hasTag("release:binder")]
+                    $[let isReleaseType = true]
+                    $[break]
+                $[/if]
+            $[/foreach]
+            $[if isReleaseType]
+    @RequestMapping(
+        path = "/{id}/release/clear",
+        method = RequestMethod.PUT,
+        consumes = "application/json"
+    )
+    @ResponseStatus(HttpStatus.ACCEPTED)
+                $[call preAuthorizeEntity(accessType:"write",entity:entity)]
+                $[let pkidtype = entity.pkType|language]
+    public void clearRelease${modelName}(@PathVariable("id") ${pkidtype} id) throws ServiceException {
+        ${service}.clearRelease(id);
+    }
+
+            $[/if]
+        $[/if]
+    $[/author]
+$[/author]
+
+$[* TODO - This came from the service class get list endpoints, instead of modifying regular get list endoints
+  new ones should be created specifically for locking.
+
+  $[let hasLockAttribute = entity.hasAttributeTagged("release:lock")]
+  $[let lockedDeclInsert = ""]
+  $[if hasLockAttribute]
+  $[let lockedDeclInsert = "boolean lockedOnly, "]
+  $[let lockAttribute = entity.attributeTagged("release:lock")]
+  $[/if]
+      public List<${responseModelName}> get${responseModelName}List(${lockedDeclInsert}int start, int limit) throws ServiceException {
+          try {
+  $[if hasLockAttribute]
+              if (lockedOnly) {
+                  return ${repositoryVariableName}.getLocked${responseModelName}List(start, limit);
+              } else {
+                  return ${repositoryVariableName}.get${responseModelName}List(start, limit);
+              }
+  $[else]
+              return ${repositoryVariableName}.get${responseModelName}List(start, limit);
+  $[/if]
+          } catch (DataAccessException ex) {
+              throw new DaoException(ex.getMessage(), ex);
+          }
+      }
+
+      public List<${responseDtoName}> get${responseDtoName}List(${lockedDeclInsert}int start, int limit, boolean hierarchical) throws ServiceException {
+          try {
+              List<${responseDtoName}> dtoList = new ArrayList<>();
+  $[if hasLockAttribute]
+              List<${responseModelName}> list;
+              if (lockedOnly) {
+                  list = ${repositoryVariableName}.getLocked${responseModelName}List(start, limit);
+              } else {
+                  list = ${repositoryVariableName}.get${responseModelName}List(start, limit);
+              }
+  $[else]
+              List<${responseModelName}> list = ${repositoryVariableName}.get${responseModelName}List(start, limit);
+  $[/if]
+              for(${responseModelName} modelObject : list) {
+                  dtoList.add(dtoFromModel(modelObject, hierarchical));
+              }
+              return dtoList;
+          } catch (DataAccessException ex) {
+              throw new DaoException(ex.getMessage(), ex);
+          }
+      }
+*]

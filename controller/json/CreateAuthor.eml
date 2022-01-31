@@ -1,0 +1,109 @@
+$[language java]
+$[D summary, main "This contains an author that generates create endpoint methods for a controller class."]
+$[import "release/ReleaseFunctions"]
+$[import "security/SecurityFunctions"]
+
+$[author to org.entitycompiler.springboot.controller]
+    $[author to outlet methods
+    D "Adds create endpoints to the controller class for its entity."]
+$[send imports]
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.ResponseStatus;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RequestMethod;
+$[/send]
+        $[call lookForReleaseStructure(topReleaseEntity:entity)->(results:releaseStructure)]
+        $[let isReleaseEntity = releaseStructure != null]
+        $[let paramOption = null]
+        $[let extraParentIdVarName = null]
+        $[if isReleaseEntity]
+            $[capture paramOption], @RequestParam("populate") Boolean populate, @RequestParam("fromId") String fromId$[/capture]
+            $[if entity.hasPrimaryParentRelationship]
+                $[let parentEntity = entity.primaryParentRelationship.to.entity]
+                $[capture extraParentIdVarName], requestObject.get${parentEntity.primaryKeyAttribute|name|capitalize}()$[/capture]
+            $[/if]
+        $[/if]
+        $[publisher org.entitycompiler.springboot.controller.create]
+    @RequestMapping(
+        method = RequestMethod.POST,
+        consumes = "application/json",
+        produces = "application/json"
+    )
+    @ResponseStatus(HttpStatus.ACCEPTED)
+$[outlet annotation
+  D "Resides just above the method declaration in the annocation area."
+]
+$[/outlet]
+    public ${dtoClassName} create${modelName}(@RequestBody ${dtoClassName} requestDto${paramOption}) throws ServiceException {
+        ${modelName} requestObject = mapper.map(requestDto, ${modelName}.class);
+        ${modelName} resultObject = ${service}.create${modelName}(requestObject);
+            $[if isReleaseEntity]
+        if (populate != null && populate) {
+            if (fromId != null) {
+                ${service}.resetReleaseWithOtherRelease(resultObject.getId(), UUID.fromString(fromId)${extraParentIdVarName});
+            } else {
+                ${service}.resetReleaseToLatestVersions(resultObject.getId()${extraParentIdVarName});
+            }
+        }
+            $[/if]
+        return mapper.map(resultObject, ${dtoClassName}.class);
+    }
+
+        $[/publisher]
+        $[if !entity.hasPrimaryParentRelationship]$[/if]
+        $[foreach entity.relationships]
+$[* We are looking only for relationships that are: required parent one *]
+            $[if !relationship.to.isOne || !relationship.isParent || relationship.isOptional]$[continue]$[/if]
+            $[publisher org.entitycompiler.springboot.controller.createWithParent]
+    @RequestMapping(
+        path = "/${relationship|domain:APIPath|name}/{id}",
+        method = RequestMethod.POST,
+        consumes = "application/json"
+    )
+    @ResponseStatus(HttpStatus.ACCEPTED)
+$[outlet annotation
+  D "Resides just above the method declaration in the annocation area."
+]
+$[/outlet]
+    public ${dtoClassName} create${modelName}With${relationship.name|capitalize}(@PathVariable("id") ${relationship.to.entity.primaryKey.type|language} id, @RequestBody ${dtoClassName} requestDto) throws ServiceException {
+        ${modelName} requestObject = mapper.map(requestDto, ${modelName}.class);
+        ${modelName} resultObject = ${service}.create${modelName}With${relationship.name|capitalize}(id, requestObject);
+        return mapper.map(resultObject, ${dtoClassName}.class);
+    }
+
+            $[/publisher]
+        $[/foreach]
+    $[/author]
+$[/author]
+
+$[*function createBatch
+  D "This is is a variant of the basic create() function that, relative to a parent entity, allows the"
+  D "requester to send an array of objects to create."
+  (entity               D "The entity corresponding to the object to be created by the endpoint.",
+   requestClassName     D "The name of the class used to define the request data array.",
+   requestItemClassName D "The name of the class used to define each item in the array.",
+   modelName            D "The name of the class used internally for this entity by the service later.",
+   role                 D "A string representing the role required to conduct this create operation.",
+   service              D "The name of the code variable for the object of the Service class that has the delegated create function."
+  )]
+  $[foreach entity.relationships]
+    $[if !relationship.isParent || relationship.isOptional]$[continue]$[/if]
+    @RequestMapping(
+        path = "/${relationship|domain:APIPath|name}/{id}/batch",
+        method = RequestMethod.POST,
+        consumes = "application/json"
+    )
+    @ResponseStatus(HttpStatus.ACCEPTED)
+    $[call preAuthorizeEntity(entity:entity, accessType: "write")]
+    public void create${modelName}With${relationship.name|capitalize}AsBatch(@PathVariable("id") ${relationship.to.entity.primaryKey.type|language} id, @RequestBody ${requestClassName} requestDto) throws ServiceException {
+        ${relationship.to.entity.primaryKey.type|language} ${relationship.name}Id = requestDto.get${relationship.name|capitalize}Id();
+        for (${requestItemClassName} item : requestDto.getItems()) {
+            ${modelName} requestItem = mapper.map(item, ${modelName}.class);
+            requestItem.set${relationship.name|capitalize}Id(${relationship.name}Id);
+            ${service}.create${modelName}With${relationship.name|capitalize}(id, requestItem);
+        }
+    }
+
+  $[/foreach]
+$[/function*]

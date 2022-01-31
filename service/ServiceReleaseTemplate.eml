@@ -1,0 +1,142 @@
+$[language java]
+$[domain Service]
+$[import "service/ServiceFunctions"]
+$[import "release/ReleaseFunctions"]
+$[*******************]
+$[*     RELEASE     *]
+$[*******************]
+$[call lookForReleaseStructure(topReleaseEntity:entity)->(results:releaseStructure)]
+$[if releaseStructure != null]
+$[*
+    CLEAR RELEASE
+    Deletes all linked element versions from a release.
+*]
+    public void clearRelease(UUID releaseId) throws ServiceException {
+    $[foreach rs in releaseStructure.values]
+        $[let binderEntity = rs.get(0)]
+        $[let repositoryDomainEntity = binderEntity|domain:Repository]
+        $[let repositoryVariableName = repositoryDomainEntity|name|uncapitalize]
+        $[call addAutoWired(domainEntity:repositoryDomainEntity)]
+        ${repositoryVariableName}.delete${binderEntity.name}By${binderEntity.singleParentRelationship.name|capitalize}Id(releaseId);
+    $[/foreach]
+    }
+
+$[*
+    POPULATE WITH LATEST
+    This populates the release with the latest versions of all elements associated with a release.
+*]
+    $[let sentObjectParentPK = false]
+    $[let extraIdVarName = null]
+    $[let extraIdDecl = null]
+    private void populateReleaseWithLatestVersions(UUID releaseId$[receive distinct objectParentPKDecl]) throws ServiceException {
+    $[foreach rs in releaseStructure.values]
+        $[let binderEntity = rs.get(0)]
+        $[let objectEntity = rs.get(1)]
+        $[let versionedEntity = rs.get(2)]
+        $[let repositoryDomainEntity = versionedEntity|domain:Repository]
+        $[let repositoryVariableName = repositoryDomainEntity|name|uncapitalize]
+$[send imports]
+import ${versionedEntity|domain:Model|fullname};
+import ${binderEntity|domain:Model|fullname};
+$[/send]
+        $[call addAutoWired(domainEntity:repositoryDomainEntity)]
+        $[let objectParentEntity = objectEntity.primaryParentRelationship.to.entity]
+        $[if objectParentEntity != null]
+            $[call hasRelationshipWithEntityTagged(fromEntity:objectParentEntity,tag:"release:top")->(result:hasRelationshipWithReleaseTop)]
+            $[if !hasRelationshipWithReleaseTop]
+                $[let objectParentEntity = null]
+            $[/if]
+        $[/if]
+        $[let nvpePrimaryKeyAttr = null]
+        $[let nvpePrimaryKeyAttributeDomainName = ""]
+        $[let methodNameSuffix = ""]
+        $[if objectParentEntity != null]
+            $[let nvpePrimaryKeyAttr = objectParentEntity.primaryKeyAttribute]
+            $[let nvpePrimaryKeyAttributeDomainName = nvpePrimaryKeyAttr|domain|name|uncapitalize]
+            $[capture methodNameSuffix]For${objectParentEntity.name}$[/capture]
+            $[if !sentObjectParentPK]
+                $[capture extraIdVarName], ${nvpePrimaryKeyAttr|domain|name}$[/capture]
+                $[capture extraIdDecl], ${nvpePrimaryKeyAttr.type|language} ${nvpePrimaryKeyAttr|domain|name}$[/capture]
+$[send objectParentPKDecl]${extraIdDecl}$[/send]
+                $[let sentObjectParentPK = true]
+            $[/if]
+        $[/if]
+        {
+            List<${versionedEntity|domain:Model|name}> versions = ${repositoryVariableName}.getLatestVersions${methodNameSuffix}(${nvpePrimaryKeyAttributeDomainName});
+            for(${versionedEntity|domain:Model|name} version : versions) {
+                ${binderEntity|domain:Model|name} release = new ${binderEntity|domain:Model|name}();
+                release.set${objectEntity.primaryKeyAttribute|domain|name|capitalize}(version.get${objectEntity.primaryKeyAttribute|domain|name|capitalize}());
+                release.set${versionedEntity.primaryKeyAttribute|domain|name|capitalize}(version.get${versionedEntity.primaryKeyAttribute|domain:Model|name|capitalize}());
+                release.set${binderEntity.singleParentRelationship.to.entity|domain:Model|name}Id(releaseId);
+        $[call addAutoWired(domainEntity:binderEntity|domain:Service)]
+                ${binderEntity|domain:Service|name|uncapitalize}.create${binderEntity|domain:Model|name}(release);
+            }
+        }
+    $[/foreach]
+    }
+
+    public void resetReleaseToLatestVersions(UUID releaseId${extraIdDecl}) throws ServiceException {
+        clearRelease(releaseId);
+        populateReleaseWithLatestVersions(releaseId${extraIdVarName});
+    }
+
+$[*
+    POPULATE FROM ANOTHER RELEASE
+    This populates the release with another release.
+*]
+    $[let sentObjectParentPK = false]
+    $[let extraIdVarName = null]
+    $[let extraIdDecl = null]
+    private void populateReleaseWithRelease(UUID releaseId, UUID fromReleaseId$[receive distinct objectParentPKDecl]) throws ServiceException {
+    $[foreach rs in releaseStructure.values]
+        $[let binderEntity = rs.get(0)]
+        $[let objectEntity = rs.get(1)]
+        $[let versionedEntity = rs.get(2)]
+        $[let repositoryDomainEntity = binderEntity|domain:Repository]
+        $[let repositoryVariableName = repositoryDomainEntity|name|uncapitalize]
+$[send imports]
+import ${versionedEntity|domain:Model|fullname};
+import ${binderEntity|domain:Model|fullname};
+$[/send]
+        $[call addAutoWired(domainEntity:repositoryDomainEntity)]
+        $[let objectParentEntity = objectEntity.primaryParentRelationship.to.entity]
+        $[if objectParentEntity != null]
+            $[call hasRelationshipWithEntityTagged(fromEntity:objectParentEntity,tag:"release:top")->(result:hasRelationshipWithReleaseTop)]
+            $[if !hasRelationshipWithReleaseTop]
+                $[let objectParentEntity = null]
+            $[/if]
+        $[/if]
+        $[let nvpePrimaryKeyAttr = null]
+        $[let nvpePrimaryKeyAttributeDomainName = ""]
+        $[let methodNameSuffix = ""]
+        $[if objectParentEntity != null]
+            $[let nvpePrimaryKeyAttr = objectParentEntity.primaryKeyAttribute]
+            $[let nvpePrimaryKeyAttributeDomainName = nvpePrimaryKeyAttr|domain|name|uncapitalize]
+            $[capture methodNameSuffix]For${objectParentEntity.name}$[/capture]
+            $[if !sentObjectParentPK]
+                $[capture extraIdVarName], ${nvpePrimaryKeyAttr|domain|name}$[/capture]
+                $[capture extraIdDecl], ${nvpePrimaryKeyAttr.type|language} ${nvpePrimaryKeyAttr|domain|name}$[/capture]
+$[send objectParentPKDecl]${extraIdDecl}$[/send]
+                $[let sentObjectParentPK = true]
+            $[/if]
+        $[/if]
+        {
+            List<${binderEntity|domain:Model|name}> versionReleases = ${repositoryVariableName}.get${binderEntity|domain:Model|name}ListBy${entity|domain:Model|name}(fromReleaseId, 0, Integer.MAX_VALUE);
+            for(${binderEntity|domain:Model|name} versionRelease : versionReleases) {
+                ${binderEntity|domain:Model|name} release = new ${binderEntity|domain:Model|name}();
+                release.set${objectEntity.primaryKeyAttribute|domain|name|capitalize}(versionRelease.get${objectEntity.primaryKeyAttribute|domain|name|capitalize}());
+                release.set${versionedEntity.primaryKeyAttribute|domain|name|capitalize}(versionRelease.get${versionedEntity.primaryKeyAttribute|domain|name|capitalize}());
+                release.set${binderEntity.singleParentRelationship.to.entity|domain:Model|name}Id(releaseId);
+        $[call addAutoWired(domainEntity:binderEntity|domain:Service)]
+                ${binderEntity|domain:Service|name|uncapitalize}.create${binderEntity|domain:Model|name}(release);
+            }
+        }
+    $[/foreach]
+    }
+
+    public void resetReleaseWithOtherRelease(UUID releaseId, UUID fromReleaseId${extraIdDecl}) throws ServiceException {
+        clearRelease(releaseId);
+        populateReleaseWithRelease(releaseId, fromReleaseId${extraIdVarName});
+    }
+
+$[/if]

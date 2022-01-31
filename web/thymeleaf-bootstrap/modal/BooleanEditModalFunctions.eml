@@ -1,0 +1,58 @@
+$[D summary, main "Contains functions for adding a modal dialog for inputing a boolean value (checkbox)."]
+$[function insertBooleanEditModalHTML
+  D "Inserts the HTML code needed to create a boolean input dialog." 
+  (adminUrlPrefix
+   D "The admin console's url prefix (e.g., `admin`)" ,
+   entity
+   D "The entity associated with the boolean being inputted. The specific attribute (field) can"
+   D "be set at runtime." ,
+   entityDtoClassName
+   D "This is simply the DTO class name for the entity." 
+  )
+]
+        <div class="modal fade" id="booleanEditModal" tabindex="-1" role="dialog" aria-labelledby="booleanEditModalLabel" aria-hidden="true">
+          <div class="modal-dialog modal-sm" role="document">
+            <form th:action="@{/${adminUrlPrefix}/${entity|domain:APIPath|name}/{id}/update(id=${$}{${entityDtoClassName}.id})}" method="post">
+				<input id="boolean-edit-field-ident" name="edit-field-ident" type="hidden"/>
+                <div class="modal-content">
+                  <div class="modal-header">
+                    <h5 class="modal-title" id="booleanEditModalLabel">Edit Text</h5>
+                    <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
+                      <span aria-hidden="true">&times;</span>
+                    </button>
+                  </div>
+                  <div class="modal-body">
+                      <div class="form-group">
+                        <input class="form-check-input" type="checkbox" name="edit-field-value" value="true"></input>
+                      </div>
+                  </div>
+                  <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <input type="submit"  class="btn btn-primary" value="Save" />
+                  </div>
+                </div>
+            </form>
+          </div>
+        </div>
+$[/function]
+$[function insertBooleanEditModalScript
+  D "Inserts the Javascript portion of the boolean input dialog."
+  (
+  )]
+<script>
+var booleanEditModal = document.getElementById('booleanEditModal')
+booleanEditModal.addEventListener('show.bs.modal', function (event) {
+  // Button that triggered the modal
+  var button = event.relatedTarget
+  var fieldName = button.getAttribute('data-bs-field-name')
+  var fieldTitle = button.getAttribute('data-bs-field-title')
+  var fieldValue = button.getAttribute('data-bs-field-value');
+  var modalFieldIdent = document.getElementById('boolean-edit-field-ident')
+  var modalTitle = booleanEditModal.querySelector('.modal-title')
+  var modalBodyInput = booleanEditModal.querySelector('.modal-body input')
+  modalFieldIdent.value = fieldName
+  modalTitle.textContent = 'Edit ' + fieldTitle
+  modalBodyInput.checked = (fieldValue == "true")
+})
+</script>
+$[/function]

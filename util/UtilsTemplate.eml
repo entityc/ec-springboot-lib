@@ -1,0 +1,9 @@
+$[domain Utils]
+
+$[let utilPath = domain.namespace|path]
+$[install "util/FieldMatch.java" utilPath]
+$[install "util/FieldMatchValidator.java" utilPath]
+$[install "util/ResourceUtils.java" utilPath]
+$[install "util/LRUCache.java" utilPath]
+$[install "util/MarkdownUtils.java" utilPath]
+$[install "util/MarkdownBuilder.java" utilPath]

@@ -1,0 +1,351 @@
+$[language java]
+$[*----------------------------------------------------------------------------------------------------------------*]
+$[author to org.entitycompiler.springboot.service]
+    $[author to outlet methods
+      D "Adds service functions to check if the logged in user has permissions to edit objects of a"
+      D "certain entity and in the case of the \"user\" entity, if a specific attribute can be updated."
+    ]
+        $[import "security/SecurityFunctions"]
+        $[import "util/AutoWired"]
+        $[let entityInSecurity = entity|domain:Security]
+        $[let userEntity = (space|domain:Security).entityTagged("user")]
+        $[let roleEnum = (space|domain:Security).enumTagged("role")]
+        $[let rolesAttribute = userEntity.attributeOfTypeTagged("role")]
+        $[if rolesAttribute == null]$[log fatal]Cannot find rolesAttribute!$[/log]$[/if]
+        $[if userEntity != null && roleEnum != null && rolesAttribute != null]
+            $[let enabledAttribute = (userEntity|domain:Security).attributeTagged("login:enabled")]
+            $[let usernameAttribute = (userEntity|domain:Security).attributeTagged("login:username")]
+            $[let securityNamespace = (space.domain("Security")).namespace]
+$[send imports]
+import ${securityNamespace}.SecurityService;
+import ${securityNamespace}.PersistentUserDetailsService;
+import ${userEntity|domain:Model|fullname};
+import java.util.Set;
+$[/send]
+$[send memberDecl]
+    @Autowired SecurityService securityService;
+    @Autowired PersistentUserDetailsService userDetailsService;
+$[/send]
+            $[let entityForAccessPurposes = entity]
+            $[let inheritFromParent = (entity|domain:Security).hasTag("access:object:parent")]
+            $[if inheritFromParent]
+                $[let entityForAccessPurposes = entity.primaryParentEntity]
+            $[/if]
+$[*
+    Add canCreate() method to entity service class.
+*]
+    /**
+        Determines if a the logged user has permission to create an object of this entity.
+        [Template] ${__template.name}:${__outlet.name} < ${__author.template.name}
+     */
+    public boolean canCreate() throws ServiceException {
+            $[call rolesContains(accessType: "write", rolesArrayName: "roles", entity: entityForAccessPurposes)->(hasRoles: hasRoles, rolesExpr: rolesExpr)]
+            $[if hasRoles]
+        ${userEntity|domain:Model|name} user = userDetailsService.findBy${usernameAttribute|domain:Model|name|capitalize}(securityService.findLoggedInUsername());
+        Set<${roleEnum|domain:Model|name}> roles = user.get${rolesAttribute|domain:Model|name|capitalize}();
+        if (${rolesExpr}) {
+            return true;
+        }
+            $[/if]
+        return false;
+    }
+
+$[*
+    Add canView() method to entity service class.
+*]
+            $[call checkObjectLevelAccess(entity: entityForAccessPurposes)->(objectLevelAccess: objectLevelAccess, accessEntity: accessEntity, readAttribute: readAttribute, writeAttribute: writeAttribute)]
+    /**
+        Determines if a the logged user has permission to view $[if objectLevelAccess]a specified object$[else]any object$[/if] of this entity.
+        [Template] ${__template.name}:${__outlet.name} < ${__author.template.name}
+     */
+    public boolean canView($[if objectLevelAccess]${entity.pkType|language} id$[/if]) throws ServiceException {
+            $[capture firstCodeBlock]
+        ${userEntity|domain:Model|name} user = userDetailsService.findBy${usernameAttribute|domain:Model|name|capitalize}(securityService.findLoggedInUsername());
+        Set<${roleEnum|domain:Model|name}> roles = user.get${rolesAttribute|domain:Model|name|capitalize}();
+            $[/capture]
+            $[call rolesContains(accessType: "read", rolesArrayName: "roles", entity: entityForAccessPurposes)->(hasRoles: hasRoles, rolesExpr: rolesExpr)]
+            $[if hasRoles]
+${firstCodeBlock}
+                $[let firstCodeBlock = ""]
+        if (${rolesExpr}) {
+            return true;
+        }
+                $[if objectLevelAccess]
+                    $[let idVarName = "id"]
+                    $[if inheritFromParent]
+                        $[let idVarName = "parentId"]
+        Optional<${modelName}> optionalObject = ${entity|domain:Repository|name|uncapitalize}.getById(id);
+                        $[let parentRelationship = entity.primaryParentRelationship]
+        ${entityForAccessPurposes.pkType|language} parentId = optionalObject.get().get${parentRelationship|name|capitalize}Id();
+                    $[/if]
+$[send imports]
+import ${accessEntity|domain:Model|fullname};
+$[/send]
+                    $[call addAutoWired(domainEntity: accessEntity|domain:Repository)]
+        ${accessEntity|domain:Model|name} access = ${accessEntity|domain:Repository|name|uncapitalize}.get${accessEntity|domain:Model|name}By${entityForAccessPurposes|domain:Model|name}IdAnd${userEntity|domain:Model|name}Id(${idVarName}, user.getId());
+        if (access != null && access.get${readAttribute|domain:Model|name|capitalize}()) {
+            return true;
+        }
+                $[/if]
+            $[/if]
+        return false;
+    }
+
+$[*
+    Add canEdit() method to entity service class.
+*]
+            $[let isUserEntity = entityInSecurity.hasTag("user")]
+            $[let checkUser = isUserEntity && entityInSecurity.hasTag("access:write:user")]
+    /**
+        Determines if a the logged user has permission to edit $[if isUserEntity || objectLevelAccess]a specified object$[else]any object$[/if] of this entity.
+        [Template] ${__template.name}:${__outlet.name} < ${__author.template.name}
+     */
+    public boolean canEdit(${entity.pkType|language} id) throws ServiceException {
+            $[capture firstCodeBlock]
+        ${userEntity|domain:Model|name} user = userDetailsService.findBy${usernameAttribute|domain:Model|name|capitalize}(securityService.findLoggedInUsername());
+        Set<${roleEnum|domain:Model|name}> roles = user.get${rolesAttribute|domain:Model|name|capitalize}();
+            $[/capture]
+            $[if checkUser]
+                $[let pk = entity.primaryKeyAttribute]
+${firstCodeBlock}
+                $[let firstCodeBlock = ""]
+        boolean _sameUser = user.get${pk|domain:Model|name|capitalize}().equals(id);
+            $[/if]
+            $[call rolesContains(accessType: "write", rolesArrayName: "roles", entity: entityForAccessPurposes)->(hasRoles: hasRoles, rolesExpr: rolesExpr)]
+            $[if checkUser]
+                $[if !hasRoles]
+                    $[let rolesExpr = "_sameUser"]
+                $[else]
+                    $[let rolesExpr = rolesExpr + " || _sameUser"]
+                $[/if]
+            $[/if]
+            $[if hasRoles || checkUser]
+${firstCodeBlock}
+                $[let firstCodeBlock = ""]
+        if (${rolesExpr}) {
+            return true;
+        }
+                $[if objectLevelAccess]
+                    $[let idVarName = "id"]
+                    $[if inheritFromParent]
+                        $[let idVarName = "parentId"]
+        Optional<${modelName}> optionalObject = ${entity|domain:Repository|name|uncapitalize}.getById(id);
+                        $[let parentRelationship = entity.primaryParentRelationship]
+        ${entityForAccessPurposes.pkType|language} parentId = optionalObject.get().get${parentRelationship|name|capitalize}Id();
+                    $[/if]
+$[send imports]
+import ${accessEntity|domain:Model|fullname};
+$[/send]
+                    $[call addAutoWired(domainEntity: accessEntity|domain:Repository)]
+        ${accessEntity|domain:Model|name} access = ${accessEntity|domain:Repository|name|uncapitalize}.get${accessEntity|domain:Model|name}By${entityForAccessPurposes|domain:Model|name}IdAnd${userEntity|domain:Model|name}Id(${idVarName}, user.getId());
+        if (access != null && access.get${writeAttribute|domain:Model|name|capitalize}()) {
+            return true;
+        }
+                $[/if]
+            $[/if]
+        return false;
+    }
+
+$[*
+    Add canUpdateAttribute() method to entity service class - but not when the entity has object level access.
+*]
+            $[if isUserEntity]
+    /**
+        Determines if the logged user has permission to update the specified attribute.
+        [Template] ${__template.name}:${__outlet.name} < ${__author.template.name}
+     */
+    public boolean canUpdateAttribute($[if isUserEntity]${userEntity|domain:JSONDTO|name} userDto, $[/if]String attributeName) throws ServiceException {
+                $[capture firstCodeBlock]
+        ${userEntity|domain:Model|name} user = userDetailsService.findBy${usernameAttribute|domain:Model|name|capitalize}(securityService.findLoggedInUsername());
+        Set<${roleEnum|domain:Model|name}> roles = user.get${rolesAttribute|domain:Model|name|capitalize}();
+                $[/capture]
+                $[if checkUser && entityInSecurity.hasAttributeWithTagPrefixed("access:write:user")]
+                    $[let pk = entity.primaryKeyAttribute]
+${firstCodeBlock}
+                    $[let firstCodeBlock = ""]
+        boolean _sameUser = user.get${pk|domain:Model|name|capitalize}().equals(userDto.get${pk|domain:JSONDTO|name|capitalize}());
+                $[/if]
+        if (!this.canEdit($[if checkUser]userDto.get${pk|domain:JSONDTO|name|capitalize}()$[else]null$[/if])) {
+            return false;
+        }
+                $[let rolesExpr = ""]
+                $[foreach attribute in entity.attributes]
+                    $[call attributeRolesContains(accessType: "write", rolesArrayName: "roles", attribute: attribute)->(hasRoles: hasRoles, rolesExpr: rolesExpr)]
+                    $[let checkUserForAttribute = checkUser && (attribute|domain:Security).hasTag("access:write:user")]
+                    $[if checkUserForAttribute]
+                        $[if !hasRoles]
+                            $[let rolesExpr = "_sameUser"]
+                        $[else]
+                            $[let rolesExpr = rolesExpr + " || _sameUser"]
+                        $[/if]
+                    $[/if]
+                    $[if hasRoles || checkUserForAttribute]
+${firstCodeBlock}
+                        $[let firstCodeBlock = ""]
+        if (attributeName.equals("${attribute.name}") && !(${rolesExpr})) {
+            return false;
+        }
+                    $[/if]
+                $[/foreach]
+        return true;
+    }
+
+                $[if enabledAttribute != null]
+    /**
+        Determines if a user by the specified username exists and is allowed to login.
+        [Template] ${__template.name}:${__outlet.name} < ${__author.template.name}
+     */
+    public boolean canLogin(String username) {
+        ${userEntity|domain:Model|name} user = userDetailsService.findBy${usernameAttribute|domain:Model|name|capitalize}(username);
+        if (user == null) {
+            return false;
+        }
+        return user.get${enabledAttribute|domain:Model|name|capitalize}();
+    }
+                $[/if]
+            $[/if]
+$[send imports]
+import ${roleEnum|domain:Model|fullname};
+$[/send]
+        $[/if]
+$[*
+    Add getBy<username>() method to entity service class that is only for the "user" entity to get the instance
+    of it corresponding to a username.
+*]
+        $[if (entity|domain:Security).hasTag("user")]
+            $[call getUserEntityAttributes(userEntity: entity)->(passwordAttribute: passwordAttribute, usernameAttribute: usernameAttribute)]
+    /**
+        Gets a user object by its username.
+        [Template] ${__template.name}:${__outlet.name} < ${__author.template.name}
+     */
+    public ${modelName} getBy${usernameAttribute|domain:Model|name|capitalize}(String ${usernameAttribute|domain:Model|name}) {
+        return ${repositoryVariableName}.findBy${usernameAttribute|domain:Model|name|capitalize}(${usernameAttribute|domain:Model|name});
+    }
+        $[/if]
+    $[/author]
+$[/author]
+$[*----------------------------------------------------------------------------------------------------------------*]
+$[author to org.entitycompiler.springboot.repository]
+    $[author to outlet methods
+      D "Adds a method to find a user by its username."
+    ]
+        $[import "security/SecurityFunctions"]
+        $[if (entity|domain:Security).hasTag("user")]
+            $[call getUserEntityAttributes(userEntity: entity)->(passwordAttribute: passwordAttribute, usernameAttribute: usernameAttribute)]
+    /**
+        Finds a user object by its username.
+        [Template] ${__template.name}:${__outlet.name} < ${__author.template.name}
+     */
+    ${modelName} findBy${usernameAttribute|domain:Model|name|capitalize}(String ${usernameAttribute|domain:Model|name});
+
+        $[/if]
+    $[/author]
+$[/author]
+$[*----------------------------------------------------------------------------------------------------------------*]
+$[author to org.entitycompiler.springboot.repository]
+    $[author to outlet methods
+      D "Adds a method to find access objects by a parent object and for a specific user."
+    ]
+        $[import "security/SecurityFunctions"]
+        $[call checkObjectLevelAccessFromAccessEntity()->(readAttribute: readAttribute, parentEntity: parentEntity, objectLevelAccess: objectLevelAccess, writeAttribute: writeAttribute)]
+        $[if objectLevelAccess]
+            $[let userEntity = (space|domain:Security).entityTagged("user")]
+            $[let userModelName = userEntity|domain:Model|name]
+            $[let accessModelName = entity|domain:Model|name]
+            $[let parentModelName = parentEntity|domain:Model|name]
+    /**
+        Finds access objects by a parent object and for a specific user.
+        [Template] ${__template.name}:${__outlet.name} < ${__author.template.name}
+     */
+    ${accessModelName} get${accessModelName}By${parentModelName}IdAnd${userModelName}Id(UUID objectId, UUID userId);
+
+        $[/if]
+    $[/author]
+$[/author]
+$[*----------------------------------------------------------------------------------------------------------------*]
+$[author to org.entitycompiler.springboot.repository]
+    $[author to outlet methods
+      D "Adds a method to get a list objects for which a user has read access."
+    ]
+        $[import "security/SecurityFunctions"]
+        $[call checkObjectLevelAccess()->(objectLevelAccess: objectLevelAccess, accessEntity: accessEntity, readAttribute: readAttribute, writeAttribute: writeAttribute)]
+        $[if objectLevelAccess]
+            $[let userEntity = (space|domain:Security).entityTagged("user")]
+            $[let accessModelName = accessEntity|domain:Model|name]
+            $[let userModelName = userEntity|domain:Model|name]
+            $[let modelName = entity|domain:Model|name]
+            $[let userDBName = userEntity|domain:Database|name]
+            $[let accessDBName = accessEntity|domain:Database|name]
+            $[let dBName = entity|domain:Database|name]
+            $[let sortByAttribute = null]
+            $[let ascending = true]
+            $[foreach attribute in entity.effectiveAttributes|type single]
+                $[if (attribute|domain).hasTag("sort:asc")]
+                    $[let sortByAttribute = attribute]
+                    $[let ascending = true]
+                $[elseif (attribute|domain).hasTag("sort:desc")]
+                    $[let sortByAttribute = attribute]
+                    $[let ascending = false]
+                $[/if]
+            $[/foreach]
+            $[if sortByAttribute == null && hasCreationDate]
+                $[let sortByAttribute = creationDateAttribute]
+                $[let ascending = false]
+            $[/if]
+    /**
+        Gets a list of ${entity.name} objects that the logged in user has permission to read.
+        [Template] ${__template.name}:${__outlet.name} < ${__author.template.name}
+     */
+    @Query(value =
+            "SELECT * FROM ${dBName} pt INNER JOIN ${accessDBName} at ON at.${dBName}_id = pt.${dBName}_id " +
+                    "WHERE at.user_id=?1 AND at.${readAttribute|domain:Database|name} " +
+                    "ORDER BY ${sortByAttribute|domain:Database|name} ${ascending ? "ASC":"DESC"} " +
+                    "LIMIT ?3 OFFSET ?2", nativeQuery = true)
+    List<${modelName}> get${modelName}ListFor${userModelName}(${userEntity.pkType|language} userId, int start, int limit);
+        $[/if]
+    $[/author]
+$[/author]
+$[*----------------------------------------------------------------------------------------------------------------*]
+$[author to org.entitycompiler.springboot.service]
+    $[author to outlet methods
+      D "Adds a service method to get a list of objects of this entity for which the logged in user has"
+      D "read access."
+    ]
+        $[import "util/AutoWired"]
+        $[let objectLevelAccess = (entity|domain:Security).hasTag("access:object:level")]
+        $[if objectLevelAccess]
+            $[let userEntity = (space|domain:Security).entityTagged("user")]
+            $[if userEntity != null]
+                $[call addAutoWired(domainEntity: entity|domain:Repository)]
+                $[let usernameAttribute = (userEntity|domain:Security).attributeTagged("login:username")]
+                $[let modelName = entity|domain:Model|name]
+                $[let dtoName = entity|domain:JSONDTO|name]
+                $[let userModelName = userEntity|domain:Model|name]
+    /**
+        Gets a list of ${entity.name} objects that the logged in user has permission to read.
+        [Template] ${__template.name}:${__outlet.name} < ${__author.template.name}
+     */
+    public List<${dtoName}> get${dtoName}ListFor${userModelName}(int start, int limit, boolean hierarchical) throws ServiceException {
+        ${userEntity|domain:Model|name} user = userDetailsService.findBy${usernameAttribute|domain:Model|name|capitalize}(securityService.findLoggedInUsername());
+        Set<Role> roles = user.getRoles();
+        List<${modelName}> list = null;
+                $[call rolesContains(accessType: "read", rolesArrayName: "roles", entity: entity)->(hasRoles: hasRoles, rolesExpr: rolesExpr)]
+                $[if hasRoles]
+        if (${rolesExpr}) {
+            list = ${entity|domain:Repository|name|uncapitalize}.get${modelName}List(start, limit);
+        }
+                $[/if]
+        if (list == null) {
+            list = ${entity|domain:Repository|name|uncapitalize}.get${modelName}ListFor${userModelName}(user.getId(), start, limit);
+        }
+        List<${dtoName}> dtoList = new ArrayList<>();
+        for(${modelName} modelObject : list) {
+            dtoList.add(dtoFromModel(modelObject, hierarchical));
+        }
+        return dtoList;
+    }
+
+            $[/if]
+        $[/if]
+    $[/author]
+$[/author]

@@ -1,0 +1,87 @@
+$[D summary, main "This template generates a properties file for a spring boot application if one does not"]
+$[D summary, main "already exist."]
+$[D ""]
+$[D "> In the future it may be capable of merging with an existing application.properties file but"]
+$[D "for now it only. generates the initial version of the file."]
+
+$[let microserviceTitle = space.getMetadataValue("microserviceTitle")]
+$[file ifdoesnotexist "src/main/resources" "application" "yml"]
+info:
+  app:
+    name: '@project.name@'
+    description: '@project.description@'
+    version: '@project.version@'
+    encoding: '@project.build.sourceEncoding@'
+    java:
+      version: '@java.version@'
+app:
+  jwtSecret: 'SPECIFY_HERE'
+  jwtExpirationMs: 86400000
+  asset:
+    binaryPersistence: s3
+aws:
+  s3:
+    bucket: SPECIFY_HERE
+    region: SPECIFY_HERE
+server:
+  shutdown: graceful
+  servlet:
+    session:
+      timeout: 60m
+  error:
+    path: /error
+    whitelabel:
+      enabled: false
+spring:
+  flyway:
+    validate-on-migrate: false
+  main:
+    banner-mode: off
+  application:
+    name: '@artifactId@'
+  datasource:
+    url: ''
+    username: ''
+    password: ''
+  jpa:
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        jdbc:
+          lob:
+            non_contextual_creation: true
+    show-sql: true
+  profiles:
+    active: '@project.profile.environment@'
+  thymeleaf:
+    cache: false
+    enabled: true
+    prefix: classpath:/templates/
+    suffix: .html
+logging:
+  level:
+    root: INFO
+management:
+  health:
+    probes:
+      enabled: true
+  endpoint:
+    health:
+      show-details: always
+  endpoints:
+    web:
+      exposure:
+        include: info,health,prometheus
+  metrics:
+    tags:
+      application: '@project.artifactId@'
+springdoc:
+  packagesToScan: RESOURCE_PACKAGE
+  swagger-ui:
+    enabled: false
+  api-docs:
+    enabled: false
+    path: /public/apix-docs
+$[/file]

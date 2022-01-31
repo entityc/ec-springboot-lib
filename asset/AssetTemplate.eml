@@ -1,0 +1,31 @@
+$[domain Service]
+$[D summary, main "Installs classes associated with managing file assets on a service such as S3."]
+$[let exceptionNamespace = (space.domain("Exception")).namespace]
+$[let usingAssets = true]
+$[if usingAssets]
+    $[let installPath = (domain.namespace|path) + "/asset"]
+    $[install "service/asset/BinaryPersistence.java" installPath]
+    $[install "service/asset/FileService.java" installPath]
+    $[install "service/asset/S3Service.java" installPath]
+    $[install "service/asset/Metadata.java" installPath]
+
+    $[author to org.entitycompiler.springboot.dto]
+        $[author to outlet methods D "Adds a method `isImageType()` to DTO class that represents a file."]
+            $[let entityInAsset = entity|domain:Asset]
+            $[if entityInAsset.hasTag("file") && entityInAsset.hasRelationshipToEntityTagged("type")]
+                $[let assetTypeRelationship = entityInAsset.relationshipToEntityTagged("type")]
+                $[let assetTypeEntity = assetTypeRelationship.to.entity]
+                $[if assetTypeEntity.hasAttributeTagged("mimeType")]
+                $[let typeMemberName = assetTypeRelationship|domain:JSONDTO|name]
+    public boolean isImageType() {
+        if (${typeMemberName} != null) {
+            String mimeType = ${typeMemberName}.get${assetTypeEntity.attributeTagged("mimeType").name|capitalize}();
+            return mimeType.startsWith("image/");
+        }
+        return false;
+    }
+                $[/if]
+            $[/if]
+        $[/author]
+    $[/author]
+$[/if]

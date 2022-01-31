@@ -1,0 +1,139 @@
+$[language md]
+$[D summary "Generates documentation in a Confluence format that can be imported into Confluence."]
+$[D main "This template generates documentation in a Confluence format that can be imported into Confluence."]
+$[foreach space.modules]
+    $[if module.isIncluded]$[continue]$[/if]
+    $[file "" module.name|capitalize "wiki"]
+        $[if module.typedefCount > 0]
+h2. Typedefs
+
+            $[foreach module.typedefs]
+h3. ${typedef.name|words|uppercase}
+                $[if typedef.description]
+${typedef.description}
+
+                $[/if]
+                $[if attribute.hasBitFields]
+||Bitfield||Low Bit||Width||Description||
+                    $[foreach typedef.bitFields]
+|{{${bitField.name}}}|${bitField.low}|${bitField.width}|${bitField.description}${bitField.description ? "":" "}|
+                    $[/foreach]
+                $[/if]
+            $[/foreach]
+        $[/if]
+
+        $[if module.entityCount > 0]
+            $[foreach module.entities]
+                $[if entity.isExtern || entity.isSecondary]$[continue]$[/if]
+                $[let _className = entity|domain:Model|name|words|uppercase]
+h2. ${_className}
+
+                $[if entity.description]
+${entity.description}
+
+                $[/if]
+||Field||Type||Description||
+                $[if entity.hasPrimaryKey]
+|{{${primaryKeyAttribute|domain:JSONDTO|name}}}|${attribute.type}|${attribute.description}${attribute.description ? "":"*Primary Key*"}|
+                $[/if]
+                $[foreach entity.attributes]
+                    $[if attribute.secondaryEntityIsTagged("asset")]$[continue]$[/if]
+                    $[capture attributeDescriptionOrSpace]${attribute.description}${attribute.description ? "":" "}$[/capture]
+                    $[if attribute.type.isAssetType]$[capture attributeName]${attribute.name}Url$[/capture]$[capture attributeType]string$[/capture]$[else]$[let attributeName = attribute.name]$[let attributeType = attribute.type]$[/if]
+                    $[if attribute.type.isEnumType]
+|{{${attribute|domain:JSONDTO|name}}}|${attributeType}|${attributeDescriptionOrSpace}|
+                    $[else]
+|{{${attribute|domain:JSONDTO|name}}}|${attributeType}${attribute.isArray ? "[]":""}|${attributeDescriptionOrSpace}|
+                    $[/if]
+                $[/foreach]
+
+                $[if entity.hasBitFields]
+h3. Bit Fields
+
+                    $[foreach attribute]
+                        $[if attribute.hasBitFields]
+h4. {{${attribute.type} ${attribute.name}}}
+
+||Name||Low Bit||Width||Description||
+                            $[foreach attribute.bitFields]
+                                $[if bitField.unused]
+|---|${bitField.low}|${bitField.width}|_Unused bits_|
+                                $[else]
+|{{${bitField.name}}}|${bitField.low}|${bitField.width}|${bitField.description}${bitField.description ? "":" "}|
+                                $[/if]
+                            $[/foreach]
+                        $[/if]
+                    $[/foreach]
+                $[/if]
+                $[if entity.relationshipCount > 0]
+
+h4. Relationships
+
+This entity has the following relationships with other entities:
+
+||Type||Other Entity||Relationship Name||
+                    $[foreach relationship in entity.relationships]
+|${relationship.to.isMany ? "many":"one"}|{{${relationship.to.entity.name}}}|{{${relationship.name}}}|
+                    $[/foreach]
+                $[/if]
+
+h3. API Endpoints
+$[*   CREATE  *]
+
+h4. Create ${entity|title}
+
+||Method||Path||
+|POST|{{/${entity|domain:APIPath|name}}}|
+
+The body of the POST is JSON containing only the following fields:
+
+$[* once supported: entity|domain:JSONDTO|view:APICreate|attributes *]
+                $[foreach entity.attributes|domain:JSONDTO]${attribute#first ? "":", "}${attribute#last ? "and ":""}{{${attribute|domain:JSONDTO|name}}}$[/foreach]
+
+
+h4. Get ${entity|title} List
+
+||Method||Path||
+|GET|{{/${entity|domain:APIPath|name}?start=\{start\}&limit=\{limit\}}}|
+
+Where:
+
+||Query Param||Description||
+|{{start}}|The starting index in the full result set.|
+|{{limit}}|The number of results to return.|
+
+h4. Get ${entity|title} by ID
+
+||Method||Path||
+|GET|{{/${entity|domain:APIPath|name}/\{id\}}}|
+
+Where:
+
+||Query Param||Description||
+|{{id}}|The unique id of the ${entity.name} object to be returned.|
+
+                $[foreach entity.attributes]
+                    $[if !attribute.type.isAssetType]$[continue]$[/if]
+$[* ASSET UPLOADS *]
+                $[/foreach]$[/foreach]
+        $[/if]
+        $[if module.enumCount > 0]
+
+h2. Enums
+
+            $[foreach module.enums]
+h3. ${enum|domain:JSONDTO|name|words|uppercase}
+
+                $[if enum.description]
+${enum.description}
+
+                $[/if]
+||Item||Description||
+                $[foreach enum.items]
+|{{${item|domain:JSONDTO|name}}}|${item.description}${item.description ? "":" "}|
+                $[/foreach]
+
+            $[/foreach]
+        $[/if]
+    $[/file]
+$[/foreach]

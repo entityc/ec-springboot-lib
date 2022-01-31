@@ -1,0 +1,246 @@
+$[D summary, main "Contains a set of functions that produce web page code that is in common with the different"]
+$[D summary, main "types of pages."]
+$[function commonHead
+  D "Supplies code for the <head> section of the web page for meta and stylesheets." 
+  (title
+   D "The web page title." 
+  )
+]
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <link rel="stylesheet" type="text/css"
+          th:href="@{/webjars/bootstrap/5.0.1/css/bootstrap.min.css}" />
+
+    <title>${title}</title>
+$[/function]
+$[function commonBodyScripts
+  D "Provides code that can be placed at the bottom of the <body> to define scripts." 
+  (
+  )
+]
+<script type="text/javascript"
+        th:src="@{/webjars/jquery/3.6.0/jquery.min.js/}"></script>
+<script type="text/javascript"
+        th:src="@{/webjars/bootstrap/5.0.1/js/bootstrap.min.js}"></script>
+$[/function]
+$[function commonBodyNavbar
+  D "Supplies code for the top navigation bar." 
+  (backURL
+   D "The URL for the back button." ,
+   title
+   D "The title to put on the navigation bar." ,
+   excludeLogout
+   D "For screens where the user is logged out, setting this will exclude the entire user menu.",
+   projectBaseApiPath
+  )
+]
+<!-- Navigation Bar -->
+<nav class="navbar navbar-expand-md navbar-dark bg-dark">
+	<div class="container-fluid">
+		<div class="navbar-collapse collapse w-100 order-1 order-md-0 dual-collapse2">
+			<ul class="navbar-nav me-auto">
+				<li class="nav-item active">
+    $[if backURL != null]
+					<a class="nav-link" th:href="@{${backURL}}">Back</a>
+    $[/if]
+				</li>
+			</ul>
+		</div>
+		<div class="mx-auto order-0">
+			<a class="navbar-brand mx-auto" th:href="@{/}">${title}</a>
+			<button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".dual-collapse2">
+				<span class="navbar-toggler-icon"></span>
+			</button>
+		</div>
+		<div class="navbar-collapse collapse w-100 order-3 dual-collapse2">
+    $[if excludeLogout == null || !excludeLogout]
+			<ul class="nav navbar-nav ms-auto w-100 justify-content-end">
+				<li class="nav-item dropdown">
+					<a class="nav-link dropdown-toggle" href="#" id="navbarScrollingDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false"> <span th:text="${$}{loggedInUser.firstName}">user</span> </a>
+					<ul class="dropdown-menu dropdown-menu-right" aria-labelledby="navbarScrollingDropdown">
+						<li><a class="dropdown-item" th:href="@{/}">Settings</a></li>
+						<li>
+							<hr class="dropdown-divider">
+						</li>
+						<li><a class="dropdown-item" th:href="@{/logout}">Logout</a></li>
+					</ul>
+				</li>
+			</ul>
+    $[/if]
+		</div>
+	</div>
+</nav>
+$[/function]
+$[function getContentRelationshipForVirtualAttribute
+  D "For virtual attributes that are tagged with `content` = *relationshipName* it will return"
+  D "the relationship." 
+  (attribute
+   D "The virtual attribute." ,
+   space
+  )->
+  (foundRelationship
+   D "The relationship associated with the attribute tagging." 
+  )
+]
+    $[let foundRelationship = null]
+    $[if space.hasDomain("Localization")]
+        $[foreach relationship in attribute.entity.relationships]
+            $[if (attribute|domain:Localization).tagValue("content") == relationship.name]
+                $[let foundRelationship = relationship]
+                $[break]
+            $[/if]
+        $[/foreach]
+    $[/if]
+$[/function]
+$[function checkIfAttributeIsEditable
+  D "Checks to see if the attribute is considered editable. Basically it is editable as long as it"
+  D "is not a creation or modification date." 
+  (attribute
+   D "The attribute to check." 
+  )->
+  (editable
+   D "True if editable, false otherwise." 
+  )
+]
+    $[let editable = !attribute.isCreation && !attribute.isModification && !attribute.isSequential]
+$[/function]
+$[function checkIfAttributeIsRequired
+  D "Checks to see if the attribute is required to be set by the admin when creating a new object." 
+  (attribute
+   D "The attribute to check." 
+  )->
+  (required
+   D "True if required, false otherwise." 
+  )
+]
+    $[let required = !attribute.isOptional && !attribute.isCreation && !attribute.isModification]
+$[/function]
+$[function requiredEditableFields
+  D "For a specified entity this function finds all editable attributes and one-to-many"
+  D "relationships. It excludes relationships to the principle user since those will"
+  D "automatically set (e.g., createdByUser) and also excludes the relationship to its parent"
+  D "entity as that is also automatically set." 
+  (entity
+   D "The specified entity." 
+  )->
+  (attributes
+   D "The attributes that are editable." ,
+   relationships
+   D "The relationships that are editable." 
+  )
+]
+    $[let attributes = @[]@]
+    $[let relationships = @[]@]
+    $[foreach domainAttribute in (entity|domain:AdminUI).orderedDomainAttributes]
+        $[let attribute = domainAttribute.attribute]
+        $[call checkIfAttributeIsRequired(attribute: attribute)->(required: required)]
+        $[call checkIfAttributeIsEditable(attribute: attribute)->(editable: editable)]
+        $[if (required || domainAttribute.hasTag("new")) && editable]
+            $[do attributes.add(attribute)]
+        $[/if]
+    $[/foreach]
+    $[foreach relationship in entity.relationships]
+        $[if !relationship.isOptional && relationship.to.isOne && 
+!(relationship|domain:Security).hasTag("user:principle") && 
+!(relationship|domain:Security).hasTag("user:created") && 
+!(relationship|domain:Security).hasTag("user:modified") && 
+!relationship.isPrimaryParent]
+$[* skip ones that are for localization *]
+            $[let forDynamicLocalization = entity.space.hasDomain("Localization") && (entity|domain:Localization).hasAttributeTagged("content")]
+            $[if !forDynamicLocalization]
+                $[do relationships.add(relationship)]
+            $[/if]
+        $[/if]
+    $[/foreach]
+$[/function]
+$[function headlineExpression
+  D "This generates a Thymeleaf expression used for constructing a Headline string based on"
+  D "attribute values. The expression will try to construct the headline as follows: *header*"
+  D "*number*: *title*.  The entity title will be used as the *header* if it is tagged with"
+  D "`headline:prefix`. An attribute tagged with `headline:number` will be used for the"
+  D "*number* (if found). Finally an attribute tagged with `headline:title` will be used as the"
+  D "*title* (if found)." 
+  (entity
+   D "The entity associated with the headline." ,
+   dtoEntity
+   D "The JSONDTO domain entity." 
+  )->
+  (thExpression
+   D "The produced Thymeleaf expression." 
+  )
+]
+    $[let entityAsHeader = (entity|domain:AdminUI).hasTag("headline:prefix")]
+    $[let numberAttribute = null]
+    $[let titleAttribute = null]
+    $[foreach attribute in dtoEntity.attributes]
+        $[if (attribute|domain:AdminUI).hasTag("headline:number")]
+            $[let numberAttribute = attribute]
+        $[elseif (attribute|domain:AdminUI).hasTag("headline:title")]
+            $[let titleAttribute = attribute]
+        $[/if]
+    $[/foreach]
+    $[let includeColon = entityAsHeader || numberAttribute != null]
+    $[if entityAsHeader || numberAttribute != null || titleAttribute != null]
+        $[capture thExpression]|$[if entityAsHeader]${entity|domain:AdminUI|title}$[/if]$[if numberAttribute != null] ${$}{${dtoEntity|name|uncapitalize}.${numberAttribute|name}}$[/if]$[if titleAttribute != null]${includeColon ? ": ":""}${$}{${dtoEntity|name|uncapitalize}.${titleAttribute|name}}$[/if]|$[/capture]
+    $[else]
+        $[let thExpression = null]
+    $[/if]
+$[/function]
+$[function breadcrumbExpression
+  D "This generates a Thymeleaf expression used for constructing a breadcrumb item string based"
+  D "on attribute values. The expression will try to construct the breadcrumb item as follows:"
+  D "*header* *number*: *title*.  The entity title will be used as the *header* if it is tagged with"
+  D "`breadcrumb:prefix`. An attribute tagged with `breadcrumb:number` will be used for the"
+  D "*number* (if found). Finally an attribute tagged with `breadcrumb:title` will be used as"
+  D "the *title* (if found)." 
+  (entity
+   D "The entity associated with the headline." ,
+   dtoEntity
+   D "The JSONDTO domain entity." 
+  )->
+  (thExpression
+   D "The produced Thymeleaf expression." 
+  )
+]
+    $[let entityAsHeader = (entity|domain:AdminUI).hasTag("breadcrumb:prefix")]
+    $[let numberAttribute = null]
+    $[let titleAttribute = null]
+    $[foreach attribute in dtoEntity.attributes]
+        $[if (attribute|domain:AdminUI).hasTag("breadcrumb:number")]
+            $[let numberAttribute = attribute]
+        $[elseif (attribute|domain:AdminUI).hasTag("breadcrumb:title")]
+            $[let titleAttribute = attribute]
+        $[/if]
+    $[/foreach]
+    $[let includeColon = entityAsHeader || numberAttribute != null]
+    $[capture thExpression]|$[if entityAsHeader]${entity|domain:AdminUI|title}$[/if]$[if numberAttribute != null] ${$}{${dtoEntity|name|uncapitalize}.${numberAttribute|name}}$[/if]$[if titleAttribute != null]${includeColon ? ": ":""}${$}{${dtoEntity|name|uncapitalize}.${titleAttribute|name}}$[/if]|$[/capture]
+$[/function]
+$[function canAccessAdminExpr
+  (rolesArrayName,
+   space
+  )->
+  (rolesExpr
+  )]
+    $[if space.hasDomain("AdminUI") && space.hasDomain("Security")]
+        $[let rolesItemList = @[]@]
+        $[let rolesEnum = (space|domain:Security).enumTagged("role")]
+        $[foreach item in rolesEnum.items]
+            $[if (item|domain:AdminUI).hasTag("canAccess")]
+                $[do rolesItemList.add(item)]
+            $[/if]
+        $[/foreach]
+        $[if rolesItemList.count > 0]
+            $[capture rolesExpr]
+                $[foreach item in rolesItemList]
+${rolesArrayName}.contains(${item.enum|domain:Security|name}.${item.name})$[if !item#last] || $[/if]
+                $[/foreach]
+            $[/capture]
+        $[else]
+            $[let rolesExpr = "false"]
+        $[/if]
+    $[else]
+        $[let rolesExpr = "false"]
+    $[/if]
+$[/function]

@@ -1,0 +1,70 @@
+$[D summary, main "Contains functions for adding a modal dialog for inputing a date value."]
+$[function insertDateEditModalHTML
+  D "Inserts the HTML code needed to create a date input dialog." 
+  (adminUrlPrefix
+   D "The admin console's url prefix (e.g., `admin`)" ,
+   entity
+   D "The entity associated with the date being inputted. The specific attribute (field) can be"
+   D "set at runtime." ,
+   entityDtoClassName
+   D "This is simply the DTO class name for the entity." 
+  )
+]
+        <div class="modal fade" id="dateEditModal" tabindex="-1" role="dialog" aria-labelledby="dateEditModalLabel" aria-hidden="true">
+          <div class="modal-dialog modal-xl" role="document">
+            <form th:action="@{/${adminUrlPrefix}/${entity|domain:APIPath|name}/{id}/update(id=${$}{${entityDtoClassName}.id})}" method="post">
+				<input id="date-edit-field-ident" name="edit-field-ident" type="hidden"/>
+                <div class="modal-content">
+                  <div class="modal-header">
+                    <h5 class="modal-title" id="dateEditModalLabel">Edit Date</h5>
+                    <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
+                      <span aria-hidden="true">&times;</span>
+                    </button>
+                  </div>
+                  <div class="modal-body">
+                        <div class="col-sm-4">
+                            <div class="input-group date">
+                                <input type="text" id="datepicker" class="form-control" name="edit-field-value">
+                                <span class="input-group-append">
+                                    <span class="input-group-text bg-white">
+                                        <i class="fa fa-calendar"></i>
+                                    </span>
+                                </span>
+                            </div>
+                        </div>
+                  </div>
+                  <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <input type="submit"  class="btn btn-primary" value="Save" />
+                  </div>
+                </div>
+            </form>
+          </div>
+        </div>
+$[/function]
+$[function insertDateEditModalScript
+  D "Inserts the Javascript portion of the date input dialog."
+  (
+  )]
+<script>
+$('#datepicker').datepicker({
+    format: "dd-M-yyyy"
+});
+</script>
+<script>
+var dateEditModal = document.getElementById('dateEditModal')
+dateEditModal.addEventListener('show.bs.modal', function (event) {
+  // Button that triggered the modal
+  var button = event.relatedTarget
+  var fieldName = button.getAttribute('data-bs-field-name')
+  var fieldTitle = button.getAttribute('data-bs-field-title')
+  var fieldValue = button.getAttribute('data-bs-field-value');
+  var modalFieldIdent = document.getElementById('date-edit-field-ident')
+  var modalTitle = dateEditModal.querySelector('.modal-title')
+  var modalBodyInput = dateEditModal.querySelector('.modal-body input')
+  modalFieldIdent.value = fieldName
+  modalTitle.textContent = 'Edit ' + fieldTitle
+  modalBodyInput.value = fieldValue
+})
+</script>
+$[/function]

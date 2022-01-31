@@ -1,0 +1,37 @@
+
+$[function setCreatedByUserFields
+  D "This function will create code that will automatically set any relationships of the"
+  D "specified entity that represent the logged in user. These relationships should be tagged"
+  D "with `user:principle` and the relationship needs to be to an entity that is tagged with"
+  D "`user`. Only use this function or perform its tagging if you are using Spring Boot's"
+  D "security." 
+  (space,
+   entity
+  )
+]
+    $[if space.hasDomain("Security") && (
+(entity|domain:Security).hasRelationshipTagged("user:created") || 
+(entity|domain:Security).hasRelationshipTagged("user:modified"))]
+        $[let userEntity = (space|domain:Security).entityTagged("user")]
+$[send imports]
+            $[let securityNamespace = (space.domain("Security")).namespace]
+import ${securityNamespace}.SecurityService;
+import ${securityNamespace}.PersistentUserDetailsService;
+import ${userEntity|domain:Model|fullname};
+$[/send]
+$[send memberDecl]
+    @Autowired SecurityService securityService;
+    @Autowired PersistentUserDetailsService userDetailsService;
+$[/send]
+        $[let usernameAttribute = (userEntity|domain:Security).attributeTagged("login:username")]
+        ${userEntity|domain:Model|name} user = userDetailsService.findBy${usernameAttribute|domain:Model|name|capitalize}(securityService.findLoggedInUsername());
+        $[foreach relationship in (entity|domain:Security).relationships]
+            $[if relationship.hasTag("user:created")]
+        object.set${relationship|domain:Model|name|capitalize}Id(user.getId());
+            $[/if]
+            $[if relationship.hasTag("user:modified")]
+        object.set${relationship|domain:Model|name|capitalize}Id(user.getId());
+            $[/if]
+        $[/foreach]
+    $[/if]
+$[/function]

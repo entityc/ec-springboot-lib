@@ -1,0 +1,124 @@
+$[language md]
+$[D summary "Generates documentation for the datamodel of this microservice."]
+$[D main "This template generates documentation for the datamodel of this microservice."]
+$[foreach space.modules|sort]
+    $[if module.isIncluded]$[continue]$[/if]
+    $[capture directory]${module.name|capitalize}/DataModel$[/capture]
+    $[capture filename]README$[/capture]
+    $[file directory filename "md"]
+# ${module.name|title} Data Model
+
+        $[if module.description]
+${module.description}
+
+        $[/if]
+        $[if module.typedefCount > 0]
+# Typedefs
+
+            $[foreach module.typedefs]
+## ${typedef.name|words|uppercase}
+                $[if typedef.description]
+${typedef.description}
+
+                $[/if]
+|Bitfield|Low Bit|Width|Description|
+|:---|:---:|:---:|:---|
+                $[foreach typedef.bitFields]
+|`${bitField.name}`|${bitField.low}|${bitField.width}|${bitField.description}${itField.description ? "":" "}|
+                $[/foreach]
+            $[/foreach]
+        $[/if]
+
+        $[if module.enumCount > 0]
+# Enums
+
+            $[foreach module.enums|sort]
+                $[if enum.itemCount > 0]
+## ${enum|domain:JSONDTO|name|words|uppercase}
+
+                    $[if enum.description]
+${enum.description}
+
+                    $[/if]
+|Item|Description|
+|:---|:---|
+                    $[foreach enum.items|sort]
+|`${item|domain:JSONDTO|name}`|${item.description}${item.description != null ? "":" "}|
+                    $[/foreach]
+
+                $[/if]
+            $[/foreach]
+        $[/if]
+        $[if module.entityCount > 0]
+# Entities
+
+|Name|Description|
+|:---|:---|
+            $[foreach entity in module.entities|sort]
+                $[if entity.isExtern || entity.isIncluded]$[continue]$[/if]
+|[`${entity.name}`](${entity.name}.md)|$[if entity.hasDescription]${entity.description}$[else]_no description_$[/if]|
+            $[/foreach]
+
+        $[/if]
+    $[/file]
+    $[if module.entityCount > 0]
+        $[foreach module.entities]
+            $[if entity.isExtern || entity.isIncluded]$[continue]$[/if]
+            $[let className = entity|domain:Model|name]
+            $[file directory className "md"]
+# ${className}
+
+                $[if entity.description]
+${entity.description}
+
+                $[/if]
+|Field|Type|Description|
+|:---|:---:|:---|
+                $[if entity.hasPrimaryKey]
+|`${entity.primaryKeyAttribute|domain:JSONDTO|name}`|${entity.pkType|language}|${entity.primaryKeyAttribute.description}${entity.primaryKeyAttribute.description != null ? "":"*Primary Key*"}|
+                $[/if]
+                $[foreach entity.attributes|sort]
+                    $[capture attributeDescriptionOrSpace]${attribute.description}${attribute.description != null ? "":" "}$[/capture]
+                    $[let attributeName = attribute.name]$[let attributeType = attribute.type|language]
+                    $[if attribute.type.isEnumType]
+|`${attribute|domain:JSONDTO|name}`|${attributeType}|${attributeDescriptionOrSpace}|
+                    $[else]
+|`${attribute|domain:JSONDTO|name}`|${attributeType}${attribute.isArray ? "[]":""}|${attributeDescriptionOrSpace}|
+                    $[/if]
+                $[/foreach]
+                $[if entity.hasBitFields]
+### Bit Fields
+                    $[foreach entity.attributes]
+                        $[if attribute.bitFields]
+#### `${attribute.type|language} ${attribute.name}`
+
+|Name|Low Bit|Width|Description|
+|:---|:---:|:---:|:---|
+                            $[foreach attribute.bitFields]
+                                $[if bitField.unused]
+|---|${bitField.low}|${bitField.width}|_Unused bits_|
+                                $[else]
+|`${bitField.name}`|${bitField.low}|${bitField.width}|${bitField.description}${bitField.description ? "":" "}|
+                                $[/if]
+                            $[/foreach]
+                        $[/if]
+                    $[/foreach]
+                $[/if]
+                $[if entity.relationshipCount > 0]
+
+### Relationships
+
+This entity has the following relationships with other entities:
+
+|Type|Other Entity|Relationship Name|Description|
+|:---:|:---|:---|:---|
+                    $[foreach entity.relationships]
+                        $[let description = relationship.hasDescription ? relationship.description:""]
+|${relationship.to.isMany ? "many":"one"}|`${relationship.to.entity.name}`|`${relationship.name}`|${description}|
+                    $[/foreach]
+                $[/if]
+            $[/file]
+        $[/foreach]$[* entities *]
+    $[/if]
+
+$[/foreach]

@@ -1,0 +1,213 @@
+$[D summary, main "This template contains the authors that are responsible for generating the get object"]
+$[D summary, main "service methods."]
+$[D "This includes methods for getting not just a single object but lists of objects."]
+$[publisher org.entitycompiler.springboot.service.get]
+    $[import "util/AutoWired"]
+    $[author to org.entitycompiler.springboot.service]
+        $[author to outlet methods]
+$[outlet init
+  D "Used by authors that may want to initialize some variables before using the other outlets."
+]
+$[/outlet]
+            $[if entity.hasPrimaryKey]
+                $[let responseDtoName = entity|domain:JSONDTO|name]
+                $[let responseModelName = entity|domain:Model|name]
+                $[let repositoryVariableName = entity|domain:Repository|name|uncapitalize]
+$[send imports]
+import ${entity|domain:Model|fullname};
+import java.util.Optional;
+import java.util.ArrayList;
+import java.util.List;
+import ${exceptionNamespace}.EntityNotFoundException;
+$[/send]
+                $[let pkidtype = entity.pkType|language]
+                $[let pkidname = entity.primaryKeyAttribute|domain:Service|name]
+    public ${responseModelName} get${responseModelName}ById(${pkidtype} id) throws ServiceException {
+        try {
+            ${responseModelName} responseObject = null;
+$[outlet preGet
+  D "Before retrieving the object from the repository into `responseObject`."
+]
+$[/outlet]
+            if (responseObject == null) {
+                Optional<${responseModelName}> modelObjectOptional = ${repositoryVariableName}.getById(id);
+                if (!modelObjectOptional.isPresent()) {
+                    throw new EntityNotFoundException("${responseModelName} not found.");
+                }
+
+                ${responseModelName} modelObject = modelObjectOptional.get();
+                responseObject = modelObject;
+$[outlet postGet
+  D "After the object has been retrieved from the repository into `responseObject` assuming it"
+  D "was not set in the `preGet` outlet."
+]
+$[/outlet]
+            }
+            return responseObject;
+        } catch (DataAccessException ex) {
+            throw new DaoException(ex.getMessage(), ex);
+        }
+    }
+
+    public ${responseDtoName} get${responseDtoName}ById(${pkidtype} id) throws ServiceException {
+        ${responseModelName} object = get${responseModelName}ById(id);
+        return dtoFromModel(object);
+    }
+
+            $[/if]
+$[************]
+$[* GET LIST *]
+$[************]
+            $[let responseDtoName = entity|domain:JSONDTO|name]
+            $[let responseModelName = entity|domain:Model|name]
+            $[let repositoryVariableName = entity|domain:Repository|name|uncapitalize]
+    public List<${responseModelName}> get${responseModelName}List(int start, int limit) throws ServiceException {
+        try {
+            return ${repositoryVariableName}.get${responseModelName}List(start, limit);
+        } catch (DataAccessException ex) {
+            throw new DaoException(ex.getMessage(), ex);
+        }
+    }
+
+    public List<${responseDtoName}> get${responseDtoName}List(int start, int limit, boolean hierarchical) throws ServiceException {
+        try {
+            List<${responseDtoName}> dtoList = new ArrayList<>();
+            List<${responseModelName}> list = ${repositoryVariableName}.get${responseModelName}List(start, limit);
+            for(${responseModelName} modelObject : list) {
+                dtoList.add(dtoFromModel(modelObject, hierarchical));
+            }
+            return dtoList;
+        } catch (DataAccessException ex) {
+            throw new DaoException(ex.getMessage(), ex);
+        }
+    }
+
+$[****************************]
+$[* GET LIST BY (attributes) *]
+$[****************************]
+            $[function makeGetListByAttributeMethod
+              D "This function generates a method to get a list of objects relative to some specified"
+              D "attribute." 
+              (responseDomain
+               D "The domain associated with the response object (e.g, Model, JSONDTO, etc.)." ,
+               entity
+               D "The entity to which this method is synthesized." ,
+               attribute
+               D "The attribute to which the results are relative." 
+              )
+            ]
+                $[let repositoryVariableName = entity|domain:Repository|name|uncapitalize]
+                $[let responseModelName = entity|domain:Model|name]
+                $[let responseDtoName = entity|domain:JSONDTO|name]
+                $[let isDtoVariant = responseDomain.name == "JSONDTO"]
+                $[let isModelVariant = responseDomain.name == "Model"]
+                $[let responseClassName = isDtoVariant ? responseDtoName:responseModelName]
+                $[let responseInMethodName = isDtoVariant ? responseDtoName:responseModelName]
+                $[capture fullResponseName]List<${responseClassName}>$[/capture]
+    public ${fullResponseName} get${responseInMethodName}ListBy${attribute.name|capitalize}(
+        ${attribute.type|language} ${attribute.name},
+        int start,
+        int limit,
+        boolean hierarchical) throws ServiceException {
+
+        try {
+                $[let listName = "list"]
+                $[if isDtoVariant]
+                    $[let listName = "dtoList"]
+            List<${responseDtoName}> dtoList = new ArrayList<>();
+                $[/if]
+            List<${responseModelName}> list = ${repositoryVariableName}.get${responseModelName}ListBy${attribute.name|capitalize}(${attribute.name}, start, limit);
+                $[if isDtoVariant]
+            for(${responseModelName} modelObject : list) {
+                ${listName}.add(dtoFromModel(modelObject, hierarchical));
+            }
+                $[/if]
+            return ${listName};
+        } catch (DataAccessException ex) {
+            throw new DaoException(ex.getMessage(), ex);
+        }
+    }
+
+            $[/function]
+            $[foreach entity.attributes]
+                $[if !attribute.isParent]$[continue]$[/if]
+                $[if attribute.type.isEnumType]
+$[send imports]
+import ${attribute.type|domain:Model|fullname};
+$[/send]
+                $[/if]
+                $[call makeGetListByAttributeMethod(responseDomain:space.domain("Model"),attribute:attribute,entity:entity)]
+                $[call makeGetListByAttributeMethod(responseDomain:space.domain("JSONDTO"),attribute:attribute,entity:entity)]
+            $[/foreach]
+$[*******************************]
+$[* GET LIST BY (relationships) *]
+$[*******************************]
+            $[function makeGetListByRelationshipMethod
+              D "This function generates a method to get a list of objects relative to some specified"
+              D "relationship." 
+              (responseDomain
+               D "The domain associated with the response object (e.g, Model, JSONDTO, etc.)." ,
+               entity
+               D "The entity to which this method is synthesized." ,
+               relationship
+               D "The relationship to which the results are relative." 
+              )
+            ]
+                $[let isDtoVariant = responseDomain.name == "JSONDTO"]
+                $[let isModelVariant = responseDomain.name == "Model"]
+                $[let repositoryVariableName = entity|domain:Repository|name|uncapitalize]
+                $[let responseModelName = entity|domain:Model|name]
+                $[let responseDtoName = entity|domain:JSONDTO|name]
+                $[let responseClassName = isDtoVariant ? responseDtoName:responseModelName]
+                $[let responseInMethodName = isDtoVariant ? responseDtoName:responseModelName]
+                $[let toPrimaryKeyName = relationship.to.entity.primaryKeyAttribute.name]
+                $[capture fullResponseName]List<${responseClassName}>$[/capture]
+    public ${fullResponseName} get${responseInMethodName}ListBy${relationship.name|capitalize}(
+        ${relationship.to.entity.pkType|language} ${toPrimaryKeyName},
+        int start,
+        int limit,
+        boolean hierarchical) throws ServiceException {
+
+        try {
+                $[let listName = "list"]
+                $[if isDtoVariant]
+                    $[let listName = "dtoList"]
+            List<${responseDtoName}> dtoList = new ArrayList<>();
+                $[/if]
+            List<${responseModelName}> list = ${repositoryVariableName}.get${responseModelName}ListBy${relationship.name|capitalize}(${toPrimaryKeyName}, start, limit);
+                $[if isDtoVariant]
+            for(${responseModelName} modelObject : list) {
+                ${listName}.add(dtoFromModel(modelObject, hierarchical));
+            }
+                $[/if]
+            return ${listName};
+        } catch (DataAccessException ex) {
+            throw new DaoException(ex.getMessage(), ex);
+        }
+    }
+
+            $[/function]
+            $[foreach entity.relationships]
+                $[if !relationship.isParent]$[continue]$[/if]
+                $[call makeGetListByRelationshipMethod(responseDomain:space.domain("Model"),relationship:relationship,entity:entity)]
+                $[call makeGetListByRelationshipMethod(responseDomain:space.domain("JSONDTO"),relationship:relationship,entity:entity)]
+            $[/foreach]
+            $[if entity.hasPrimaryParentRelationship]
+                $[let primaryParentEntity = entity.primaryParentRelationship.to.entity]
+                $[let pkType = entity.pkType|language]
+                $[let parentPkType = primaryParentEntity.pkType|language]
+    public ${parentPkType} getParentId(${pkType} objId) {
+        Optional<${modelName}> objOptional = ${repositoryVariableName}.getById(objId);
+        if (objOptional.isPresent()) {
+            ${modelName} obj = objOptional.get();
+            ${parentPkType} parentId = obj.get${primaryParentEntity|domain:Model|name}Id();
+            return parentId;
+        }
+        return $[if primaryParentEntity.pkType.isUUIDType]null$[else]0$[/if];
+    }
+
+            $[/if]
+        $[/author]
+    $[/author]
+$[/publisher]
+    

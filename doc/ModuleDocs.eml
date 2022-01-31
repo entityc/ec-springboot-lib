@@ -1,0 +1,40 @@
+$[language md]
+$[D summary "Generates documentation for the entity modules in a space."]
+$[D main "This template first generates a basic README for a space, then a simple README for each module which links"]
+$[D main "to its data model and API documentation."]
+$[file "" "README" "md"]
+# ${space.name|title}
+
+    $[if space.hasDescription]
+${space.description}
+
+    $[/if]
+This is broken down into the following modules. Each module covers both a data model and an REST API:
+
+|Name|Description|
+|:---|:---|
+    $[foreach module in space.modules|sort]
+|[`${module.name|capitalize}`](${module.name|capitalize}/README.md)|${module.description}|
+    $[/foreach]
+$[/file]
+
+$[foreach module in space.modules]
+    $[if module.isIncluded]$[continue]$[/if]
+    $[capture directory]${module.name|capitalize}$[/capture]
+    $[file directory "README" "md"]
+# ${module.name|title}
+
+        $[if module.description]
+${module.description}
+
+        $[/if]
+
+This document is broken down into the following sections:
+
+|Section|Description|
+|:---|:---|
+|[API](API/README.md)| Descriptions of the endpoints available for accessing the data associated with these entities.|
+|[Data Model](DataModel/README.md) | Detailed descriptions of the entities that make up this module.|
+
+    $[/file]
+$[/foreach]

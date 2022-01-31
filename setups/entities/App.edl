@@ -1,0 +1,16 @@
+module App {
+
+    D "This application has the following core entities."
+
+    entity ${entityName} {
+        primarykey uuid ${entityName|uncapitalize}Id
+        
+        attributes {
+            string title
+            optional string description
+        }
+        
+        relationships {
+        }
+    }
+}

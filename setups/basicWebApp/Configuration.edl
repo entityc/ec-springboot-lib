@@ -1,0 +1,81 @@
+configuration CodeGen {
+
+    output ServerCode {
+        path "src/main/java"
+    }
+
+    output SourceMain {
+        path "src/main"
+    }
+
+    output Project {
+        path ""
+    }
+
+    output Docs {
+        path "docs"
+    }
+
+    output DatabaseMigrationResources {
+        path "src/main/resources/db/migration"
+    }
+
+    output DatabaseSchema {
+        path "schema"
+    }
+
+    transform Postgres {
+        output primary DatabaseMigrationResources
+        output schema DatabaseSchema
+    }
+
+    templates {
+        import from ServerTemplates
+
+        default config {
+            "projectPackage" : "${appBasePackage}"
+        }
+
+        template ServerDocumentation  in "doc" {
+            output primary Docs
+        }
+        template Microservice {
+            output primary ServerCode
+        }
+
+        template DocumentBuilderAuthor  in "documentBuilder" {
+            output primary ServerCode
+        }
+
+        template ProjectTemplate in "project" {
+            output primary Project
+        }
+
+        template SecurityTemplate in "security" {
+            output primary ServerCode
+        }
+
+        template AdminConsole in "web/thymeleaf-bootstrap/admin" {
+            output primary SourceMain
+            config {
+                "appTitle" : "${appName|title}",
+                "appHomeMessage": "This is the admin portal for the ${appName|title} application.",
+                "adminUrlPrefix" : "admin"
+            }
+        }
+        template AuthPageTemplate in "web/thymeleaf-bootstrap/auth" {
+            output primary SourceMain
+        }
+
+        template LocalizedMessagesTemplate in "web/thymeleaf-bootstrap" {
+            output primary SourceMain
+        }
+    }
+    templates {
+        import from LocalAuthors
+
+        template PomAuthor {
+            output primary ServerCode
+        }
+    }
+}

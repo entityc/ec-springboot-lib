@@ -1,0 +1,89 @@
+$[language java]
+$[D summary, main "Functions that generate markdown documentation about GET endpoints."]
+
+$[function getByIdMarkdown
+  D "Generates markdown documentation for the get by ID endpoint." 
+  (entity
+   D "The entity corresponding to the get endpoint documentation to generate." 
+  )
+]
+## Get ${entity|title} by ID
+
+|Method|Path|
+|:---:|:---|
+|GET|`/${(entity|domain:APIPath).domain.namespace|path}/${entity|domain:APIPath|name}/{id}`|
+
+Where:
+
+|Param|Description|
+|:---|:---|
+|`id`|The unique ID of the `${entity.name}` object to be returned.|
+
+    $[let createViewOrEntity = entity|domain:JSONDTO]
+    $[if entity|domain:JSONDTO|has view:APIGet]
+        $[let createViewOrEntity = entity|domain:JSONDTO|view:APIGet]
+    $[/if]
+    $[let attributeList = createViewOrEntity.attributes|sort]
+    $[let relationshipList = createViewOrEntity.relationships|sort]
+    $[if attributeList#count > 0]
+The body of the response is JSON containing the following fields:
+
+|Field|Description|
+|:---|:---|
+        $[if entity.hasPrimaryKey]
+|`${entity.primaryKeyAttribute.name}`|_Primary Key_|
+        $[/if]
+        $[foreach attribute in attributeList]
+|`${attribute.name}`|${attribute.description}|
+        $[/foreach]
+        $[if relationshipList#count > 0]
+            $[foreach relationship in relationshipList]
+                $[if relationship.to.isOne]
+                    $[if relationship.to.entity.entity.hasPrimaryKey && relationship.withViewName == "Reference"]
+|`${relationship.name}.${relationship.to.view.primaryKeyAttribute.name}`|Primary key of contextual `${relationship.to.entity.entity.name}` object.|
+                    $[else]
+|`${relationship.relationship.name}`|`${relationship.to.entity.entity.name}` object.|
+                    $[/if]
+                $[else]
+                    $[if relationship.to.entity.entity.hasPrimaryKey && relationship.withViewName == "Reference"]
+|`${relationship.name}.${relationship.to.entity.primaryKeyAttribute.name}`|Primary key of contextual `${relationship.to.entity.entity.name}` object.|
+                    $[else]
+|`${relationship.name}[]`|Array of `${relationship.to.entity.entity.name}` objects.|
+                    $[/if]
+                $[/if]
+            $[/foreach]
+        $[/if]
+    $[/if]
+$[/function]
+
+$[function getListByParentMarkdown
+  D "Generates markdown documentation for the get list by parent endpoint." 
+  (entity
+   D "The entity corresponding to the get endpoint documentation to generate." 
+  )
+]
+    $[capture fullTitle]Get ${entity|title} List$[/capture]
+    $[if entity.hasPrimaryParentRelationship]
+        $[let parentEntity = entity.primaryParentRelationship.to.entity]
+        $[capture fullTitle]${fullTitle} by *optional* ${parentEntity|name|title} ID$[/capture]
+    $[/if]
+## ${fullTitle}
+
+|Method|Path|
+|:---:|:---|
+|GET|`/${(entity|domain:APIPath).domain.namespace|path}/${entity|domain:APIPath|name}?start={start}&limit={limit}`|
+
+Where:
+
+|Param|Description|
+|:---|:---|
+    $[if entity.hasPrimaryParentRelationship]
+        $[let parentEntity = entity.primaryParentRelationship.to.entity]
+        $[capture parentId]${entity.primaryParentRelationship|domain:Model|name}Id$[/capture]
+|`${parentId}`|The unique ID of the parent `${parentEntity.name}` object.|
+    $[/if]
+|`start`|The starting index in the full result set.|
+|`limit`|The number of results to return.|
+
+The response JSON is simply an array of the same ${entity.name} objects as returned by the Get ${entity|title} by ID endpoint.
+$[/function]

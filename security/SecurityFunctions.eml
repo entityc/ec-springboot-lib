@@ -1,0 +1,266 @@
+$[D summary "Contains functions for finding the logged in user entity, roles, and other useful"]
+$[D summary "functions."]
+$[D "Contains functions for finding the logged in user entity, roles, and other useful"]
+$[D "functions."]
+$[function getUserEntityAttributes
+  D "Gets the username and password attributes of the specified user entity. The username"
+  D "attribute must be tagged with `login:username` and the password attribute with"
+  D "`login:password`." 
+  (userEntity
+   D "The user entity that represents logged in users of the system. This entity should be tagged"
+   D "with `user`." 
+  )->
+  (usernameAttribute
+   D "The attribute of this entity that is tagged with `login:username`." ,
+   passwordAttribute
+   D "The attribute of this entity that is tagged with `login:password`." 
+  )
+]
+    $[if userEntity != null && userEntity.space.hasDomain("Security")]
+        $[let domainEntity = userEntity|domain:Security]
+        $[let usernameAttribute = (domainEntity.attributeTagged("login:username")).attribute]
+        $[let passwordAttribute = (domainEntity.attributeTagged("login:password")).attribute]
+    $[/if]
+$[/function]
+$[function findUserEntity
+  D "Finds the entity in the specified space that has is tagged `user` in the Security domian and"
+  D "returns its username and password attributes. The username attribute must be tagged with"
+  D "`login:username` and the password attribute with `login:password` - both in the Securty"
+  D "domain." 
+  (space
+   D "The specified space." 
+  )->
+  (userEntity
+   D "The user entity that represents logged in users of the system. This entity should be tagged"
+   D "with `user`." ,
+   usernameAttribute
+   D "The attribute of this entity that is tagged with `login:username`." ,
+   passwordAttribute
+   D "The attribute of this entity that is tagged with `login:password`." 
+  )
+]
+    $[if space.hasDomain("Security")]
+        $[let userEntity = (space|domain:Security).entityTagged("user")]
+        $[if userEntity != null]
+            $[call getUserEntityAttributes(userEntity:userEntity)->(passwordAttribute:passwordAttribute,usernameAttribute:usernameAttribute)]
+        $[/if]
+    $[/if]
+$[/function]
+$[function findRoleEnum
+  D "Finds and returns the enum that is tagged with `role` in the Security domain. It also returns"
+  D "the default role (enum item tagged with `role:default` in the Security domain)." 
+  (space
+   D "The specified space." 
+  )->
+  (roleEnum
+   D "The returned enum presenting the security roles of the application." ,
+   defaultEnumItem
+   D "The default role to be assigned to a new user." 
+  )
+]
+    $[if space.hasDomain("Security")]
+        $[let roleEnum = (space|domain:Security).enumTagged("role")]
+        $[if roleEnum != null]
+            $[foreach item in roleEnum.items]
+                $[if (item|domain:Security).hasTag("role:default")]
+                    $[let defaultEnumItem = item]
+                    $[break]
+                $[/if]
+            $[/foreach]
+        $[/if]
+    $[/if]
+$[/function]
+$[function roleItems
+  (entity,
+   accessType
+  )->
+  (rolesItemList
+  )]
+    $[if entity.space.hasDomain("Security")]
+        $[let rolesItemList = @[]@]
+        $[let roleEnum = (entity.space|domain:Security).enumTagged("role")]
+        $[if roleEnum != null]
+            $[let accessPrefix = "access:" + accessType + ":"]
+            $[if (entity|domain:Security).hasTagPrefixed(accessPrefix)]
+                $[let roleTags = (entity|domain:Security).getTagsMinusPrefix(accessPrefix)]
+                $[foreach roleTag in roleTags]
+                    $[let itemsTagged = (roleEnum|domain:Security).itemsTagged(roleTag)]
+                    $[foreach itemTagged in itemsTagged]
+                        $[do rolesItemList.add(itemTagged)]
+                    $[/foreach]
+                $[/foreach]
+            $[/if]
+        $[/if]
+    $[/if]
+$[/function]
+$[function attributeRoleItems
+  (attribute,
+   accessType
+  )->
+  (rolesItemList
+  )]
+    $[if attribute.space.hasDomain("Security")]
+        $[let rolesItemList = @[]@]
+        $[let roleEnum = (attribute.entity.space|domain:Security).enumTagged("role")]
+        $[if roleEnum != null]
+            $[let accessPrefix = "access:" + accessType + ":"]
+            $[if (attribute|domain:Security).hasTagPrefixed(accessPrefix)]
+                $[let roleTags = (attribute|domain:Security).getTagsMinusPrefix(accessPrefix)]
+                $[foreach roleTag in roleTags]
+                    $[let itemsTagged = (roleEnum|domain:Security).itemsTagged(roleTag)]
+                    $[foreach itemTagged in itemsTagged]
+                        $[do rolesItemList.add(itemTagged)]
+                    $[/foreach]
+                $[/foreach]
+            $[/if]
+        $[/if]
+    $[/if]
+$[/function]
+$[function preAuthorizeEntity
+  (entity,
+   accessType
+  )]
+    $[if entity.space.hasDomain("Security")]
+        $[call roleItems(accessType:accessType,entity:entity)->(rolesItemList:rolesItemList)]
+        $[if rolesItemList.count > 0]
+            $[capture hasRoleExpr]
+                $[foreach item in rolesItemList]
+'${item.name}'$[if !item#last], $[/if]
+                $[/foreach]
+            $[/capture]
+    @PreAuthorize("hasAnyRole(${hasRoleExpr})")
+        $[/if]
+    $[/if]
+$[/function]
+$[function rolesContains
+  (entity,
+   accessType,
+   rolesArrayName
+  )->
+  (hasRoles,
+   rolesExpr
+  )]
+    $[if entity.space.hasDomain("Security")]
+        $[call roleItems(accessType:accessType,entity:entity)->(rolesItemList:rolesItemList)]
+        $[let hasRoles = rolesItemList.count > 0]
+        $[capture rolesExpr]
+            $[foreach item in rolesItemList]
+${rolesArrayName}.contains(${item.enum|domain:Security|name}.${item.name})$[if !item#last] || $[/if]
+            $[/foreach]
+        $[/capture]
+    $[/if]
+$[/function]
+$[function attributeRolesContains
+  (attribute,
+   accessType,
+   rolesArrayName
+  )->
+  (hasRoles,
+   rolesExpr
+  )]
+    $[if attribute.space.hasDomain("Security")]
+        $[call attributeRoleItems(accessType:accessType,attribute:attribute)->(rolesItemList:rolesItemList)]
+        $[let hasRoles = rolesItemList.count > 0]
+        $[capture rolesExpr]
+            $[foreach item in rolesItemList]
+${rolesArrayName}.contains(${item.enum|domain:Security|name}.${item.name})$[if !item#last] || $[/if]
+            $[/foreach]
+        $[/capture]
+    $[/if]
+$[/function]
+$[function writeAccessAttributes
+  D "Gets all the attributes of the specified entity that have any tags that start with"
+  D "`access:write`." 
+  (entity
+   D "The entity." 
+  )->
+  (attributeList
+   D "The attributes that have at least one tag starting with `access:write`." 
+  )
+]
+    $[if entity.space.hasDomain("Security")]
+        $[let attributeList = @[]@]
+        $[foreach attribute in entity.attributes]
+            $[let domainAttribute = attribute|domain:Security]
+            $[if domainAttribute.hasTagPrefixed("access:write:")]
+                $[do attributeList.add(attribute)]
+            $[/if]
+        $[/foreach]
+    $[/if]
+$[/function]
+$[function attributesOfRoleItem
+  (entity,
+   roleItem,
+   accessType
+  )->
+  (attributeList
+  )]
+    $[let attributeList = @[]@]
+    $[if entity.space.hasDomain("Security")]
+        $[foreach attribute in entity.attributes]
+            $[let domainAttribute = attribute|domain:Security]
+            $[let roleTagPrefix = "access:" + accessType + ":"]
+            $[if domainAttribute.hasTagPrefixed(roleTagPrefix)]
+                $[let roleTags = domainAttribute.getTagsMinusPrefix(roleTagPrefix)]
+                $[foreach roleTag in roleTags]
+                    $[if roleItem.hasTag(roleTag)]
+                        $[do attributeList.add(attribute)]
+                        $[break]
+                    $[/if]
+                $[/foreach]
+            $[/if]
+        $[/foreach]
+    $[/if]
+$[/function]
+$[function checkObjectLevelAccess
+  (entity
+  )->
+  (objectLevelAccess,
+   accessEntity,
+   readAttribute,
+   writeAttribute
+  )]
+    $[let objectLevelAccess = false]
+    $[let entityInSecurity = entity|domain:Security]
+    $[if entityInSecurity.hasTag("access:object:level") && entityInSecurity.hasRelationshipToEntityTagged("object:access:entity")]
+        $[let accessDomainEntity = (entityInSecurity.relationshipToEntityTagged("object:access:entity")).to.entity]
+        $[if accessDomainEntity.hasAttributeTagged("object:access:read")]
+            $[let readAttribute = (accessDomainEntity.attributeTagged("object:access:read")).attribute]
+        $[elseif accessDomainEntity.hasAttributeNamed("read")]
+            $[let readAttribute = (accessDomainEntity.attributeNamed("read")).attribute]
+        $[/if]
+        $[if accessDomainEntity.hasAttributeTagged("object:access:write")]
+            $[let writeAttribute = (accessDomainEntity.attributeTagged("object:access:write")).attribute]
+        $[elseif accessDomainEntity.hasAttributeNamed("write")]
+            $[let writeAttribute = (accessDomainEntity.attributeNamed("write")).attribute]
+        $[/if]
+        $[let objectLevelAccess = readAttribute != null && writeAttribute != null]
+        $[let accessEntity = accessDomainEntity.entity]
+    $[/if]
+$[/function]
+$[function checkObjectLevelAccessFromAccessEntity
+  (entity
+  )->
+  (objectLevelAccess,
+   parentEntity,
+   readAttribute,
+   writeAttribute
+  )]
+    $[let objectLevelAccess = false]
+    $[let accessEntityInSecurity = entity|domain:Security]
+    $[if accessEntityInSecurity.hasTag("object:access:entity") && accessEntityInSecurity.hasRelationshipToEntityTagged("access:object:level") && accessEntityInSecurity.hasRelationshipToEntityTagged("user")]
+        $[if accessEntityInSecurity.hasAttributeTagged("object:access:read")]
+            $[let readAttribute = (accessEntityInSecurity.attributeTagged("object:access:read")).attribute]
+        $[elseif accessEntityInSecurity.hasAttributeNamed("read")]
+            $[let readAttribute = (accessEntityInSecurity.attributeNamed("read")).attribute]
+        $[/if]
+        $[if accessEntityInSecurity.hasAttributeTagged("object:access:write")]
+            $[let writeAttribute = (accessEntityInSecurity.attributeTagged("object:access:write")).attribute]
+        $[elseif accessEntityInSecurity.hasAttributeNamed("write")]
+            $[let writeAttribute = (accessEntityInSecurity.attributeNamed("write")).attribute]
+        $[/if]
+        $[let objectLevelAccess = readAttribute != null && writeAttribute != null]
+        $[let parentEntityInSecurity = (accessEntityInSecurity.relationshipToEntityTagged("access:object:level")).to.entity]
+        $[let parentEntity = parentEntityInSecurity.entity]
+    $[/if]
+$[/function]

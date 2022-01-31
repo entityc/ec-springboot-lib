@@ -1,0 +1,7 @@
+$[D summary, main "Contains functions used to construct modal dialogs in the admin panel."]
+$[import "web/thymeleaf-bootstrap/modal/BooleanEditModalFunctions"]
+$[import "web/thymeleaf-bootstrap/modal/StringEditModalFunctions"]
+$[import "web/thymeleaf-bootstrap/modal/DateEditModalFunctions"]
+$[import "web/thymeleaf-bootstrap/modal/EnumEditModalFunctions"]
+$[import "web/thymeleaf-bootstrap/modal/FileUploadModalFunctions"]
+$[import "web/thymeleaf-bootstrap/modal/EntitySelectModalFunctions"]

@@ -1,0 +1,22 @@
+$[D summary "This template generates a template that will be used to author into the maven project file."]
+$[D main "This template looks strange because it is escaping the template instruction markers. This is necessary"]
+$[D main "when trying to **generate** a template, not be a template."]
+${$}[author to springboot.pom]
+
+    ${$}[author to outlet properties]
+    ${$}[* Add custom properties here *]
+    ${$}[/author]
+
+    ${$}[author to outlet dependencies]
+    ${$}[* Add custom dependencies here *]
+    ${$}[/author]
+
+    ${$}[author to outlet profiles]
+    ${$}[* Add custom profiles here *]
+    ${$}[/author]
+
+    ${$}[author to outlet plugins]
+    ${$}[* Add custom plugins here *]
+    ${$}[/author]
+
+${$}[/author]

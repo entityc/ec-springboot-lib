@@ -1,0 +1,44 @@
+space SpringBootLib {
+
+    repository ecStdLibLanguages {
+        type github
+        organization "entityc"
+        name "ec-std-lib"
+        path "languages"
+        tag "v1.0"
+    }
+    import Markdown from ecStdLibLanguages
+}
+
+configuration Documentation {
+
+    repository ecStdLibTemplates {
+        type github
+        organization "entityc"
+        name "ec-std-lib"
+        path "templates"
+        tag "v1.0"
+    }
+    repository ecStdLibTemplatesLocal {
+        type local
+        path "../ec-std-lib/templates"
+    }
+    repository thisRepo {
+        type local
+        path "."
+    }
+
+    directory Templates {
+      path "." // all
+    }
+
+    templates {
+        import from ecStdLibTemplatesLocal
+        template TemplateMarkdown in "document" {
+            output primary Templates
+            config {
+                "localRepoName" : "thisRepo"
+            }
+        }
+    }
+}

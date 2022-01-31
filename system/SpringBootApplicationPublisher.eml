@@ -1,0 +1,21 @@
+$[D main, summary "This template generates the Spring Boot Application class used to start the application running."]
+$[let applicationName = space.getMetadataValue("microserviceName")]
+$[publisher springboot.application]
+    $[file (space.namespace|path) applicationName + "Application" "java"]
+package ${space.namespace};
+
+$[receive distinct imports]
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+
+@SpringBootApplication
+public class ${applicationName}Application {
+
+    public static void main(String[] args) {
+$[outlet main D "This outlet is just inside the `main()` method of the class right before starting up the application."]
+$[/outlet]
+        SpringApplication.run(${applicationName}Application.class, args);
+    }
+}
+    $[/file]
+$[/publisher]

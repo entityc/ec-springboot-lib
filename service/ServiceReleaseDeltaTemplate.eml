@@ -1,0 +1,310 @@
+$[version 0.5.0]
+$[language java]
+$[domain Service]
+$[import "release/ReleaseFunctions"]
+
+$[*
+    Function: addAutoWired
+    Helps send up imports and constructor parameters for auto-wired variables to services or repositories.
+*]
+$[function addAutoWired(domainEntity, autoWiredDomainEntities)]
+$[let firstAutoWired = autoWiredDomainEntities.isEmpty()]
+$[if !autoWiredDomainEntities.contains(domainEntity|fullname)]
+$[do autoWiredDomainEntities.add(domainEntity|fullname)]
+$[let variableName = domainEntity|name|uncapitalize]
+$[send imports]
+import ${domainEntity|fullname};
+$[/send]
+$[send repositoryDecl]
+    private final ${domainEntity|name} ${variableName};
+$[/send]
+$[send constructorArgs]${firstAutoWired ? "        " : ",
+        "}${domainEntity|name} ${variableName}$[/send]
+$[send constructorAssigns]
+        this.${variableName} = ${variableName};
+$[/send]
+$[/if]
+$[/function]
+
+$[*
+    Function: addCacheDef
+    Helps send up imports and constructor parameters for auto-wired variables to services or repositories.
+*]
+$[function addCacheDef(name, key, valueClass, definition)]
+$[send caches]
+$[if definition.isLRUType]
+    private final LRUCache<${key}, ${valueClass}> ${name} = new LRUCache<>(${definition.size});
+$[else]
+$[log fatal]This template does not support a cache of type: ${definition.type.name}$[/log]
+$[/if]
+$[/send]
+$[/function]
+$[let exceptionNamespace = space.domain("Exception").namespace]
+$[let utilsNamespace = space.domain("Utils").namespace]
+$[let serviceNamespace = space.domain("Service").namespace]
+
+$[*
+    This is the core part of the template where it generates the Service classes responsible for
+    generating release deltas.
+*]
+$[let useCache = true]
+$[foreach space.modules]
+$[if module.isIncluded]$[continue]$[/if]
+$[foreach module.entities as entity]
+$[if !(entity.isTransient && entity.hasTag("release:delta"))]$[continue]$[/if]
+$[* make sure it has correctly tagged relationships *]
+$[let fromRelationship = entity.relationshipTagged("release:delta:from")]
+$[let addedRelationship = entity.relationshipTagged("release:delta:added")]
+$[let changedRelationship = entity.relationshipTagged("release:delta:changed")]
+$[let removedRelationship = entity.relationshipTagged("release:delta:removed")]
+$[if fromRelationship == null || addedRelationship == null || changedRelationship == null || removedRelationship == null]
+$[log info]${entity.name} is tagged as a delta entity but its relationships are not properly tagged. Skipping...$[/log]
+$[continue]
+$[/if]
+$[let releaseEntity = fromRelationship.to.entity]
+$[if releaseEntity.name != addedRelationship.to.entity.name || releaseEntity.name != changedRelationship.to.entity.name || releaseEntity.name != removedRelationship.to.entity.name]
+$[log info]${entity.name} is tagged as a delta entity but its tagged relationships are not all to the same entity. Skipping...$[/log]
+$[continue]
+$[/if]
+$[if !releaseEntity.hasTag("release:top")]
+$[log info]${entity.name} specifies a release entity ${releaseEntity.name} but that entity is not tagged as a release entity. Skipping...$[/log]
+$[continue]
+$[/if]
+$[let useDeltaCache = useCache && entity.hasPrimaryKey && (entity|domain).hasCache]
+$[let className = entity|domain|name]
+$[let modelName = entity|domain:Model|name]
+$[let modelVariableName = entity|domain:Model|name|uncapitalize]
+$[let repositoryClassName = entity|domain:Repository|name]
+$[let repositoryVariableName = entity|domain:Repository|name|uncapitalize]
+$[let responseEntity = entity]
+$[let responseDtoName = responseEntity|domain:JSONDTO|name]
+$[let protobufNamespace = space.domain("ProtobufDTO").namespace]
+$[let protobufClassName = entity|domain:ProtobufDTO|name]
+$[capture fullProtobufClassName]${entity.module|domain:ProtobufDTO|name}.${protobufClassName}$[/capture]
+$[let responseModelName = responseEntity|domain:Model|name]
+$[file domain.namespace|path entity|domain|name "java"]
+//
+// This Service class is responsible for generating release delta associated with entity:
+//
+//   Name:        ${entity.name}
+$[if entity.hasDescription]
+//   Description: ${entity.description|wrap}
+$[/if]
+$[if entity.hasTags]
+//   Tags:        [${entity.tagsSeparatedBy("][")}]
+$[/if]
+//
+// THIS FILE IS GENERATED. DO NOT EDIT!!
+//
+package ${domain.namespace};
+
+import ${serviceNamespace}.file.BinaryPersistence;
+import ${serviceNamespace}.file.Metadata;
+$[if useCache]
+import ${utilsNamespace}.LRUCache;
+$[/if]
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.dao.DataAccessException;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
+import java.io.ByteArrayInputStream;
+
+import java.util.List;
+import java.util.ArrayList;
+import java.util.Optional;
+import java.util.Set;
+import java.util.UUID;
+import java.util.Date;
+
+import ${exceptionNamespace}.ServiceException;
+import ${exceptionNamespace}.DaoException;
+import ${exceptionNamespace}.EntityNotFoundException;
+
+$[receive distinct imports]
+$[send imports]
+import ${entity|domain:JSONDTO|fullname};
+import ${releaseEntity|domain:Model|fullname};
+import ${releaseEntity|domain:JSONDTO|fullname};
+import ${protobufNamespace}.${entity.module.name|capitalize};
+$[/send]
+
+@Service
+@Transactional
+public class ${className} extends BaseService
+{
+$[receive distinct repositoryDecl]
+
+    @Autowired
+    private BinaryPersistence binaryPersistence;
+
+$[receive distinct caches]
+
+    @Autowired
+    public ${className}(
+$[receive distinct constructorArgs]
+    ) {
+$[receive distinct constructorAssigns]
+    }
+
+$[let autoWiredDomainEntities = @[]@]
+$[if useCache]
+$[send caches]
+    private final LRUCache<String, ${entity|domain:JSONDTO|name}> deltaJsonCache = new LRUCache<>(5);
+    private final LRUCache<String, ${fullProtobufClassName}> deltaProtobufCache = new LRUCache<>(5);
+$[/send]
+$[/if]
+$[call addAutoWired(domainEntity:releaseEntity|domain:Service)]
+$[let releaseServiceVariableName = releaseEntity|domain:Service|name|uncapitalize]
+    public ${entity|domain:JSONDTO|name} getReleaseDeltaDto(${releaseEntity.pkType|language} fromReleaseId, ${releaseEntity.pkType|language} toReleaseId) throws ServiceException {
+$[if useCache]
+        ${releaseEntity|domain:Model|name} fromRelease = ${releaseServiceVariableName}.get${releaseEntity|domain:Model|name}ById(fromReleaseId);
+        ${releaseEntity|domain:Model|name} toRelease = ${releaseServiceVariableName}.get${releaseEntity|domain:Model|name}ById(toReleaseId);
+        String cacheKey = null;
+        if (fromRelease.isLocked() && toRelease.isLocked()) {
+            cacheKey = "" + fromReleaseId + toReleaseId;
+            if (deltaJsonCache.containsKey(cacheKey)) {
+                return deltaJsonCache.get(cacheKey);
+            }
+        }
+$[/if]
+        ${entity|domain:JSONDTO|name} delta = new ${entity|domain:JSONDTO|name}();
+        // since we are going to fill in the details based on the delta, make these without hierarchy
+        ${releaseEntity|domain:JSONDTO|name} fromDto = ${releaseServiceVariableName}.dtoFromModel(${releaseServiceVariableName}.get${releaseEntity|domain:Model|name}ById(fromReleaseId), false);
+        ${releaseEntity|domain:JSONDTO|name} removedDto = ${releaseServiceVariableName}.dtoFromModel(${releaseServiceVariableName}.get${releaseEntity|domain:Model|name}ById(toReleaseId), false);
+        ${releaseEntity|domain:JSONDTO|name} changedDto = ${releaseServiceVariableName}.dtoFromModel(${releaseServiceVariableName}.get${releaseEntity|domain:Model|name}ById(toReleaseId), false);
+        ${releaseEntity|domain:JSONDTO|name} addedDto = ${releaseServiceVariableName}.dtoFromModel(${releaseServiceVariableName}.get${releaseEntity|domain:Model|name}ById(toReleaseId), false);
+        delta.setFrom(fromDto);
+        delta.setRemoved(removedDto);
+        delta.setChanged(changedDto);
+        delta.setAdded(addedDto);
+$[foreach releaseEntity.relationships|sort as binderRelationship]
+$[if binderRelationship.to.entity.hasTag("release:binder")]
+$[let binderEntity = binderRelationship.to.entity]
+$[call getReleaseBinderRelationships(versionReleaseEntity:binderEntity) -> (results:results)]
+$[if results != null && results.count > 1]
+$[let objectRelationship = results.get(1)]
+$[let objectEntity = objectRelationship.to.entity]
+$[call addAutoWired(domainEntity:binderEntity|domain:Repository)]
+$[send imports]
+import ${binderEntity|domain:Model|fullname};
+import ${binderEntity|domain:JSONDTO|fullname};
+import java.util.HashSet;
+$[/send]
+$[call addAutoWired(domainEntity:binderEntity|domain:Service)]
+$[let serviceVariableName = binderEntity|domain:Service|name|uncapitalize]
+        // ${binderEntity.name|title|uppercase}
+        {
+            // ADDED
+            List<${binderEntity|domain:Model|name}> added = ${binderEntity|domain:Repository|name|uncapitalize}.getExcess${binderEntity|domain:Model|name}ListBy${releaseEntity|domain:Model|name}(fromRelease.get${releaseEntity.primaryKeyAttribute|domain:Model|name|capitalize}(), toRelease.get${releaseEntity.primaryKeyAttribute|domain:Model|name|capitalize}());
+            HashSet<${binderEntity|domain:JSONDTO|name}> addedDtoSet = new HashSet<>(added.size());
+            for (${binderEntity|domain:Model|name} item : added) {
+                addedDtoSet.add(${serviceVariableName}.dtoFromModel(item));
+            }
+            addedDto.set${binderEntity|domain:Model|name}(addedDtoSet);
+            // REMOVED
+            List<${binderEntity|domain:Model|name}> removed = ${binderEntity|domain:Repository|name|uncapitalize}.getExcess${binderEntity|domain:Model|name}ListBy${releaseEntity|domain:Model|name}(toRelease.get${releaseEntity.primaryKeyAttribute|domain:Model|name|capitalize}(), fromRelease.get${releaseEntity.primaryKeyAttribute|domain:Model|name|capitalize}());
+            HashSet<${binderEntity|domain:JSONDTO|name}> removedDtoSet = new HashSet<>(removed.size());
+            for (${binderEntity|domain:Model|name} item : removed) {
+                removedDtoSet.add(${serviceVariableName}.dtoFromModel(item, false)); // the removed ones don't need full detail
+            }
+            removedDto.set${binderEntity|domain:Model|name}(removedDtoSet);
+            // CHANGED
+            List<${binderEntity|domain:Model|name}> changed = ${binderEntity|domain:Repository|name|uncapitalize}.getChanged${binderEntity|domain:Model|name}ListBy${releaseEntity|domain:Model|name}(fromRelease.get${releaseEntity.primaryKeyAttribute|domain:Model|name|capitalize}(), toRelease.get${releaseEntity.primaryKeyAttribute|domain:Model|name|capitalize}());
+            HashSet<${binderEntity|domain:JSONDTO|name}> changedDtoSet = new HashSet<>(changed.size());
+            for (${binderEntity|domain:Model|name} item : changed) {
+                changedDtoSet.add(${serviceVariableName}.dtoFromModel(item));
+            }
+            changedDto.set${binderEntity|domain:Model|name}(changedDtoSet);
+        }
+$[/if]
+$[/if]
+$[/foreach]
+$[if useCache]
+        if (cacheKey != null) {
+            deltaJsonCache.put(cacheKey, delta);
+        }
+$[/if]
+        return delta;
+    }
+
+$[capture fullReleaseProtobufClassName]${releaseEntity.module|domain:ProtobufDTO|name}.${releaseEntity|domain:ProtobufDTO|name}$[/capture]
+    public ${fullProtobufClassName} getReleaseDeltaProtobuf(${releaseEntity.pkType|language} fromReleaseId, ${releaseEntity.pkType|language} toReleaseId) throws ServiceException {
+$[if useCache]
+        ${releaseEntity|domain:Model|name} fromRelease = ${releaseServiceVariableName}.get${releaseEntity|domain:Model|name}ById(fromReleaseId);
+        ${releaseEntity|domain:Model|name} toRelease = ${releaseServiceVariableName}.get${releaseEntity|domain:Model|name}ById(toReleaseId);
+        String cacheKey = null;
+        if (fromRelease.isLocked() && toRelease.isLocked()) {
+            cacheKey = "" + fromReleaseId + toReleaseId;
+            if (deltaProtobufCache.containsKey(cacheKey)) {
+                return deltaProtobufCache.get(cacheKey);
+            }
+        }
+$[/if]
+        ${fullProtobufClassName}.Builder deltaBuilder = ${fullProtobufClassName}.newBuilder();
+        // since we are going to fill in the details based on the delta, make these without hierarchy
+        ${fullReleaseProtobufClassName} fromProtobuf = ${releaseServiceVariableName}.protobufFromModel(${releaseServiceVariableName}.get${releaseEntity|domain:Model|name}ById(fromReleaseId), false);
+        ${fullReleaseProtobufClassName} removedProtobuf = ${releaseServiceVariableName}.protobufFromModel(${releaseServiceVariableName}.get${releaseEntity|domain:Model|name}ById(toReleaseId), false);
+        ${fullReleaseProtobufClassName} changedProtobuf = ${releaseServiceVariableName}.protobufFromModel(${releaseServiceVariableName}.get${releaseEntity|domain:Model|name}ById(toReleaseId), false);
+        ${fullReleaseProtobufClassName} addedProtobuf = ${releaseServiceVariableName}.protobufFromModel(${releaseServiceVariableName}.get${releaseEntity|domain:Model|name}ById(toReleaseId), false);
+        deltaBuilder.setFrom(fromProtobuf);
+        deltaBuilder.setRemoved(removedProtobuf);
+        deltaBuilder.setChanged(changedProtobuf);
+        deltaBuilder.setAdded(addedProtobuf);
+$[foreach releaseEntity.relationships|sort as binderRelationship]
+$[if binderRelationship.to.entity.hasTag("release:binder")]
+$[let binderEntity = binderRelationship.to.entity]
+$[call getReleaseBinderRelationships(versionReleaseEntity:binderEntity) -> (results:results)]
+$[if results != null && results.count > 1]
+$[let objectRelationship = results.get(1)]
+$[let objectEntity = objectRelationship.to.entity]
+$[call addAutoWired(domainEntity:binderEntity|domain:Repository)]
+$[send imports]
+import ${binderEntity|domain:Model|fullname};
+import ${binderEntity|domain:JSONDTO|fullname};
+import java.util.HashSet;
+$[/send]
+$[call addAutoWired(domainEntity:binderEntity|domain:Service)]
+$[let serviceVariableName = binderEntity|domain:Service|name|uncapitalize]
+$[capture fullBinderProtobufClassName]${binderEntity.module|domain:ProtobufDTO|name}.${binderEntity|domain:ProtobufDTO|name}$[/capture]
+        // ${binderEntity.name|title|uppercase}
+        {
+            // ADDED
+            List<${binderEntity|domain:Model|name}> added = ${binderEntity|domain:Repository|name|uncapitalize}.getExcess${binderEntity|domain:Model|name}ListBy${releaseEntity|domain:Model|name}(fromRelease.get${releaseEntity.primaryKeyAttribute|domain:Model|name|capitalize}(), toRelease.get${releaseEntity.primaryKeyAttribute|domain:Model|name|capitalize}());
+            HashSet<${fullBinderProtobufClassName}> addedProtobufSet = new HashSet<>(added.size());
+            for (${binderEntity|domain:Model|name} item : added) {
+                addedProtobufSet.add(${serviceVariableName}.protobufFromModel(item));
+            }
+            addedProtobuf.toBuilder().addAll${binderEntity|domain:ProtobufDTO|name}(addedProtobufSet).build();
+            // REMOVED
+            List<${binderEntity|domain:Model|name}> removed = ${binderEntity|domain:Repository|name|uncapitalize}.getExcess${binderEntity|domain:Model|name}ListBy${releaseEntity|domain:Model|name}(toRelease.get${releaseEntity.primaryKeyAttribute|domain:Model|name|capitalize}(), fromRelease.get${releaseEntity.primaryKeyAttribute|domain:Model|name|capitalize}());
+            HashSet<${fullBinderProtobufClassName}> removedProtobufSet = new HashSet<>(removed.size());
+            for (${binderEntity|domain:Model|name} item : removed) {
+                removedProtobufSet.add(${serviceVariableName}.protobufFromModel(item, false)); // the removed ones don't need full detail
+            }
+            removedProtobuf.toBuilder().addAll${binderEntity|domain:ProtobufDTO|name}(removedProtobufSet).build();
+            // CHANGED
+            List<${binderEntity|domain:Model|name}> changed = ${binderEntity|domain:Repository|name|uncapitalize}.getChanged${binderEntity|domain:Model|name}ListBy${releaseEntity|domain:Model|name}(fromRelease.get${releaseEntity.primaryKeyAttribute|domain:Model|name|capitalize}(), toRelease.get${releaseEntity.primaryKeyAttribute|domain:Model|name|capitalize}());
+            HashSet<${fullBinderProtobufClassName}> changedProtobufSet = new HashSet<>(changed.size());
+            for (${binderEntity|domain:Model|name} item : changed) {
+                changedProtobufSet.add(${serviceVariableName}.protobufFromModel(item));
+            }
+            changedProtobuf.toBuilder().addAll${binderEntity|domain:ProtobufDTO|name}(changedProtobufSet).build();
+        }
+$[/if]
+$[/if]
+$[/foreach]
+        ${fullProtobufClassName} delta = deltaBuilder.build();
+$[if useCache]
+        if (cacheKey != null) {
+            deltaProtobufCache.put(cacheKey, delta);
+        }
+$[/if]
+        return delta;
+    }
+}
+$[/file]
+$[/foreach]
+$[/foreach]

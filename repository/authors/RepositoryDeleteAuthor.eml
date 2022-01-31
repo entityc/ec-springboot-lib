@@ -1,0 +1,22 @@
+$[D summary, main "This template contains the authors that are responsible for generating the delete object"]
+$[D summary, main "repository methods."]
+$[author to org.entitycompiler.springboot.repository]
+    $[author to outlet methods
+      D "Adds delete by parent relationship method."
+    ]
+        $[if entity.hasParentRelationship]
+            $[foreach entity.relationships]
+                $[if !relationship.isParent]$[continue]$[/if]
+                $[let relationshipName = relationship.name]
+    /**
+     * Deletes all ${modelName} objects that share the same reference to an object of ${relationship.to.entity.name}.
+     * @param ${relationshipName}Id The ID of the ${relationship.to.entity.name} object to which all objects to delete share.
+     */
+    @Modifying
+    @Query(value = "DELETE FROM ${tableName} WHERE ${relationship|domain:Database|name}_id = ?1", nativeQuery = true)
+    public void delete${modelName}By${relationshipName|capitalize}Id(${relationship.to.entity.primaryKey.type|language} ${relationshipName}Id);
+
+            $[/foreach]
+        $[/if]
+    $[/author]
+$[/author]

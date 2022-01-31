@@ -1,0 +1,950 @@
+$[language java]
+$[domain AdminUI]
+$[D summary "This template generates an admin detail page for an entity."]
+$[D "This template generates an admin detail page for an entity. It allows an admin to edit fields"]
+$[D "of an object and create new objects of child (one-to-many relationship) entities."]
+$[D detail "At the very top of the page is the same navigation bar from the home screen. The screen has other"]
+$[D detail "features that you can customize."]
+$[D detail ""]
+$[D detail "### Breadcrumb Bar"]
+$[D detail ""]
+$[D detail "Just below the top navigation is what is referred to as a \"breadcrumb\" bar. This bar will"]
+$[D detail "allow you to see the depth of screens you have traversed and let you click on a prior level to go"]
+$[D detail "back. Each depth (iten on the bar) represents some entity in your model. If a particular"]
+$[D detail "entity has a one-to-many relationship with another entity, that represents another level."]
+$[D detail "As the admin goes to deeper levels items are added to the bar."]
+$[D detail ""]
+$[D detail "Each item in this bar is formatted as:
+
+  *header* *number*`:` *title*
+
+Where *header*, *number* and *title* correspond to tags that you place on an entity that can appear in the bar.
+
+| Tag | Description
+|---|---|
+| `breadcrumb.header` | This is typically placed on an entity. |
+| `breadcrumb.number` | This would be placed on a numeric attribute that represents some type of numbering for objects of this entity.|
+| `breadcrumb.title` | This should be placed on an attribute that provides a name or title of the object.|
+
+All tags are optional and which tags are used depend on how you want it to look as a breadcrumb item. For some"]
+$[D detail "entities, for instance, it may be appropriate to just have a title."]
+$[D detail ""]
+$[D detail "### Headline
+
+Below the breadcrumb bar is what is referred to as a Headline. It has the same three elements as a breadcrumb items:
+
+  *header* *number*`:` *title*
+
+You make an entity's headline be the same as how its breadcrumb item is formatted or you can make it different. The tags for the headline are:
+
+| Tag | Description
+|---|---|
+| `headline.header` | This is typically placed on an entity. |
+| `headline.number` | This would be placed on a numeric attribute that represents some type of numbering for objects of this entity.|
+| `headline.title` | This should be placed on an attribute that provides a name or title of the object.|
+
+Although the headline is composed of attributes that are shown and editable below it, it is in bigger font and let's you know what you are editing very clearly."]
+$[D detail ""]
+$[D detail "### Object Fields"]
+$[D detail ""]
+$[D detail "The next section of the page shows attributes (fields) of the page object as a table where the"]
+$[D detail "first column is the attribute name and the second column is its value. The third column will"]
+$[D detail "populate with an \"Edit\" button for fields that are not a creation or modification date."]
+$[D detail ""]
+$[D detail "String fields are by default considered just plain text. However, this template also"]
+$[D detail "supports a string field that is to contain Markdown. For string fields that you want to"]
+$[D detail "contain Markdown, simply tag those attributes in the `AdminUI` domain with `markdown`. Not"]
+$[D detail "only will string values for these attributes be displayed as markdown (that is rendered to"]
+$[D detail "HTML - with GitHub flavored style) but also will invoke a web based markdown editor when you"]
+$[D detail "want to edit the field."]
+$[D detail ""]
+$[D detail "### Child Objects"]
+$[D detail ""]
+$[D detail "For each on-to-many relationship this entity has with other entites it can render a table for"]
+$[D detail "each in this bottom section. Only the relationships that are tagged with `detail` will be"]
+$[D detail "included. The fields of the child entity that are included in the generated table are those"]
+$[D detail "attributes that are tagged with `summary`."]
+$[D detail ""]
+
+$[import "web/thymeleaf-bootstrap/WebPageFunctions"]
+$[import "web/thymeleaf-bootstrap/modal/ModalFunctions"]
+$[import "security/SecurityFunctions"]
+
+$[let projectBaseApiPath = space.getMetadataValue("appBaseUrlPath")]
+
+$[publisher org.entitycompiler.springboot.web.admin.detail]
+    $[foreach entity in space.entities]
+        $[if entity.isImplicit || entity.isExtern || entity.isIncluded || entity.isTransient || entity.isSecondary]$[continue]$[/if]
+        $[let domainEntity = entity|domain]
+        $[let filename = "admin_" + domainEntity.name + "_detail"]
+        $[let pageTitle = (domainEntity|title) + " Detail"]
+        $[let entityDtoClassName = entity|domain:JSONDTO|name|uncapitalize]
+        $[file "resources/templates" filename "html"]
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+            $[call commonHead(title: pageTitle)]
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/inscrybmde@1.11.6/dist/inscrybmde.min.css">
+<script src="https://cdn.jsdelivr.net/npm/inscrybmde@1.11.6/dist/inscrybmde.min.js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/github-markdown-css@4.0.0/github-markdown.min.css">
+<script src="https://cdn.jsdelivr.net/npm/marked@4.0.0/marked.min.js"></script>
+            $[foreach attribute in entity.attributes]
+                $[if attribute.secondaryEntityIsTagged("asset:file")]
+<link href="https://cdn.jsdelivr.net/gh/kartik-v/bootstrap-fileinput@5.2.5/css/fileinput.min.css"
+      media="all" rel="stylesheet" type="text/css" />
+                    $[break]
+                $[/if]
+            $[/foreach]
+</head>
+<body>
+            $[call commonBodyScripts()]
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.9.0/css/bootstrap-datepicker.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.9.0/js/bootstrap-datepicker.js"></script>
+            $[call commonBodyNavbar(backURL: null, title: pageTitle)]
+<br>
+<br>
+<div class="container">
+  <nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+      <li class="breadcrumb-item"> <a th:href="@{/${adminUrlPrefix}}">Admin Home</a> </li>
+      <li class="breadcrumb-item"> <a th:href="@{/${adminUrlPrefix}/${entity|domain:APIPath|name}}">${entity|title|plural}</a> </li>
+            $[let parentNumber = 1]
+            $[foreach parentEntity in entity.primaryParentAncestory]
+                $[call breadcrumbExpression(entity: parentEntity, dtoEntity: parentEntity|domain:JSONDTO)->(thExpression: breadcrumbExpression)]
+      <li class="breadcrumb-item"> <a th:href="@{/${adminUrlPrefix}/${parentEntity|domain:APIPath|name}/{id}/detail(id=${$}{${parentEntity|domain:JSONDTO|name|uncapitalize}.id})}" th:text="${breadcrumbExpression}">link</a> </li>
+                $[let parentNumber = parentNumber + 1]
+            $[/foreach]
+      <li class="breadcrumb-item active" aria-current="page">${entity|title}</li>
+    </ol>
+  </nav>
+            $[call headlineExpression(dtoEntity: entity|domain:JSONDTO)->(thExpression: headlineExpression)]
+            $[if headlineExpression != null]
+$[outlet headlineButtonArea]
+    <h2 th:text="${headlineExpression}"></h2>
+$[/outlet]
+            $[/if]
+	<div class="container">
+
+$[*-----------------------------------------------------------------------------------------------------------------*]
+            $[function tableForEntity
+              D "Generates a table row for a single attribute. This is in a function so it can be used for"
+              D "secondary entity attributes."
+              (entity,
+               secondaryAttributeStack,
+               dtoVariable,
+               optShowMarkdownIcon
+              )
+            ]
+                $[let domainEntity = entity|domain:AdminUI]
+                $[let entityVariablePrefix = entity|name|uncapitalize]
+		<table class="table">
+                $[if entity.isSecondary && secondaryAttributeStack != null && secondaryAttributeStack.count > 0]
+                    $[let secondaryAttribute = secondaryAttributeStack.last()]
+			<thead>
+			<tr>
+				<th th:text="#{${secondaryAttribute.attribute.entity|domain:StaticLocalization|name}.${secondaryAttribute|domain:StaticLocalization|name}}"></th>
+			</tr>
+			</thead>
+                $[/if]
+		<tbody>
+$[* ATTRIBUTES *]
+                $[let domainAttributeList = domainEntity.declaredDomainAttributes]
+                $[if domainAttributeList.isEmpty]
+                    $[let domainAttributeList = domainEntity.attributes]
+                $[/if]
+                $[foreach domainAttribute in domainAttributeList]
+                    $[if domainAttribute.hasTag("detail") || entity.isSecondary]
+                        $[if domainAttribute.type.isEntityType]
+                            $[let secondaryEntity = domainAttribute.attribute.typeEntity]
+                            $[if secondaryEntity.hasTag("asset:file")]
+                                $[let editModalType = "asset"]
+                                $[let domainUrlAttribute = secondaryEntity.attributeTagged("url")]
+                                $[let attributeName = dtoVariable + "." + domainAttribute.name]
+                                $[let urlAttributeName = attributeName + "." + domainUrlAttribute.name]
+                                $[capture canEditVariable]canEdit${entity|name}$[/capture]
+        <tr>
+			<th th:text="#{${entity|domain:StaticLocalization|name}.${domainAttribute|domain:StaticLocalization|name}}" scope="col" width="250">${domainAttribute|title}</th>
+            <td>
+                <div class="mb-3">
+                  <img th:src="@{${$}{(${attributeName} == null || ${urlAttributeName} == null) ? '/images/DefaultConceptImage.png' : ${urlAttributeName}}}" width="128" height="128"/>
+                </div>
+            </td>
+            <td>
+            <button th:if="${$}{${canEditVariable}}" type="button" class="btn btn-primary"
+                data-bs-toggle="modal" data-bs-target="#${editModalType}UploadModal" data-bs-field-name="${domainAttribute|name}"
+                data-bs-field-title="${domainAttribute|title}">Edit</button>
+            </td>
+        </tr>
+                            $[else]
+        <tr>
+            <td colspan="4">
+                                $[let attributeStack = secondaryAttributeStack != null ? secondaryAttributeStack:(@[]@)]
+                                $[do attributeStack.add(domainAttribute)]
+                                $[call tableForEntity(dtoVariable: dtoVariable + "." + (domainAttribute|domain:JSONDTO|name), optShowMarkdownIcon: optShowMarkdownIcon, entity: secondaryEntity, secondaryAttributeStack: attributeStack)]
+                                $[do attributeStack.remove(domainAttribute)]
+            </td>
+        </tr>
+                            $[/if]
+                        $[else]
+		<tr>
+			<th th:text="#{${entity|domain:StaticLocalization|name}.${domainAttribute|domain:StaticLocalization|name}}" scope="col" width="250">${domainAttribute|title}</th>
+                            $[if domainAttribute.hasTag("markdown")]
+                                $[if optShowMarkdownIcon]
+			<td><img src="/images/MarkdownIcon.png" width="23" height="14"/></td>
+                                $[/if]
+			<td>
+                                $[let fieldName = domainAttribute|name]
+                                $[if secondaryAttributeStack != null && secondaryAttributeStack.count > 0]
+                                    $[let fieldNamePrefix = ""]
+                                    $[foreach item in secondaryAttributeStack]
+                                        $[if !item#first]$[let fieldNamePrefix = fieldNamePrefix + "-"]$[/if]
+                                        $[let fieldNamePrefix = fieldNamePrefix + (item|name)]
+                                    $[/foreach]
+                                    $[let fieldName = fieldNamePrefix + "-" + fieldName]
+                                $[/if]
+			<input type="hidden" id="${fieldName}-hidden-value" th:value="${$}{${dtoVariable}.${domainAttribute.name}}"/>
+			  <div id="${fieldName}-value" class="markdown-body"/>
+              <script>
+                document.getElementById('${fieldName}-value').innerHTML =
+                  marked.parse(document.getElementById('${fieldName}-hidden-value').value, {pedantic: false, gfm: true});
+              </script>
+			</td>
+                            $[else]
+                                $[if optShowMarkdownIcon]
+            <td></td>
+                                $[/if]
+                                $[let fieldName = domainAttribute|name]
+                                $[if secondaryAttributeStack != null && secondaryAttributeStack.count > 0]
+                                    $[let fieldNamePrefix = ""]
+                                    $[foreach item in secondaryAttributeStack]
+                                        $[if !item#first]
+                                            $[let fieldNamePrefix = fieldNamePrefix + "_"]
+                                        $[else]
+                                            $[let fieldNamePrefix = (item.attribute.entity.name|uncapitalize) + "_"]
+                                        $[/if]
+                                        $[let fieldNamePrefix = fieldNamePrefix + (item|name)]
+                                    $[/foreach]
+                                    $[let fieldName = fieldNamePrefix + "_" + fieldName]
+                                $[else]
+                                    $[let fieldName = (entity.name|uncapitalize) + "_" + domainAttribute.name]
+                                $[/if]
+                                $[switch domainAttribute.type]
+                                    $[case date]
+   			<td th:text="${$}{#dates.format(${dtoVariable}.${domainAttribute.name}, 'dd-MMM-yyyy')}"$[if domainAttribute#first] scope="row"$[/if]></td>
+                                    $[case enum]
+			<td th:text="${$}{${fieldName}_text}"$[if domainAttribute#first] scope="row"$[/if]></td>
+                                    $[default]
+			<td th:text="${$}{${dtoVariable}.${domainAttribute.name}}"$[if domainAttribute#first] scope="row"$[/if]></td>
+                                $[/switch]
+                            $[/if]
+            <td>
+                            $[call checkIfAttributeIsEditable(attribute: domainAttribute.attribute)->(editable: editable)]
+                            $[if editable]
+                                $[let editModalType = "string"]
+                                $[let valueVariableName = dtoVariable + "." + domainAttribute.name]
+                                $[switch domainAttribute.attribute.type]
+                                    $[case date]
+                                        $[capture valueVariableName]#dates.format(${dtoVariable}.${domainAttribute.name}, 'dd-MMM-yyyy')$[/capture]
+                                        $[let editModalType = "date"]
+                                    $[case boolean]
+                                        $[let editModalType = "boolean"]
+                                    $[case enum]
+                                        $[let enumAttributeName = entityVariablePrefix + "_" + domainAttribute.name]
+                                        $[if secondaryAttributeStack != null && secondaryAttributeStack.count > 0]
+                                            $[let fieldNamePrefix = ""]
+                                            $[foreach item in secondaryAttributeStack]
+                                                $[if !item#first]
+                                                    $[let fieldNamePrefix = fieldNamePrefix + "_"]
+                                                $[else]
+                                                    $[let fieldNamePrefix = (item.attribute.entity.name|uncapitalize) + "_"]
+                                                $[/if]
+                                                $[let fieldNamePrefix = fieldNamePrefix + (item|name)]
+                                            $[/foreach]
+                                            $[let enumAttributeName = fieldNamePrefix + "_" + domainAttribute.name]
+                                        $[/if]
+                                        $[let editModalType = domainAttribute.attribute.type.name + "_"]
+                                        $[let valueVariableName = enumAttributeName + "_enum_value"]
+                                        $[if domainAttribute.attribute.isArray]
+                                            $[let editModalType = editModalType + "Multi_"]
+                                            $[let valueVariableName = valueVariableName + "s"]
+                                        $[/if]
+                                    $[default]
+                                $[/switch]
+                                $[if secondaryAttributeStack != null && secondaryAttributeStack.count > 0]
+                                    $[capture canEditVariable]canEdit${(secondaryAttributeStack.first()).domainEntity.entity|name}$[/capture]
+                                $[else]
+                                    $[call writeAccessAttributes(entity: entity)->(attributeList: attributeList)]
+                                    $[capture canEditVariable]canEdit${entity|name}$[if attributeList.contains(domainAttribute.attribute)]_${domainAttribute.name}$[/if]$[/capture]
+                                $[/if]
+                                $[let fieldName = domainAttribute|name]
+                                $[if secondaryAttributeStack != null && secondaryAttributeStack.count > 0]
+                                    $[let fieldNamePrefix = ""]
+                                    $[foreach item in secondaryAttributeStack]
+                                        $[if !item#first]$[let fieldNamePrefix = fieldNamePrefix + "."]$[/if]
+                                        $[let fieldNamePrefix = fieldNamePrefix + (item|name)]
+                                    $[/foreach]
+                                    $[let fieldName = fieldNamePrefix + "." + fieldName]
+                                $[/if]
+            <button th:if="${$}{${canEditVariable}}" type="button" class="btn btn-primary"
+                data-bs-toggle="modal" data-bs-target="#${editModalType}EditModal" data-bs-field-name="${fieldName}"
+                data-bs-field-title="${domainAttribute|title}"
+                th:attr="data-bs-field-value=${$}{${valueVariableName}}">Edit</button>
+                            $[/if]
+            </td>
+		</tr>
+                        $[/if]
+                    $[/if]
+                $[/foreach]
+$[* RELATIONSHIPS *]
+                $[foreach domainRelationship in domainEntity.declaredDomainRelationships]
+                    $[if domainRelationship.to.isOne]
+                        $[let toEntity = domainRelationship.to.entity]
+                        $[if !domainRelationship.hasTag("display:attribute")]
+                            $[continue]
+                        $[/if]
+                        $[let displayAttributeName = domainRelationship.tagValue("display:attribute")]
+                        $[let valueVariableField = dtoVariable + "." + domainRelationship.name]
+                        $[let valueVariableName = valueVariableField + "." + displayAttributeName]
+                        $[capture canEditVariable]canEdit${entity|name}$[/capture]
+		<tr>
+			<th th:text="#{${entity|domain:StaticLocalization|name}.${domainRelationship|domain:StaticLocalization|name}}" scope="col" width="250">${domainRelationship|title}</th>
+                        $[if optShowMarkdownIcon]
+            <td></td>
+                        $[/if]
+			<td th:text="${$}{${valueVariableField}==null?'':${valueVariableName}}"$[if domainRelationship#first] scope="row"$[/if]></td>
+			<td>
+            <button th:if="${$}{${canEditVariable}}" type="button" class="btn btn-primary"
+                data-bs-toggle="modal" data-bs-target="#${domainRelationship.name}_EditModal" data-bs-field-name="${domainRelationship|name}"
+                data-bs-field-title="${domainRelationship|title}"
+                th:attr="data-bs-field-value=${$}{${valueVariableField}==null?'':${valueVariableName}}">Edit</button>
+            </td>
+		</tr>
+                    $[/if]
+                $[/foreach]
+		</tbody>
+		</table>
+            $[/function]
+$[*-----------------------------------------------------------------------------------------------------------------*]
+            $[call tableForEntity(dtoVariable: entity|domain:JSONDTO|name|uncapitalize, optShowMarkdownIcon: optShowMarkdownIcon, entity: entity, secondaryAttributeStack: null)]
+            $[call insertDateEditModalHTML()]
+            $[call insertStringEditModalHTML()]
+            $[call insertBooleanEditModalHTML()]
+            $[let singleEnumsInserted = @[]@]
+            $[let manyEnumsInserted = @[]@]
+            $[foreach domainAttribute in domainEntity.getFlatDeclaredAttributeList(@["enum","entity"]@)]
+                $[if domainAttribute.type.isEnumType]
+                    $[if domainAttribute.attribute.isArray]
+                        $[if !manyEnumsInserted.contains(domainAttribute.type)]
+                            $[call insertManyEnumEditModalHTML(attribute: domainAttribute.attribute)]
+                            $[do manyEnumsInserted.add(domainAttribute.type)]
+                        $[/if]
+                    $[else]
+                        $[if !singleEnumsInserted.contains(domainAttribute.type)]
+                            $[call insertEnumEditModalHTML(attribute: domainAttribute.attribute)]
+                            $[do singleEnumsInserted.add(domainAttribute.type)]
+                        $[/if]
+                    $[/if]
+                $[elseif domainAttribute.type.isEntityType]
+                    $[let secondaryEntity = domainAttribute.attribute.typeEntity]
+                    $[if secondaryEntity.hasTag("asset:file")]
+                        $[call insertFileUploadModalHTML()]
+                    $[/if]
+                $[/if]
+            $[/foreach]
+$[* treat to-one relationships like attributes assigned to an object of the relationships entity *]
+            $[foreach domainRelationship in domainEntity.declaredDomainRelationships]
+                $[if !domainRelationship.hasTag("detail")]$[continue]$[/if]
+                $[if domainRelationship.to.isOne]
+                    $[call insertEntitySelectModalHTML(relationship: domainRelationship.relationship)]
+                $[/if]
+            $[/foreach]
+	</div>
+            $[foreach relationship in domainEntity.relationships]
+                $[if !relationship.hasTag("detail")]$[continue]$[/if]
+                $[if relationship.isOneToMany]
+                    $[let toEntity = relationship.to.entity]
+                    $[if toEntity == null]$[log fatal]Something is wrong with relationship ${relationship|fullname}!$[/log]$[/if]
+                    $[let actionUrl = (toEntity|domain:APIPath|name) + "/add"]
+                    $[if toEntity.hasPrimaryParentRelationship]$[let actionUrl = actionUrl + "/{id}(id=${" + entityDtoClassName + ".id})"]$[/if]
+    <hr/>
+	<div class="container">
+	    <div class="container g-0" th:if="${$}{!#lists.isEmpty(${relationship.name}List) || canAdd${toEntity|name}}">
+            <div class="row">
+                <div class="col-md-auto">
+     	            <h3>${relationship|title}</h3>
+                </div>
+                <div class="col-md-auto">
+                    <form th:if="${$}{canAdd${toEntity|name}}" th:action="@{/${adminUrlPrefix}/${actionUrl}}" method="post">
+                        <input type="submit" name="${toEntity.name}add" id="${toEntity.name}-add"
+                               class="btn btn-primary" value="+" />
+                    </form>
+                </div>
+            </div>
+        </div>
+		<table class="table" th:unless="${$}{#lists.isEmpty(${relationship.name}List)}">
+		<thead>
+		<tr>
+                    $[foreach attribute in toEntity.declaredDomainAttributes]
+                        $[if attribute.hasTag("summary")]
+		  <th th:text="#{${toEntity|domain:StaticLocalization|name}.${attribute|domain:StaticLocalization|name}}" scope="col">${attribute|title}</th>
+                        $[/if]
+                    $[/foreach]
+                    $[foreach toEntityRelationship in toEntity.declaredDomainRelationships]
+                        $[if toEntityRelationship.hasTag("summary")]
+	      <th th:text="#{${toEntity|domain:StaticLocalization|name}.${toEntityRelationship|domain:StaticLocalization|name}}" scope="col">${toEntityRelationship|title}</th>
+                        $[/if]
+                    $[/foreach]
+          <th th:text="Action" data-width="100" data-width-unit="px">Action</th>
+        </tr>
+		</thead>
+		<tbody>
+		<tr th:each="item : ${$}{${relationship.name}List}">
+                    $[foreach attribute in toEntity.declaredDomainAttributes]
+                        $[if attribute.hasTag("summary")]
+                            $[switch attribute.type]
+                                $[case date]
+   			<td th:text="${$}{#dates.format(item.${attribute.name}, 'dd-MMM-yyyy')}"$[if attribute#first] scope="row"$[/if]></td>
+                                $[default]
+			<td th:text="${$}{item.${attribute.name}}"$[if attribute#first] scope="row"$[/if]></td>
+                            $[/switch]
+                        $[/if]
+                    $[/foreach]
+                    $[foreach toEntityRelationship in toEntity.declaredDomainRelationships]
+                        $[if toEntityRelationship.hasTag("summary")]
+                            $[capture relItemExpr]item.${toEntityRelationship.name}.${(toEntityRelationship|domain:AdminUI).tagValue("display:attribute")}$[/capture]
+                            $[if toEntityRelationship.isOptional]
+                                $[capture relItemExpr]item.${toEntityRelationship.name} != null ? ${relItemExpr} : ''$[/capture]
+                            $[/if]
+			<td th:text="${$}{${relItemExpr}}"></td>
+                        $[/if]
+                    $[/foreach]
+            <td><a class="btn btn-secondary active" role="button" aria-pressed="true" th:href="@{'/${adminUrlPrefix}/${toEntity|domain:APIPath|name}/' + ${$}{item.id} + '/detail'}">Open</a></td>
+		</tr>
+		</tbody>
+		</table>
+	</div>
+                $[elseif relationship.isManyToMany]
+    <!-- put many to many picker here -->
+                $[/if]
+            $[/foreach]
+    <br/>
+    <div>
+        <button th:if="${$}{canEdit${entity|name}}" type="button" class="btn btn-danger"
+        data-bs-toggle="modal" data-bs-target="#confirm-delete">Delete ${entity|title}</button>
+    </div>
+    <br/>
+  </div>
+</div>
+<div class="modal fade" id="confirm-delete" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <form th:action="@{/admin/${entity|domain:APIPath|name}/{id}/delete(id=${$}{${entity|domain:JSONDTO|name|uncapitalize}.id})}" method="POST">
+        <div class="modal-content">
+            <div class="modal-header">
+                Delete ${entity|title}
+            </div>
+            <div class="modal-body">
+                Are you sure you want to delete this ${entity|title}?
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <input type="submit"  class="btn btn-danger" value="Delete" />
+            </div>
+        </div>
+        </form>
+    </div>
+</div>
+<script>
+</script>
+            $[call insertDateEditModalScript()]
+            $[call insertStringEditModalScript()]
+            $[call insertBooleanEditModalScript()]
+            $[let singleEnumsInserted = @[]@]
+            $[let manyEnumsInserted = @[]@]
+            $[foreach domainAttribute in domainEntity.getFlatDeclaredAttributeList(@["enum","entity"]@)]
+                $[if domainAttribute.type.isEnumType]
+                    $[if domainAttribute.attribute.isArray]
+                        $[if !manyEnumsInserted.contains(domainAttribute.type)]
+                            $[call insertManyEnumEditModalScript(attribute: domainAttribute.attribute)]
+                            $[do manyEnumsInserted.add(domainAttribute.type)]
+                        $[/if]
+                    $[else]
+                        $[if !singleEnumsInserted.contains(domainAttribute.type)]
+                            $[call insertEnumEditModalScript(attribute: domainAttribute.attribute)]
+                            $[do singleEnumsInserted.add(domainAttribute.type)]
+                        $[/if]
+                    $[/if]
+                $[elseif domainAttribute.type.isEntityType]
+                    $[let secondaryEntity = domainAttribute.attribute.typeEntity]
+                    $[if secondaryEntity.hasTag("asset:file")]
+                        $[call insertFileUploadModalScript()]
+                    $[/if]
+                $[/if]
+            $[/foreach]
+            $[foreach domainRelationship in domainEntity.declaredDomainRelationships]
+                $[if domainRelationship.to.isOne]
+                    $[call insertEntitySelectModalScript(relationship: domainRelationship.relationship)]
+                $[/if]
+            $[/foreach]
+</body>
+</html>
+        $[/file]
+    $[/foreach]
+$[/publisher]
+$[call findUserEntity()->(userEntity: userEntity, usernameAttribute: usernameAttribute)]
+$[capture filedir]java/${domain.namespace|path}$[/capture]
+$[let className = "AdminDetailWebPageController"]
+$[file filedir className "java"]
+package ${domain.namespace};
+
+    $[let securityNamespace = (space.domain("Security")).namespace]
+    $[let exceptionNamespace = (space.domain("Exception")).namespace]
+import ${securityNamespace}.PersistentUserDetailsService;
+import ${securityNamespace}.SecurityService;
+import ${exceptionNamespace}.ServiceException;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.servlet.ModelAndView;
+import javax.servlet.http.HttpServletRequest;
+import org.springframework.web.servlet.View;
+import org.springframework.http.HttpStatus;
+import org.springframework.security.access.prepost.PreAuthorize;
+
+$[receive distinct imports]
+
+import java.util.Set;
+import java.util.List;
+import java.util.UUID;
+import java.util.Vector;
+
+@Controller
+public class ${className} {
+
+    @Autowired
+    private SecurityService securityService;
+
+    @Autowired
+    private PersistentUserDetailsService userDetailsService;
+
+$[receive distinct autowired]
+
+$[send imports]
+import ${userEntity|domain:Model|fullname};
+$[/send]
+    private void populateUser(Model model) {
+        ${userEntity|domain:Model|name} user = userDetailsService.findBy${usernameAttribute|domain:Model|name|capitalize}(securityService.findLoggedInUsername());
+        model.addAttribute("loggedInUser", user);
+   }
+
+    $[foreach entity in space.entities]
+        $[if entity.isImplicit || entity.isExtern || entity.isIncluded || entity.isTransient || entity.isSecondary]$[continue]$[/if]
+        $[let pkTypeName = entity.pkType|language]
+        $[let pkIsUUID = entity.pkType.isUUIDType]
+        $[let domainEntity = entity|domain]
+        $[let htmlFilename = "admin_" + domainEntity.name + "_detail"]
+        $[let entityDtoClassName = entity|domain:JSONDTO|name]
+$[send imports]
+import ${entity|domain:JSONDTO|fullname};
+import ${entity|domain:Service|fullname};
+import java.util.stream.Collectors;
+$[/send]
+        $[let serviceName = entity|domain:Service|name]
+$[send autowired]
+    @Autowired private ${serviceName} ${serviceName|uncapitalize};
+$[/send]
+
+    /**
+     * /${adminUrlPrefix}/${entity|domain:APIPath|name}/{id}/detail
+     * Directs the endpoint to use the detail page ${htmlFilename} for ${entity.name}
+     */
+    @GetMapping(value = {"/${adminUrlPrefix}/${entity|domain:APIPath|name}/{id}/detail"})
+        $[let objectLevelAccess = (entity|domain:Security).hasTag("access:object:level")]
+        $[if !objectLevelAccess]
+            $[call preAuthorizeEntity(accessType: "read", entity: entity)]
+        $[/if]
+    public String get${domainEntity.name}Detail(Model model, @PathVariable("id") ${pkTypeName} id) throws ServiceException {
+        $[if objectLevelAccess]
+$[send imports]
+import ${exceptionNamespace}.ForbiddenException;
+$[/send]
+        if (!${entity|domain:Service|name|uncapitalize}.canView(id)) {
+            throw new ForbiddenException("User does not have permission to view this card.");
+        }
+        $[/if]
+        ${entityDtoClassName} dto = ${serviceName|uncapitalize}.get${entityDtoClassName}ById(id);
+        $[let isUserEntity = (entity|domain:Security).hasTag("user")]
+        model.addAttribute("${entityDtoClassName|uncapitalize}", dto);
+        $[let entityVariablePrefix = entity|name|uncapitalize]
+        boolean canEdit = ${entity|domain:Service|name|uncapitalize}.canEdit(id);
+        model.addAttribute("canEdit${entity|name}", canEdit);
+        $[foreach attribute in entity.flatAttributeList]
+            $[let getMethod = ""]
+            $[let fullAttributeName = ""]
+            $[if attribute.isSecondary]
+                $[foreach secondaryAttribute in attribute.path]
+                    $[let getMethod = getMethod + ".get" + (secondaryAttribute|domain:JSONDTO|name|capitalize) + "()"]
+                    $[let fullAttributeName = fullAttributeName + "_" + secondaryAttribute.name]
+                $[/foreach]
+            $[else]
+                $[let getMethod = ".get" + (attribute.name|capitalize) + "()"]
+                $[let fullAttributeName = "_" + (attribute|name)]
+            $[/if]
+            $[if attribute.type.isEnumType]
+                $[if attribute.isArray]
+        model.addAttribute("${entityVariablePrefix}${fullAttributeName}_text", dto${getMethod}.stream().map(e -> e.getTitle()).collect(Collectors.joining(", ")));
+                    $[let valueVariableName = entityVariablePrefix + fullAttributeName + "_enum_values"]
+        model.addAttribute("${valueVariableName}", dto${getMethod}.stream().map(e -> e.getNumberValue()).collect(Collectors.toSet()));
+                $[else]
+        model.addAttribute("${entityVariablePrefix}${fullAttributeName}_text", dto${getMethod}.getTitle());
+                    $[let valueVariableName = entityVariablePrefix + fullAttributeName + "_enum_value"]
+        model.addAttribute("${valueVariableName}", dto${getMethod}.getNumberValue());
+                $[/if]
+            $[/if]
+        $[/foreach]
+        if (canEdit) {
+        $[call writeAccessAttributes(entity: entity)->(attributeList: attributeWriteAccessList)]
+        $[foreach attribute in attributeWriteAccessList]
+            $[if attribute.isSecondaryEntityType]
+            $[else]
+            boolean canUpdate${attribute|name|capitalize} = ${entity|domain:Service|name|uncapitalize}.canUpdateAttribute($[if isUserEntity]dto, $[/if]"${attribute|name}");
+            model.addAttribute("canEdit${entity|name}_${attribute|name}", canUpdate${attribute|name|capitalize});
+            $[/if]
+        $[/foreach]
+        }
+        $[let toOneEntities = @[]@]
+        $[foreach relationship in entity.relationships]
+            $[if relationship.isOneToMany]
+                $[let toEntity = relationship.to.entity]
+        {
+            List<${toEntity|domain:JSONDTO|name}> list = ${toEntity|domain:Service|name|uncapitalize}.get${toEntity|domain:JSONDTO|name}ListBy${entity|domain:Model|name}(id, 0, 1000, true);
+            model.addAttribute("${relationship.name}List", list);
+            boolean canAdd = ${toEntity|domain:Service|name|uncapitalize}.canCreate();
+            model.addAttribute("canAdd${toEntity|name}", canAdd);
+        }
+            $[elseif relationship.to.isOne && !(!relationship.isOptional && relationship.isParent) && (relationship|domain:AdminUI).hasTag("selectable")]
+                $[let toEntity = relationship.to.entity]
+                $[if !toOneEntities.contains(toEntity)]
+                    $[do toOneEntities.add(toEntity)]
+                $[/if]
+            $[/if]
+        $[/foreach]
+        $[foreach toEntity in toOneEntities]
+        {
+            List<${toEntity|domain:JSONDTO|name}> list = ${toEntity|domain:Service|name|uncapitalize}.get${toEntity|domain:JSONDTO|name}List(0, 1000, true);
+            model.addAttribute("${toEntity|domain:JSONDTO|name|uncapitalize}List", list);
+        }
+        $[/foreach]
+        $[if entity.hasParentRelationship]
+            $[let parentNumber = 1]
+        Vector<Object> parentDtos = new Vector<>();
+            $[let prevParentIdName = "id"]
+            $[let nextEntity = entity]
+            $[foreach parentEntity in entity.primaryParentAncestory|reverse]
+                $[let parentPkTypeName = parentEntity.pkType|language]
+        ${parentPkTypeName} ${nextEntity|name|uncapitalize}ParentId = ${nextEntity|domain:Service|name|uncapitalize}.getParentId(${prevParentIdName});
+        parentDtos.insertElementAt(${parentEntity|domain:Service|name|uncapitalize}.get${parentEntity|domain:JSONDTO|name}ById(${nextEntity|name|uncapitalize}ParentId),0);
+                $[let prevParentIdName = (nextEntity|name|uncapitalize) + "ParentId"]
+                $[let nextEntity = parentEntity]
+            $[/foreach]
+            $[foreach parentEntity in entity.primaryParentAncestory]
+        model.addAttribute("${parentEntity|domain:JSONDTO|name|uncapitalize}", parentDtos.get(${parentNumber - 1}));
+                $[let parentNumber = parentNumber + 1]
+            $[/foreach]
+        $[/if]
+        populateUser(model);
+        return "${htmlFilename}";
+    }
+
+        $[if domainEntity.hasDeclaredDomainAttributes]
+    /**
+     * /${adminUrlPrefix}/${entity|domain:APIPath|name}/{id}/update
+     * The detail page allows the user to edit certain fields. When the user hits a field Edit button, it will go
+     * to this endpoint, where the field to update is contained in the 'field-ident' parameter and the value is in
+     * the 'field-value' parameter.
+     */
+    @PostMapping(value = {"/${adminUrlPrefix}/${entity|domain:APIPath|name}/{id}/update"})
+            $[let isUserEntity = (entity|domain:Security).hasTag("user")]
+            $[let objectLevelAccess = (entity|domain:Security).hasTag("access:object:level")]
+            $[if !isUserEntity && !objectLevelAccess]
+                $[call preAuthorizeEntity(accessType: "write", entity: entity)]
+            $[/if]
+    public ModelAndView updateFieldIn${domainEntity.name}(HttpServletRequest request, @PathVariable("id") ${pkTypeName} id) throws ServiceException, ParseException {
+$[send imports]
+import ${entity|domain:Model|fullname};
+import java.text.ParseException;
+$[/send]
+            $[if objectLevelAccess]
+$[send imports]
+import ${exceptionNamespace}.ForbiddenException;
+$[/send]
+        if (!${serviceName|uncapitalize}.canEdit(id)) {
+            throw new ForbiddenException("User does not have permission to edit this card.");
+        }
+            $[/if]
+        ${entity|domain:Model|name} object = ${serviceName|uncapitalize}.get${entity|domain:Model|name}ById(id);
+            $[if isUserEntity]
+$[send imports]
+import ${entity|domain:Model|fullname};
+import ${(space.domain("Exception")).namespace}.ForbiddenException;
+import java.text.ParseException;
+$[/send]
+        // add authorization checks here and throw exception if necessary
+        if (!${serviceName|uncapitalize}.canEdit(id)) {
+            throw new ForbiddenException("Cannot edit attribute ${attribute.name}.");
+        }
+            $[/if]
+$[send imports]
+import ${(space.domain("Utils")).namespace}.ResourceUtils;
+import ${(space.domain("Exception")).namespace}.ValidationException;
+$[/send]
+        String[] fieldValues = request.getParameterValues("edit-field-value");
+        String fieldName = request.getParameter("edit-field-ident");
+        if (fieldName == null) {
+            throw new ValidationException("Field to update not provided.");
+        }
+        String fieldValue = fieldValues == null ? null : fieldValues[0];
+            $[let ifClause = "if"]
+$[*-----------------------------------------------------------------------------------------------------------------*]
+            $[function genAttributeIfBlock
+              (space,
+               entity,
+               ifClause,
+               domainAttribute,
+               serviceName,
+               secondaryAttributeStack
+              )->
+              (addedIfBlock
+              )]
+                $[let addedIfBlock = false]
+                $[if domainAttribute.attribute.type.isEntityType]
+                    $[do secondaryAttributeStack.add(domainAttribute)]
+                    $[foreach secondaryDomainAttribute in (domainAttribute.typeEntity|domain:JSONDTO).attributes]
+                        $[call genAttributeIfBlock(entity: domainAttribute.attribute.typeEntity, domainAttribute: secondaryDomainAttribute, space: space, ifClause: ifClause, serviceName: serviceName, secondaryAttributeStack: secondaryAttributeStack)->(addedIfBlock: addedIfBlock)]
+                    $[/foreach]
+                    $[do secondaryAttributeStack.remove(domainAttribute)]
+                    $[return]
+                $[/if]
+                $[let addedIfBlock = true]
+                $[let fieldNameText = domainAttribute.attribute.name]
+                $[if secondaryAttributeStack.count > 0]
+                    $[let fieldNameTextPrefix = ""]
+                    $[foreach secondaryAttribute in secondaryAttributeStack]
+                        $[let fieldNameTextPrefix = fieldNameTextPrefix + secondaryAttribute.attribute.name + "."]
+                    $[/foreach]
+                    $[let fieldNameText = fieldNameTextPrefix + fieldNameText]
+                $[/if]
+        ${ifClause} (fieldName.equals("${fieldNameText}")) {
+                $[call getContentRelationshipForVirtualAttribute(attribute: domainAttribute.attribute)->(foundRelationship: relationship)]
+                $[let contentEntity = relationship.to.entity]
+                $[if contentEntity != null]
+$[send imports]
+import ${contentEntity|domain:Model|fullname};
+$[/send]
+                    $[let contentClassName = contentEntity|domain:Model|name]
+            ${contentEntity.pkType|language} contentId = object.get${relationship|domain:Model|name|capitalize}Id();
+            ${contentClassName} content = null;
+            if (contentId == ${contentEntity.pkType.isUUIDType ? "null":"0"}) {
+                // create a content
+                content = new ${contentClassName}();
+                content = ${contentEntity|domain:Service|name|uncapitalize}.create${contentClassName}(content);
+                contentId = content.getId();
+                object.set${relationship|domain:Model|name|capitalize}Id(contentId);
+                ${serviceName|uncapitalize}.update${entity|domain:Model|name}(object);
+            }
+                    $[let localizedContentEntity = ((contentEntity|domain:Localization).relationshipToEntityTagged("content:localized")).to.entity]
+$[send imports]
+import ${localizedContentEntity|domain:Model|fullname};
+$[/send]
+                    $[let localizedContentServiceVariable = localizedContentEntity|domain:Service|name|uncapitalize]
+                    $[let localizedContentModelName = localizedContentEntity|domain:Model|name]
+                    $[let textAttribute = (localizedContentEntity|domain:Localization).attributeTagged("content:text")]
+            ${localizedContentModelName} localizedContent = ${localizedContentServiceVariable}.getPreferred${localizedContentModelName}(contentId);
+            localizedContent.set${textAttribute|domain:Model|name|capitalize}(fieldValue);
+            ${localizedContentServiceVariable}.update${localizedContentModelName}(localizedContent);
+                $[else]
+                    $[let fieldName = domainAttribute|domain:Model|name|capitalize]
+                    $[let fieldValue = null]
+                    $[switch domainAttribute.attribute.type]
+                        $[case date]
+                            $[capture fieldValue]ResourceUtils.ParseDateString(fieldValue)$[/capture]
+                        $[case boolean]
+                            $[capture fieldValue]fieldValue != null && (fieldValue.equalsIgnoreCase("true") || fieldValue.equals("1"))$[/capture]
+                        $[case string]
+                            $[capture fieldValue]fieldValue$[/capture]
+                        $[case int32]
+                            $[capture fieldValue]Integer.valueOf(fieldValue)$[/capture]
+                        $[case int64]
+                            $[capture fieldValue]Long.valueOf(fieldValue)$[/capture]
+                        $[case enum]
+$[send imports]
+import ${domainAttribute.type.enumType|domain:Model|fullname};
+$[/send]
+                            $[let enumModelName = domainAttribute.type.enumType|domain:Model|name]
+                            $[if domainAttribute.attribute.isArray]
+$[send imports]
+import java.util.HashSet;
+$[/send]
+            Set<${enumModelName}> set = new HashSet<>();
+            for(String value : fieldValues) {
+                set.add(${enumModelName}.numberValueOf(Integer.valueOf(value)));
+            }
+                                $[let fieldName = domainAttribute|domain:Model|name|capitalize]
+                                $[capture fieldValue]set$[/capture]
+                            $[else]
+                                $[let fieldName = domainAttribute|domain:Model|name|capitalize]
+                                $[capture fieldValue]${enumModelName}.numberValueOf(Integer.valueOf(fieldValue))$[/capture]
+                            $[/if]
+                        $[default]
+            // todo
+                    $[/switch]
+                    $[let secondaryAttributeGets = ""]
+                    $[foreach secondaryAttribute in secondaryAttributeStack]
+                        $[let secondaryAttributeGets = secondaryAttributeGets + "get" + (secondaryAttribute|domain:JSONDTO|name|capitalize) + "()."]
+                    $[/foreach]
+            object.${secondaryAttributeGets}set${fieldName}(${fieldValue});
+                    $[let topEntity = entity]
+                    $[if secondaryAttributeStack.count > 0]
+                        $[let topEntity = (secondaryAttributeStack.first()).domainEntity]
+                    $[/if]
+                $[/if]
+        }
+            $[/function]
+$[*-----------------------------------------------------------------------------------------------------------------*]
+            $[foreach domainAttribute in domainEntity.declaredDomainAttributes]
+                $[if !domainAttribute.hasTag("detail")]$[continue]$[/if]
+                $[if domainAttribute.type.isEntityType && !domainAttribute.hasTag("flatten")]$[continue]$[/if]
+                $[call genAttributeIfBlock(space: space, domainAttribute: domainAttribute, entity: entity, serviceName: serviceName, secondaryAttributeStack: @[]@, ifClause: ifClause)->(addedIfBlock: addedIfBlock)]
+                $[if addedIfBlock]$[let ifClause = "else if"]$[/if]
+            $[/foreach]
+            $[foreach domainRelationship in domainEntity.declaredDomainRelationships]
+                $[if domainRelationship.to.isOne]
+        ${ifClause} (fieldName.equals("${domainRelationship.relationship.name}")) {
+                    $[let idCode = "Long.valueOf(fieldValue)"]
+                    $[if domainRelationship.to.entity.pkType.isUUIDType]
+                        $[let idCode = "UUID.fromString(fieldValue)"]
+                    $[/if]
+            object.set${domainRelationship|domain:Model|name|capitalize}Id(${idCode});
+        }
+                    $[let ifClause = "else if"]
+                $[/if]
+            $[/foreach]
+        ${serviceName|uncapitalize}.update${entity|domain:Model|name}(object);
+        request.setAttribute(
+          View.RESPONSE_STATUS_ATTRIBUTE, HttpStatus.FOUND);
+        return new ModelAndView("redirect:/${adminUrlPrefix}/${entity|domain:APIPath|name}/" + id$[if pkIsUUID].toString()$[/if] + "/detail");
+    }
+        $[/if]
+
+    /**
+     * DELETE /${adminUrlPrefix}/${entity|domain:APIPath|name}/{id}
+     * The detail page allows the user to edit certain fields. When the user hits a field Edit button, it will go
+     * to this endpoint, where the field to update is contained in the 'field-ident' parameter and the value is in
+     * the 'field-value' parameter.
+     */
+$[send imports]
+import ${entity|domain:Model|fullname};
+$[/send]
+    @PostMapping(value = {"/${adminUrlPrefix}/${entity|domain:APIPath|name}/{id}/delete"})
+        $[call preAuthorizeEntity(accessType: "write", entity: entity)]
+    public ModelAndView delete${domainEntity.name}(HttpServletRequest request, @PathVariable("id") ${pkTypeName} id) throws ServiceException {
+        // check to make sure it exists
+        $[if entity.hasPrimaryParentRelationship]
+            $[let parentEntity = entity.primaryParentEntity]
+            $[let parentPkTypeName = parentEntity.pkType|language]
+        ${parentPkTypeName} ${entity|name|uncapitalize}ParentId = ${entity|domain:Service|name|uncapitalize}.getParentId(id);
+        $[/if]
+        ${entity|domain:Model|name} object = ${serviceName|uncapitalize}.get${entity|domain:Model|name}ById(id);
+        ${serviceName|uncapitalize}.delete${entity|domain:Model|name}ById(id);
+        $[if entity.hasPrimaryParentRelationship]
+        return new ModelAndView("redirect:/${adminUrlPrefix}/${parentEntity|domain:APIPath|name}/" + ${entity|name|uncapitalize}ParentId + "/detail");
+        $[else]
+        return new ModelAndView("redirect:/${adminUrlPrefix}/${entity|domain:APIPath|name}");
+        $[/if]
+    }
+
+        $[let assetAttributes = @[]@]
+        $[foreach attribute in entity.attributes]
+            $[if attribute.type.isEntityType]
+                $[let secondaryEntity = attribute.typeEntity]
+                $[if secondaryEntity.hasTag("asset:file")]
+                    $[do assetAttributes.add(attribute)]
+                $[/if]
+            $[/if]
+        $[/foreach]
+        $[if !assetAttributes.isEmpty()]
+$[send imports]
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestPart;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.ResponseStatus;
+import java.io.IOException;
+import ${(space.domain("Exception")).namespace}.EntityNotFoundException;
+import ${(space.domain("Exception")).namespace}.ValidationException;
+import ${entity|domain:Model|fullname};
+$[/send]
+    @PostMapping(value = {"/${adminUrlPrefix}/${entity|domain:APIPath|name}/{id}/upload-file"})
+            $[let isUserEntity = (entity|domain:Security).hasTag("user")]
+            $[if !isUserEntity]
+                $[call preAuthorizeEntity(accessType: "write", entity: entity)]
+            $[/if]
+    public ModelAndView upload${entity.name}File(HttpServletRequest request, @PathVariable("id") UUID id,
+                                @RequestPart(value = "file") MultipartFile file
+                                ) throws ServiceException {
+        String fieldName = request.getParameter("upload-field-ident");
+        String fileExtension = request.getParameter("file-extension");
+        if (fileExtension == null) {
+            fileExtension = "png";
+        }
+            $[let modelName = entity|domain:Model|name]
+            $[let modelVariableName = modelName|uncapitalize]
+        ${modelName} ${modelVariableName};
+        try {
+            ${modelVariableName} = ${serviceName|uncapitalize}.get${modelName}ById(id);
+        } catch (EntityNotFoundException e) {
+            throw new ValidationException("Could not find ${modelName} by its id: " + id);
+        }
+        byte[] byteArray;
+        try {
+            byteArray = file.getBytes();
+        } catch (IOException e) {
+            $[let exceptionText = attribute|domain:Model|name|words|lowercase]
+            $[if hasCollection]
+                $[capture exceptionText]${exceptionText} of collection ${collectionName|words|lowercase}$[/capture]
+            $[/if]
+            throw new ValidationException("Could not read uploaded file for ${modelName} ${exceptionText}.");
+        }
+
+            $[let ifClause = "if"]
+            $[foreach attribute in assetAttributes]
+        ${ifClause} (fieldName.equals("${attribute.name}")) {
+                $[let hasCollection = collectionAttribute != null]
+                $[if hasCollection]
+                    $[let collectionName = collectionAttribute|domain:Model|name]
+                    $[capture assetPath]${collectionAttribute|domain:APIPath|name}/${attribute|domain:APIPath|name}$[/capture]
+                $[/if]
+                $[let methodName = attribute|domain:Model|name|capitalize]
+                $[if hasCollection]
+                    $[capture methodName]${collectionName|capitalize}${methodName}$[/capture]
+                $[/if]
+            ${serviceName|uncapitalize}.upload${methodName}(${modelVariableName}, file.getContentType(), byteArray, fileExtension);
+                $[let ifClause = "else if"]
+        }
+            $[/foreach]
+        else {
+            throw new ValidationException("Could not uploaded file non-asset attribute: " + fieldName);
+        }
+        return new ModelAndView("redirect:/${adminUrlPrefix}/${entity|domain:APIPath|name}/" + id$[if pkIsUUID].toString()$[/if] + "/detail");
+    }
+        $[/if]
+    $[/foreach]
+}
+$[/file]

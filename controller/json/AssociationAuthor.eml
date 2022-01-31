@@ -1,0 +1,50 @@
+$[D summary, main "Contains an author used to generate code related to creating associations between objects."]
+$[import "security/SecurityFunctions"]
+$[import "util/AutoWired"]
+
+$[author to org.entitycompiler.springboot.controller]
+    $[author to outlet methods
+    D "Adds an \"associatedTo...\" endpoint to the controller."]
+        $[foreach relationship in entity.implicitRelationships]
+            $[if relationship.to.entity.hasTag("internal:many-to-many")]
+                $[let manyToManyEntity = relationship.to.entity]
+                $[let destMMEntity = null]
+                $[foreach mmRel in manyToManyEntity.implicitRelationships]
+                    $[if mmRel.to.entity.name != entity.name]
+                        $[let destMMEntity = mmRel.to.entity]
+                        $[break];
+                    $[/if]
+                $[/foreach]
+                $[let destModelName = destMMEntity|domain:Model|name]
+                $[let destPbMapper = destMMEntity|domain:DTOMapper|name|uncapitalize]
+                $[call addAutoWired(domainEntity:destMMEntity|domain:DTOMapper)]
+                $[let sourcePKType = entity.pkType|language]
+                $[let sourcePKVarName = entity.primaryKeyAttribute|domain|name]
+                $[let destPKType = destMMEntity.pkType|language]
+                $[let destPKMethName = destMMEntity.primaryKeyAttribute|domain:Model|name|capitalize]
+$[send imports]
+import ${destMMEntity|domain:Model|fullname};
+$[/send]
+                $[publisher org.entitycompiler.springboot.controller.associate
+                  D "Associate endpoint"
+                ]
+    @RequestMapping(
+            path = "{id}/${destMMEntity|domain:APIPath|name}",
+            method = RequestMethod.POST,
+            consumes = "application/json"
+    )
+    @ResponseStatus(HttpStatus.ACCEPTED)
+$[outlet annotation
+  D "Resides just above the method declaration in the annocation area."
+]
+$[/outlet]
+    public void associateTo${destModelName}(@PathVariable("id") UUID id, @RequestBody ${destModelName} requestDto) throws ServiceException {
+        ${destModelName} requestObject = mapper.map(requestDto, ${destModelName}.class);
+        ${service}.associateTo${destModelName}(id, requestObject.get${destPKMethName}());
+    }
+
+                $[/publisher]
+            $[/if]
+        $[/foreach]
+    $[/author]
+$[/author]

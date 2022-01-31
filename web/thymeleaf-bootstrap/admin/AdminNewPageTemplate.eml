@@ -1,0 +1,322 @@
+$[language java]
+$[domain AdminUI]
+$[D "This template is responsible for generating code that allows the administrator of the site"]
+$[D "create new objects."]
+
+$[import "web/thymeleaf-bootstrap/WebPageFunctions"]
+$[import "security/SecurityFunctions"]
+
+$[let projectBaseApiPath = space.getMetadataValue("appBaseUrlPath")]
+$[if adminUrlPrefix == null || adminUrlPrefix == ""]
+    $[let adminUrlPrefix = "admin"]
+$[/if]
+
+$[foreach entity in space.entities]
+    $[if entity.isImplicit || entity.isExtern || entity.isIncluded || entity.isTransient || entity.isSecondary]$[continue]$[/if]
+    $[let domainEntity = entity|domain]
+    $[let filename = "admin_" + domainEntity.name + "_new"]
+    $[let pageTitle = "New " + (domainEntity|title)]
+    $[let entityDtoClassName = entity|domain:JSONDTO|name]
+    $[file "resources/templates" filename "html"]
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+        $[call commonHead(title: pageTitle)]
+</head>
+<body>
+        $[call commonBodyScripts()]
+        $[call commonBodyNavbar(backURL: null, title: pageTitle)]
+<br>
+<br>
+<!-- Form for inputing a new ${entity|title} -->
+<div class="container">
+	<h2>${pageTitle}</h2>
+	<div class="container">
+        $[let actionUrl = (entity|domain:APIPath|name) + "/create"]
+        $[if entity.hasPrimaryParentRelationship]$[let actionUrl = actionUrl + "/{id}(id=${parentId})"]$[/if]
+        <form th:action="@{/${adminUrlPrefix}/${actionUrl}}" method="post">
+            <table class="table">
+            <tbody>
+        $[call requiredEditableFields()->(relationships: editableRelationships, attributes: editableAttributes)]
+        $[foreach attribute in editableAttributes]
+            <tr>
+                <th th:text="#{${entity|domain:StaticLocalization|name}.${attribute|domain:StaticLocalization|name}}" scope="col">${attribute|title}</th>
+            $[switch attribute.type]
+                $[case boolean]
+                <td><input class="form-check-input" type="checkbox" name="${attribute.name}" value="true"></input></td>
+                $[case enum]
+                          <td><select id="${attribute.name}" name="${attribute.name}">
+                    $[foreach item in attribute.type.enumType.items]
+                        $[let itemTitle = item|title]
+                        $[if item.hasTag("title")]
+                            $[let itemTitle = item.tagValue("title")]
+                        $[/if]
+                              <option value="${item.value}">${itemTitle}</option>
+                    $[/foreach]
+                          </select></td>
+                $[case entity]
+                    $[let secondaryEntity = attribute.typeEntity]
+                    $[if secondaryEntity.hasTag("asset:file")]
+                <td><input id="file" name="file" type="file" class="file form-control" data-allowed-file-extensions='["png"]'></td>
+                    $[/if]
+                $[default]
+                    $[let extraStuff = ""]
+                    $[if (attribute|domain:AdminUI).hasTag("default:now")]
+                        $[let extraStuff = " th:value=\"${#dates.format(#dates.createNow(), 'dd-MMM-yyyy')}\""]
+                    $[/if]
+                <td><input type="text" id="${attribute.name}" name="${attribute.name}" class="form-control"${extraStuff}></input></td>
+            $[/switch]
+            </tr>
+        $[/foreach]
+        $[foreach relationship in editableRelationships]
+            <tr>
+                <th th:text="#{${entity|domain:StaticLocalization|name}.${relationship|domain:StaticLocalization|name}}" scope="col">${relationship|title}</th>
+                <td>
+            $[if relationship.to.isOne]$[* && (relationship.to.entity|domain:Security).hasTag("user") *]
+					<select id="${relationship.name}" name="${relationship.name}">
+                $[capture optionDisplayExpr]selectDtoObject.${(relationship|domain:AdminUI).tagValue("display:attribute")}$[/capture]
+                $[if (relationship|domain:AdminUI).hasTag("display:attribute:abbr")]
+                    $[capture optionDisplayExpr]#strings.abbreviate(${optionDisplayExpr},${(relationship|domain:AdminUI).tagValue("display:attribute:abbr")})$[/capture]
+                $[/if]
+						<option th:each="selectDtoObject : ${$}{${relationship.to.entity|domain:JSONDTO|name|uncapitalize}List}" th:value="${$}{selectDtoObject.id}" th:text="${$}{${optionDisplayExpr}}"></option>
+					</select>
+            $[else]
+                    <input type="text" id="${relationship.name}" name="${relationship.name}" class="form-control"></input>
+            $[/if]
+                </td>
+            </tr>
+        $[/foreach]
+            </tbody>
+            </table>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" onclick="window.history.back();">Cancel</button>
+                <input type="submit"  class="btn btn-primary" value="Create" />
+            </div>
+		</form>
+	</div>
+</div>
+
+</body>
+</html>
+    $[/file]
+$[/foreach]
+
+$[let exceptionNamespace = (space.domain("Exception")).namespace]
+$[let utilsNamespace = (space.domain("Utils")).namespace]
+$[let securityNamespace = (space.domain("Security")).namespace]
+$[call findUserEntity()->(userEntity: userEntity, usernameAttribute: usernameAttribute)]
+$[capture filedir]java/${domain.namespace|path}$[/capture]
+$[let className = "AdminNewWebPageController"]
+$[file filedir className "java"]
+package ${domain.namespace};
+
+import ${securityNamespace}.PersistentUserDetailsService;
+import ${securityNamespace}.SecurityService;
+import ${exceptionNamespace}.ServiceException;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.servlet.ModelAndView;
+import javax.servlet.http.HttpServletRequest;
+import org.springframework.web.servlet.View;
+import org.springframework.http.HttpStatus;
+
+$[receive distinct imports]
+
+import java.util.UUID;
+
+@Controller
+public class ${className} {
+
+    @Autowired
+    private SecurityService securityService;
+
+    @Autowired
+    private PersistentUserDetailsService userDetailsService;
+
+$[receive distinct autowired]
+
+    private void populateUser(Model model) {
+        ${userEntity|domain:Model|name} user = userDetailsService.findBy${usernameAttribute|domain:Model|name|capitalize}(securityService.findLoggedInUsername());
+        model.addAttribute("loggedInUser", user);
+   }
+
+    $[foreach entity in space.entities]
+        $[if entity.isImplicit || entity.isExtern || entity.isIncluded || entity.isTransient || entity.isSecondary]$[continue]$[/if]
+        $[let domainEntity = entity|domain]
+        $[let htmlFilename = domainEntity.name + "_detail"]
+        $[let entityDtoClassName = entity|domain:JSONDTO|name]
+$[send imports]
+import ${entity|domain:Model|fullname};
+import ${entity|domain:JSONDTO|fullname};
+import ${entity|domain:Service|fullname};
+$[/send]
+        $[let serviceName = entity|domain:Service|name]
+$[send autowired]
+    @Autowired private ${serviceName} ${serviceName|uncapitalize};
+$[/send]
+
+        $[let parentPath = ""]
+        $[let parentPathArg = ""]
+        $[let hasParent = false]
+        $[let parentTypeName = ""]
+        $[if entity.hasPrimaryParentRelationship]
+            $[let hasParent = true]
+            $[let parentPath = "/{parent_id}"]
+            $[let primaryParentEntity = entity.primaryParentRelationship.to.entity]
+            $[let parentTypeName = primaryParentEntity.pkType|language]
+            $[capture parentPathArg], @PathVariable("parent_id") ${parentTypeName} parentId$[/capture]
+        $[/if]
+
+    @PostMapping(value = {"/${adminUrlPrefix}/${entity|domain:APIPath|name}/add${parentPath}"})
+        $[call preAuthorizeEntity(accessType: "write", entity: entity)]
+    public String add${domainEntity.name}(Model model${parentPathArg}) throws ServiceException {
+        $[if hasParent]
+         model.addAttribute("parentId", parentId);
+        $[/if]
+         populateUser(model);
+        $[let toOneEntities = @[]@]
+        $[foreach relationship in entity.relationships]
+            $[if relationship.to.isOne && !relationship.isParent && (relationship|domain:AdminUI).hasTag("selectable")]
+                $[let toEntity = relationship.to.entity]
+                $[if !toOneEntities.contains(toEntity)]
+                    $[do toOneEntities.add(toEntity)]
+                $[/if]
+            $[/if]
+        $[/foreach]
+        $[foreach toEntity in toOneEntities]
+$[send imports]
+import java.util.List;
+$[/send]
+         {
+             List<${toEntity|domain:JSONDTO|name}> list = ${toEntity|domain:Service|name|uncapitalize}.get${toEntity|domain:JSONDTO|name}List(0, 1000, true);
+             model.addAttribute("${toEntity|domain:JSONDTO|name|uncapitalize}List", list);
+         }
+        $[/foreach]
+
+         return "admin_${entity|name}_new";
+    }
+        $[if !space.hasDomain("Localization") || ((entity|domain:Localization).hasTag("content") || (entity|domain:Localization).hasTag("content:localized"))]
+$[send imports]
+import java.text.ParseException;
+import ${(space.domain("Utils")).namespace}.ResourceUtils;
+$[/send]
+    @PostMapping(value = {"/${adminUrlPrefix}/${entity|domain:APIPath|name}/create$[if hasParent]/{parentId}$[/if]"})
+            $[call preAuthorizeEntity(accessType: "write", entity: entity)]
+    public ModelAndView create${domainEntity.name}(HttpServletRequest request$[if hasParent], @PathVariable("parentId") ${parentTypeName} parentId$[/if]) throws ServiceException, ParseException {
+        ${entity|domain:Model|name} object = new ${entity|domain:Model|name}();
+            $[if hasParent]
+        object.set${entity.primaryParentRelationship|domain:Model|name|capitalize}Id(parentId);
+            $[/if]
+            $[call requiredEditableFields()->(relationships: editableRelationships, attributes: editableAttributes)]
+            $[foreach attribute in editableAttributes]
+                $[if attribute.isVirtual]$[continue]$[/if]
+                $[capture paramVariable]param${attribute.name|capitalize}$[/capture]
+
+                $[if attribute.type.isEnumType && attribute.isArray]
+        String[] ${paramVariable} = request.getParameterValues("${attribute.name}");
+                $[else]
+        String ${paramVariable} = request.getParameter("${attribute.name}");
+                $[/if]
+                $[call getContentRelationshipForVirtualAttribute()->(foundRelationship: relationshipToContent)]
+                $[if relationshipToContent != null]
+        if (${paramVariable} != null) {
+          // create content and localizedContent and then set that to ${paramVariable}
+                    $[let contentEntity = relationshipToContent.to.entity]
+                    $[let contentClassName = contentEntity|domain:model|name]
+          ${contentClassName} content = new ${contentClassName}();
+          content = ${contentEntity|domain:Service|name|uncapitalize}.create${contentClassName}(content);
+          ${contentEntity.pkType|language} contentId = content.getId();
+          object.set${relationshipToContent|domain:Model|name|capitalize}Id(contentId);
+                    $[let localizedContentEntity = ((contentEntity|domain:Localization).relationshipToEntityTagged("content:localized")).to.entity]
+                    $[let localizedContentServiceVariable = localizedContentEntity|domain:Service|name|uncapitalize]
+                    $[let localizedContentModelName = localizedContentEntity|domain:Model|name]
+                    $[let textAttribute = (localizedContentEntity|domain:Localization).attributeTagged("content:text")]
+          ${localizedContentModelName} localizedContent = ${localizedContentServiceVariable}.getPreferred${localizedContentModelName}(contentId);
+          localizedContent.set${textAttribute|domain:Model|name|capitalize}(${paramVariable});
+          ${localizedContentServiceVariable}.update${localizedContentModelName}(localizedContent);
+        }
+                $[else]
+                    $[let fieldName = attribute|domain:Model|name|capitalize]
+                    $[switch attribute.type]
+                        $[case date]
+        object.set${fieldName}(ResourceUtils.ParseDateString(${paramVariable}));
+                        $[case boolean]
+        object.set${fieldName}(${paramVariable} != null && (${paramVariable}.equalsIgnoreCase("true") || ${paramVariable}.equals("1")));
+                        $[case string]
+                            $[if !attribute.isOptional]
+        object.set${fieldName}(${paramVariable} != null ? ${paramVariable} : "");
+                            $[else]
+        if (${paramVariable} != null) {
+            object.set${fieldName}(${paramVariable});
+        }
+                            $[/if]
+                        $[case int32]
+                            $[if !attribute.isOptional]
+        object.set${fieldName}(${paramVariable} != null ? Integer.valueOf(${paramVariable}) : 0);
+                            $[else]
+        if (${paramVariable} != null) {
+            object.set${fieldName}(Integer.valueOf(${paramVariable}));
+        }
+                            $[/if]
+                        $[case int64]
+                            $[if !attribute.isOptional]
+        object.set${fieldName}(${paramVariable} != null ? Long.valueOf(${paramVariable}) : 0L);
+                            $[else]
+        if (${paramVariable} != null) {
+            object.set${fieldName}(Long.valueOf(${paramVariable}));
+        }
+                            $[/if]
+                        $[case enum]
+$[send imports]
+import ${attribute.type.enumType|domain:Model|fullname};
+$[/send]
+                            $[let enumModelName = attribute.type.enumType|domain:Model|name]
+                            $[if attribute.isArray]
+$[send imports]
+import java.util.HashSet;
+import java.util.Set;
+$[/send]
+        Set<${enumModelName}> set = new HashSet<>();
+        for(String value : ${paramVariable}) {
+            set.add(${enumModelName}.numberValueOf(Integer.valueOf(value)));
+        }
+                                $[let fieldName = attribute|domain:Model|name|capitalize]
+                                $[capture fieldValue]set$[/capture]
+                            $[else]
+                                $[let fieldName = attribute|domain:Model|name|capitalize]
+                                $[capture fieldValue]${enumModelName}.numberValueOf(Integer.valueOf(${paramVariable}))$[/capture]
+                            $[/if]
+                            $[if !attribute.isOptional]
+        object.set${fieldName}(${paramVariable} != null ? ${fieldValue} : null);
+                            $[else]
+        if (${paramVariable} != null) {
+            object.set${fieldName}(${fieldValue});
+        }
+                            $[/if]
+                        $[default]
+                    $[/switch]
+                $[/if]
+            $[/foreach]
+            $[foreach relationship in editableRelationships]
+                $[capture paramVariable]param${relationship.name|capitalize}$[/capture]
+                $[let fieldName = (relationship|domain:Model|name|capitalize) + "Id"]
+        String ${paramVariable} = request.getParameter("${relationship.name}");
+        if (${paramVariable} != null) {
+            object.set${fieldName}(UUID.fromString(${paramVariable}));
+        }
+            $[/foreach]
+        object = ${entity|domain:Service|name|uncapitalize}.create${entity|domain:Model|name}(object);
+            $[let hasUUIDPk = entity.pkType.isUUIDType]
+        request.setAttribute(
+          View.RESPONSE_STATUS_ATTRIBUTE, HttpStatus.FOUND);
+        return new ModelAndView("redirect:/${adminUrlPrefix}/${entity|domain:APIPath|name}/" + object.getId()$[if hasUUIDPk].toString()$[/if] + "/detail");
+    }
+        $[/if]
+    $[/foreach]
+}
+$[/file]

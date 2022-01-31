@@ -1,0 +1,84 @@
+$[D summary, main "Contains an author that generates update endpoint methods for a controller class."]
+$[import "security/SecurityFunctions"]
+$[author to org.entitycompiler.springboot.controller]
+    $[author to outlet methods
+    D "Adds update endpoints to the controller class for its entity."]
+$[send imports]
+import org.springframework.web.bind.annotation.PutMapping;
+$[/send]
+        $[if entity.hasPrimaryKey]
+            $[publisher org.entitycompiler.springboot.controller.update]
+    @RequestMapping(
+        path = "/{id}",
+        method = RequestMethod.PUT,
+        consumes = "application/json",
+        produces = "application/json"
+    )
+    @ResponseStatus(HttpStatus.ACCEPTED)
+$[outlet annotation
+  D "Resides just above the method declaration in the annocation area."
+]
+$[/outlet]
+                $[let pkidtype = entity.pkType|language]
+                $[let pkidname = entity.primaryKeyAttribute|domain:Model|name|capitalize]
+    public ${dtoClassName} update${modelName}(@PathVariable("id") ${pkidtype} id, @RequestBody ${dtoClassName} requestDto, @AuthenticationPrincipal UserDetails userDetails) throws ServiceException {
+$[outlet insideTop
+  D "This outlet is just inside the update endpoint method, the first code to execute. The request"
+  D "DTO object is called `requestDto`."
+]
+$[/outlet]
+        ${modelName} requestObject = mapper.map(requestDto, ${modelName}.class);
+        requestObject.set${pkidname}(id);
+        ${modelName} resultObject = ${service}.update${modelName}(requestObject);
+        return mapper.map(resultObject, ${dtoClassName}.class);
+    }
+            $[/publisher]
+
+            $[if entity.hasAttributeTagged("release:lock")]
+    @RequestMapping(
+        path = "/{id}/lock",
+        method = RequestMethod.PUT,
+        consumes = "application/json",
+        produces = "application/json"
+    )
+    @ResponseStatus(HttpStatus.ACCEPTED)
+                $[call preAuthorizeEntity(accessType:"write",entity:entity)]
+                $[let pkidtype = entity.pkType|language]
+                $[let pkidname = entity.primaryKeyAttribute|domain:Model|name|capitalize]
+    public ${dtoClassName} update${modelName}(@PathVariable("id") ${pkidtype} id) throws ServiceException {
+        ${modelName} object = ${service}.get${modelName}ById(id);
+        object.set${entity.attributeTagged("release:lock")|domain:Model|name|capitalize}(true);
+        ${modelName} resultObject = ${service}.update${modelName}(object);
+        return mapper.map(resultObject, ${dtoClassName}.class);
+    }
+            $[/if]
+        $[/if]
+    $[/author]
+$[/author]
+$[*function updateProto
+  D "Generates code inside a controller class responsible for updating objects received and returned as protobuf."
+  D "objects."
+  (entity            D "The entity corresponding to the object to be updated by the endpoint.",
+   className         D "Name of the protobuf class used for both request and response.",
+   modelName         D "The name of the class used internally for this entity by the service later.",
+   role              D "A string representing the role required to conduct this create operation.",
+   service           D "The name of the code variable for the object of the Service class that has the delegated create function.",
+   pbMapper          D "An object that can map between protobuf objects and model objects."
+  )]
+    @RequestMapping(
+        path = "/{id}",
+        method = RequestMethod.PUT,
+        consumes = "application/x-protobuf-lite",
+        produces = "application/x-protobuf-lite"
+    )
+    @ResponseStatus(HttpStatus.ACCEPTED)
+    $[call preAuthorizeEntity(entity:entity, accessType: "write")]
+$[let pkidtype = entity.pkType|language]
+$[let pkidname = entity.primaryKeyAttribute|domain:Model|name|capitalize]
+    public ${className} update${modelName}(@PathVariable("id") ${pkidtype} id, @RequestBody ${className} requestPBData) throws ServiceException {
+        ${modelName} requestObject = ${pbMapper}.toModelFromProtobuf(requestPBData);
+        requestObject.set${pkidname}(id);
+        ${modelName} resultObject = ${service}.update${modelName}(requestObject);
+        return ${pbMapper}.toProtobufFromModel(resultObject);
+    }
+$[/function*]

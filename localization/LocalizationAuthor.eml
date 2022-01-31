@@ -1,0 +1,175 @@
+$[D summary, main "This template generates localization code in the application based on tagging in the"]
+$[D summary, main "Localization (if any)."]
+$[D "The template uses authors to publish to various publisher templates such as for the service,"]
+$[D "repository, etc. classes."]
+$[D ""]
+$[import "util/AutoWired"]
+$[author to org.entitycompiler.springboot.service]
+    $[author to outlet methods
+      D "Adds method to get the localized content object in the user's preferred language.  Also adds"
+      D "method to get the localized text in the user's preferred language. These are only added to the"
+      D "service class of the localized content entity."
+    ]
+        $[if space.hasDomain("Localization")]
+            $[let entityLocalization = entity|domain:Localization]
+            $[if entityLocalization.hasTag("content:localized") && 
+entityLocalization.hasAttributeTagged("content:text") && 
+entityLocalization.hasRelationshipToEntityTagged("content") && 
+entityLocalization.hasRelationshipToEntityTagged("language") && 
+(space|domain:Security).hasEntityTagged("user")]
+                $[let contentEntity = (entityLocalization.relationshipToEntityTagged("content")).to.entity]
+                $[let languageEntity = (entityLocalization.relationshipToEntityTagged("language")).to.entity]
+                $[foreach attribute in entityLocalization.attributes]
+                    $[if attribute.hasTag("content:text")]
+    public ${modelName} getPreferred${modelName}(${contentEntity.pkType|language} contentId) throws ServiceException {
+$[send imports]
+                            $[let securityNamespace = (space.domain("Security")).namespace]
+import ${securityNamespace}.SecurityService;
+import ${securityNamespace}.PersistentUserDetailsService;
+$[/send]
+$[send memberDecl]
+    @Autowired SecurityService securityService;
+    @Autowired PersistentUserDetailsService userDetailsService;
+$[/send]
+                        $[let userEntity = (space|domain:Security).entityTagged("user")]
+$[send imports]
+import ${userEntity|domain:Model|fullname};
+$[/send]
+                        $[let preferredLanguageRelationship = (userEntity|domain:Localization).relationshipTagged("language:preferred")]
+                        $[let usernameAttribute = (userEntity|domain:Security).attributeTagged("login:username")]
+        ${userEntity|domain:Model|name} user = userDetailsService.findBy${usernameAttribute|domain:Model|name|capitalize}(securityService.findLoggedInUsername());
+        if (user.get${preferredLanguageRelationship|domain:Model|name|capitalize}Id() != ${languageEntity.pkType.isUUIDType ? "null":"0"}) {
+            ${languageEntity.pkType|language} preferredLanguageId = user.get${preferredLanguageRelationship|domain:Model|name|capitalize}Id();
+            return get${modelName}InLanguage(contentId, preferredLanguageId);
+        }
+        return null;
+    }
+    public String getPreferred${modelName}Text(${contentEntity.pkType|language} contentId) throws ServiceException {
+        ${modelName} object = getPreferred${modelName}(contentId);
+        if (object != null) {
+            return object.get${attribute|domain:Model|name|capitalize}();
+        }
+        return null;
+    }
+
+    public LocalizedContent get${modelName}InLanguage(${contentEntity.pkType|language} contentId, ${languageEntity.pkType|language} languageId) throws ServiceException {
+        List<${modelName}> localizedContents = ${repositoryVariableName}.findBy${contentEntity|domain:Model|name}IdAnd${languageEntity|domain:Model|name}Id(contentId, languageId);
+        ${modelName} localizedContent = null;
+        if (localizedContents != null && localizedContents.size() > 0) {
+            localizedContent = localizedContents.get(0);
+        } else {
+            // create it
+            ${userEntity|domain:Model|name} user = userDetailsService.findBy${usernameAttribute|domain:Model|name|capitalize}(securityService.findLoggedInUsername());
+            localizedContent = new ${modelName}();
+            localizedContent.set${contentEntity|domain:Model|name}Id(contentId);
+            localizedContent.set${languageEntity|domain:Model|name}Id(languageId);
+            localizedContent.set${attribute|domain:Model|name|capitalize}(""); // placeholder
+                    $[if (entity|domain:Security).hasRelationshipTagged("user:modified")]
+                        $[let lastModifiedRelationship = (entity|domain:Security).relationshipTagged("user:modified")]
+            localizedContent.set${lastModifiedRelationship|domain:Model|name|capitalize}Id(user.getId());
+                    $[/if]
+            localizedContent = create${modelName}(localizedContent);
+        }
+        return localizedContent;
+    }
+                    $[/if]
+                $[/foreach]
+            $[/if]
+        $[/if]
+    $[/author]
+$[/author]
+
+$[author to org.entitycompiler.springboot.service]
+    $[author to outlet methods
+      D "Adds a method to create a content ojbect along with a localized content object in a specified language."
+    ]
+        $[if space.hasDomain("Localization")]
+            $[let entityInLocalizationDomain = entity|domain:Localization]
+            $[if entityInLocalizationDomain.hasTag("content")]
+                $[let localizedContentEntity = (space|domain:Localization).entityTagged("content:localized")]
+                $[let textAttribute = localizedContentEntity.attributeTagged("content:text")]
+                $[let languageEntity = (space|domain:Localization).entityTagged("language")]
+                $[let contentClassName = entity|domain:Model|name]
+                $[let localizedContentClass = localizedContentEntity|domain:Model|name]
+$[send imports]
+import ${localizedContentEntity|domain:Model|fullname};
+$[/send]
+
+    /**
+     * Creates a content object and associated localized content object for a specific language.
+     * @param text The localized text to set.
+     * @param languageId The language.
+     * @return A content object with the localized text set for a specified language.
+     * @throws ServiceException
+     */
+    public ${contentClassName} create${contentClassName}(String text, ${languageEntity.pkType|language} languageId) throws ServiceException {
+        ${contentClassName} contentObject = new ${contentClassName}();
+        contentObject.setId(UUID.randomUUID());
+        contentObject = this.saveContent(contentObject);
+        ${localizedContentClass} localizedContent = ${localizedContentEntity|domain:Service|name|uncapitalize}.get${localizedContentClass}InLanguage(contentObject.getId(), languageId);
+        localizedContent.set${textAttribute|domain:Model|name|capitalize}(text);
+        ${localizedContentEntity|domain:Service|name|uncapitalize}.update${localizedContentClass}(localizedContent);
+        return contentObject;
+    }
+            $[/if]
+        $[/if]
+    $[/author]
+$[/author]
+
+$[author to org.entitycompiler.springboot.service.mapping]
+    $[author to outlet dtoFromModelTop
+      D "If this is the content entity, add code to copy the content text in user's preferred language"
+      D "into the virtual attribute that holds the preferred language text."
+    ]
+        $[if space.hasDomain("Localization")]
+            $[foreach attribute in (entity|domain:Localization).attributes]
+                $[if attribute.isVirtual && attribute.hasTag("language:preferred")]
+                    $[let localizedContentRelationship = (entity|domain:Localization).relationshipToEntityTagged("content:localized")]
+                    $[if localizedContentRelationship != null]
+                        $[let localizedContentEntity = localizedContentRelationship.to.entity]
+                        $[call addAutoWired(domainEntity:localizedContentEntity|domain:Service)]
+                        $[let domainAttribute = attribute|domain:JSONDTO]
+        dtoObject.set${domainAttribute|name|capitalize}(${localizedContentEntity|domain:Service|name|uncapitalize}.getPreferred${localizedContentEntity|domain:Model|name}Text(modelObject.getId()));
+                    $[/if]
+                $[/if]
+            $[/foreach]
+        $[/if]
+    $[/author]
+    $[author to outlet dtoFromModelMiddle
+      D "For each of the virtual attributes that should contain text in the user's preferred"
+      D "language, copy the text from its associated content relationship object."
+    ]
+        $[if space.hasDomain("Localization")]
+            $[let entityLocalization = entity|domain:Localization]
+            $[foreach relationship in entityLocalization.relationships]
+                $[if relationship.hasToEntityTagged("content")]
+                    $[let relationshipField = relationship|domain:JSONDTO|name|capitalize]
+                    $[foreach attribute in entityLocalization.attributes]
+                        $[if attribute.tagValue("content") == relationship.name]
+            if (dtoObject.get${relationshipField}() != null) {
+                dtoObject.set${attribute|domain:JSONDTO|name|capitalize}(dtoObject.get${relationshipField}().getLocalizedText());
+            }
+                            $[break]
+                        $[/if]
+                    $[/foreach]
+                $[/if]
+            $[/foreach]
+        $[/if]
+    $[/author]
+$[/author]
+
+$[author to org.entitycompiler.springboot.repository]
+    $[author to outlet methods]
+        $[if space.hasDomain("Localization")]
+            $[let entityLocalization = entity|domain:Localization]
+            $[if entityLocalization.hasTag("content:localized") && 
+entityLocalization.hasAttributeTagged("content:text") && 
+entityLocalization.hasRelationshipToEntityTagged("language") && 
+entityLocalization.hasRelationshipToEntityTagged("content")]
+                $[let languageEntity = (entityLocalization.relationshipToEntityTagged("language")).to.entity]
+                $[let contentEntity = (entityLocalization.relationshipToEntityTagged("content")).to.entity]
+    List<${modelName}> findBy${contentEntity|domain:Model|name}IdAnd${languageEntity|domain:Model|name}Id(${contentEntity.pkType|language} contentId, ${languageEntity.pkType|language} languageId);
+            $[/if]
+        $[/if]
+    $[/author]
+$[/author]

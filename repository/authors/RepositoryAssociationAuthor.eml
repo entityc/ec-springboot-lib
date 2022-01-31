@@ -1,0 +1,55 @@
+$[D summary, main "This template contains the authors that are responsible for generating repository methods"]
+$[D summary, main "for maintaining many-to-many (association) relationships between objects."]
+
+$[author to org.entitycompiler.springboot.repository]
+    $[author to outlet methods
+      D "Adds methods for adding and removing a single association, checking a specific association"
+      D "and getting all associations."
+    ]
+        $[foreach relationship in entity.implicitRelationships]
+            $[if relationship.to.entity.hasTag("internal:many-to-many")]
+                $[let manyToManyEntity = relationship.to.entity]
+                $[let destMMEntity = null]
+                $[foreach mmRel in manyToManyEntity.implicitRelationships]
+                    $[if mmRel.to.entity.name != entity.name]
+                        $[let destMMEntity = mmRel.to.entity]
+                        $[break]
+                    $[/if]
+                $[/foreach]
+                $[let sourcePKType = entity.pkType|language]
+                $[let sourcePKVarName = entity.primaryKeyAttribute|domain|name]
+                $[let sourcePKDBName = entity.primaryKeyAttribute|domain:Database|name]
+                $[let destPKType = destMMEntity.pkType|language]
+                $[let destPKVarName = destMMEntity.primaryKeyAttribute|domain|name]
+                $[let destPKDBName = destMMEntity.primaryKeyAttribute|domain:Database|name]
+    @Query(value =
+            "SELECT pt.* " +
+            "FROM ${entity|domain:Database|name} pt " +
+            "WHERE pt.${sourcePKDBName} IN " +
+              "(SELECT ${sourcePKDBName} " +
+                 "FROM ${manyToManyEntity|domain:Database|name} " +
+                 "WHERE ${destPKDBName} = ?1) " +
+             "ORDER BY pt.created_on DESC LIMIT ?3 OFFSET ?2", nativeQuery = true)
+    List<${modelName}> get${modelName}ListAssociatedWith${destMMEntity|domain:Model|name}(${destPKType} ${destPKVarName}, int start, int limit);
+
+    @Modifying
+    @Query(value =
+            "INSERT INTO ${manyToManyEntity|domain:Database|name} " +
+            "(${sourcePKDBName}, ${destPKDBName}) VALUES (?1, ?2)", nativeQuery = true)
+    void addAssociationTo${destMMEntity|domain:Model|name}(${sourcePKType} ${sourcePKVarName}, ${destPKType} ${destPKVarName});
+
+    @Modifying
+    @Query(value =
+            "DELETE FROM ${manyToManyEntity|domain:Database|name} " +
+            "WHERE ${sourcePKDBName} = ?1 AND ${destPKDBName} = ?2", nativeQuery = true)
+    void removeAssociationTo${destMMEntity|domain:Model|name}(${sourcePKType} ${sourcePKVarName}, ${destPKType} ${destPKVarName});
+
+    @Query(value =
+         "SELECT CASE WHEN COUNT(t) > 0 THEN true ELSE false END " +
+         "FROM ${manyToManyEntity|domain:Database|name} t WHERE t.${sourcePKDBName} = ?1 AND t.${destPKDBName} = ?2", nativeQuery = true)
+    Boolean isAssociatedTo${destMMEntity|domain:Model|name}(${sourcePKType} ${sourcePKVarName}, ${destPKType} ${destPKVarName});
+
+            $[/if]
+        $[/foreach]
+    $[/author]
+$[/author]

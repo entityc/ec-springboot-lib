@@ -1,0 +1,6 @@
+$[D summary "This is the top level template that generates the Admin Console."]
+$[D "This is the top level template that generates the Admin Console."]
+
+$[import "web/thymeleaf-bootstrap/admin/AdminHomePageTemplate"]
+$[import "web/thymeleaf-bootstrap/admin/AdminDetailPageTemplate"]
+$[import "web/thymeleaf-bootstrap/admin/AdminNewPageTemplate"]

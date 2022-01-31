@@ -1,0 +1,114 @@
+$[language java]
+$[domain Service]
+$[import "service/ServiceFunctions"]
+$[import "util/AutoWired"]
+$[publisher org.entitycompiler.springboot.service.mapping]
+    $[author to org.entitycompiler.springboot.service]
+        $[author to outlet methods
+          D "Adds methods to map model objects into DTO objects."
+        ]
+            $[let responseDtoName = entity|domain:JSONDTO|name]
+            $[let responseModelName = entity|domain:Model|name]
+            $[let repositoryVariableName = entity|domain:Repository|name|uncapitalize]
+$[receive methodDescriptionReceiver]
+    public ${responseDtoName} dtoFromModel(${responseModelName} modelObject, boolean hierarchical) throws ServiceException {
+            $[let _mapperDomainEntity = entity|domain:DTOMapper]
+            $[call addAutoWired(domainEntity: _mapperDomainEntity)]
+            $[let _mapperVariableName = _mapperDomainEntity|name|uncapitalize]
+        ${responseDtoName} dtoObject = ${_mapperVariableName}.toDtoFromModel(modelObject);
+$[outlet dtoFromModelTop
+  D "At the top of the `dtoFromModel()` method just after the `dtoObject` was initially mapped"
+  D "from the `modelObject` and above the `hierarchical` if block."
+]
+$[/outlet]
+            $[let copiedEntities = @[]@]
+        if (hierarchical) {
+            $[foreach relationship in (entity|domain:JSONDTO|view:APIGet).relationships|sort]
+                $[let _toEntity = relationship.to.entity]
+                $[if _toEntity.entity.isImplicit || _toEntity.entity.isExtern || _toEntity.entity.isIncluded]$[continue]$[/if]
+                $[let toSelf = _toEntity.entity.name == entity.name]
+                $[let includeChildEntities = _toEntity.entity.space.name == entity.space.name && !_toEntity.entity.isIncluded]
+                $[if !includeChildEntities]$[continue]$[/if]
+                $[let _toEntityDtoClassName = _toEntity|name]
+                $[let _toEntityModelClassName = _toEntity|domain:Model|name]
+$[send imports]
+import ${_toEntity|domain:Model|fullname};
+import ${_toEntity|domain:JSONDTO|fullname};
+$[/send]
+                $[let _toEntityRepository = _toEntity|domain:Repository]
+                $[if relationship.to.isOne && relationship.withViewName != "Reference"]
+                    $[if _toEntity.name != entity.name]
+                        $[call addAutoWired(domainEntity: _toEntityRepository)]
+                    $[/if]
+                    $[do copiedEntities.add(relationship.to.entity)]
+                    $[if !toSelf]
+                        $[call addAutoWired(domainEntity: _toEntity|domain:Service)]
+                    $[/if]
+            if (modelObject.get${relationship|domain:Model|name|capitalize}Id() != ${relationship.to.entity.pkType.isUUIDType ? "null":"0"}) {
+                Optional<${_toEntityModelClassName}> fieldObjectOptional = ${_toEntityRepository|name|uncapitalize}.getById(modelObject.get${relationship|domain:Model|name|capitalize}Id());
+                if (!fieldObjectOptional.isPresent()) {
+                    throw new EntityNotFoundException("${_toEntityModelClassName} not found.");
+                }
+                dtoObject.set${relationship|domain:Model|name|capitalize}($[if toSelf]this$[else]${_toEntity|domain:Service|name|uncapitalize}$[/if].dtoFromModel(fieldObjectOptional.get(), true));
+            }
+                $[elseif relationship.isOneToMany && relationship.withViewName != "Reference"]
+                    $[capture bySomething]By${entity|domain:Model|name|capitalize}$[/capture]
+                    $[capture byArgument]modelObject.get${entity.primaryKeyAttribute|domain:Model|name|capitalize}(), $[/capture]
+$[send imports]
+import java.util.HashSet;
+$[/send]
+$[*if false]
+            {
+                List<${_toEntityModelClassName}> items = ${_toEntityRepository|name|uncapitalize}.get${_toEntity|domain:Model|name|capitalize}List${bySomething}(${byArgument}0, 10000);
+                HashSet<${_toEntityDtoClassName}> dtoItems = new HashSet<>();
+                for( ${_toEntityModelClassName} item : items ) {
+                    dtoItems.add(${_toEntityMapperVariableName}.toDtoFromModel(item));
+                }
+                dtoObject.set${relationship|domain:Model|name|capitalize}(dtoItems);
+            }
+$[else*]
+                    $[if !toSelf]
+                        $[call addAutoWired(domainEntity: _toEntity|domain:Service)]
+                    $[/if]
+            dtoObject.set${relationship|domain:Model|name|capitalize}(new HashSet<>($[if toSelf]this$[else]${_toEntity|domain:Service|name|uncapitalize}$[/if].get${_toEntity|domain:JSONDTO|name|capitalize}List${bySomething}(${byArgument}0, 10000, true)));
+$[*/if*]
+                $[elseif relationship.isManyToMany && relationship.withViewName != "Reference"]
+$[send imports]
+import java.util.HashSet;
+import java.util.List;
+$[/send]
+                    $[if !toSelf]
+                        $[call addAutoWired(domainEntity: _toEntity|domain:Repository)]
+                        $[call addAutoWired(domainEntity: _toEntity|domain:Service)]
+                    $[/if]
+            List<${_toEntityModelClassName}> associatedObjectList = ${_toEntity|domain:Repository|name|uncapitalize}.get${_toEntityModelClassName}ListAssociatedWith${responseModelName}(modelObject.getId(), 0, 1000);
+            HashSet<${_toEntityDtoClassName}> associatedDtoList = new HashSet<>();
+            for (${_toEntityModelClassName} object : associatedObjectList) {
+                associatedDtoList.add(${_toEntity|domain:Service|name|uncapitalize}.dtoFromModel(object, true));
+            }
+            dtoObject.set${relationship|domain:Model|name|capitalize}(associatedDtoList);
+                $[/if]
+            $[/foreach]
+$[outlet dtoFromModelMiddle
+  D "Inside `hierarchical` if block, near the bottom of it. The dto object is `dtoObject`."
+]
+$[/outlet]
+        }
+        return dtoObject;
+    }
+            $[capture methodDesc]Creates a DTO object from a Model object.$[if !copiedEntities.isEmpty()] It also includes full objects for referenced $[if copiedEntities.count == 1]entity $[else]entities $[/if]$[foreach ce in copiedEntities.values]$[if ce#last]and $[/if]${ce|domain:Model|name}$[if !ce#last], $[/if]$[/foreach].$[/if]$[/capture]
+$[send methodDescriptionReceiver]
+    /**
+     * ${methodDesc|join|wrap:("     * ")}
+     * [Template] ${__template.name}:${__outlet.name} < ${__author.template.name}
+     */
+$[/send]
+    /**
+     * ${methodDesc|join|wrap:("     * ")}
+     * [Template] ${__template.name}:${__outlet.name} < ${__author.template.name}
+     */
+    public ${responseDtoName} dtoFromModel(${responseModelName} modelObject) throws ServiceException {
+        return dtoFromModel(modelObject, true);
+    }
+        $[/author]
+    $[/author]$[/publisher]

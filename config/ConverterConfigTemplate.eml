@@ -1,0 +1,88 @@
+$[language java]
+$[D summary, main "Used to convert protobuf DTOs so they can be sent via HTTP."]
+$[domain Converter]
+$[let protobufNamespace = (space.domain("ProtobufDTO")).namespace]
+$[foreach space.modules|sort]
+    $[if module.isIncluded]$[continue]$[/if]
+    $[foreach module.entities|sort]
+        $[if entity.isImplicit || entity.isExtern]$[continue]$[/if]
+        $[let protobufClassName = entity|domain:ProtobufDTO|name]
+        $[capture fullProtobufClassName]${module|domain:ProtobufDTO|name}.${protobufClassName}$[/capture]
+        $[file domain.namespace|path entity|domain|name "java"]
+
+package ${domain.namespace};
+
+import com.google.protobuf.CodedOutputStream;
+import org.springframework.http.HttpInputMessage;
+import org.springframework.http.HttpOutputMessage;
+import org.springframework.http.MediaType;
+import org.springframework.http.converter.AbstractHttpMessageConverter;
+import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.http.converter.HttpMessageNotWritableException;
+import org.springframework.util.ConcurrentReferenceHashMap;
+
+import java.io.IOException;
+import java.lang.reflect.Method;
+import java.nio.charset.StandardCharsets;
+import java.util.Collections;
+import java.util.Map;
+import ${protobufNamespace}.${module|domain:ProtobufDTO|name};
+
+public class ${entity|domain|name} extends AbstractHttpMessageConverter<${fullProtobufClassName}> {
+
+    public static final MediaType PROTOBUF_LITE = new MediaType("application", "x-protobuf-lite", StandardCharsets.UTF_8);
+
+    protected ${entity|domain|name}() {
+        setSupportedMediaTypes(Collections.singletonList(PROTOBUF_LITE));
+    }
+
+    @Override
+    protected boolean supports(Class<?> aClass) {
+        return ${fullProtobufClassName}.class.isAssignableFrom(aClass);
+    }
+
+    @Override
+    protected ${fullProtobufClassName} readInternal(Class<? extends ${fullProtobufClassName}> aClass, HttpInputMessage httpInputMessage) throws IOException, HttpMessageNotReadableException {
+        ${fullProtobufClassName}.Builder builder = ${fullProtobufClassName}.newBuilder();
+        return builder.mergeFrom(httpInputMessage.getBody()).build();
+    }
+
+    @Override
+    protected void writeInternal(${fullProtobufClassName} ${entity.name|uncapitalize}, HttpOutputMessage httpOutputMessage) throws IOException, HttpMessageNotWritableException {
+        CodedOutputStream codedOutputStream = CodedOutputStream.newInstance(httpOutputMessage.getBody());
+        ${entity.name|uncapitalize}.writeTo(codedOutputStream);
+        codedOutputStream.flush();
+    }
+}
+        $[/file]
+    $[/foreach]
+$[/foreach]
+
+$[file domain.namespace|path "PBLConverterConfig" "java"]
+package ${domain.namespace};
+
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.http.converter.protobuf.ProtobufHttpMessageConverter;
+
+@Configuration
+public class PBLConverterConfig {
+    $[foreach space.modules|sort]
+        $[if module.isIncluded]$[continue]$[/if]
+        $[foreach module.entities|sort]
+            $[if entity.isImplicit || entity.isExtern]$[continue]$[/if]
+    @Bean
+    ${entity|domain|name} ${entity|domain|name|uncapitalize}() {
+        return new ${entity|domain|name}();
+    }
+
+        $[/foreach]
+    $[/foreach]
+    @Bean
+    ProtobufLiteConverter protobufLiteConverter() {
+        return new ProtobufLiteConverter();
+    }
+
+}
+
+$[/file]

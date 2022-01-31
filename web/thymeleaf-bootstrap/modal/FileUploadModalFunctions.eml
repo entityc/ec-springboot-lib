@@ -1,0 +1,59 @@
+$[D summary, main "Contains functions for adding a modal dialog that allows a user to select a local file for the"]
+$[D summary, main "purpose of uploading it to the server."]
+
+$[function insertFileUploadModalHTML
+  D "Inserts the HTML code needed to create a file upload dialog." 
+  (adminUrlPrefix
+   D "The admin console's url prefix (e.g., `admin`)" ,
+   entity
+   D "The entity associated with the file upload. At runtime, the attribute associated with the"
+   D "upload can be set." ,
+   entityDtoClassName
+   D "This is simply the DTO class name for the entity." 
+  )
+]
+        <div class="modal fade" id="assetUploadModal" tabindex="-1" role="dialog" aria-labelledby="assetUploadModalLabel" aria-hidden="true">
+          <div class="modal-dialog modal-xl" role="document">
+            <form th:action="@{/${adminUrlPrefix}/${entity|domain:APIPath|name}/{id}/upload-file(id=${$}{${entityDtoClassName}.id})}" method="post" enctype="multipart/form-data">
+				<input id="asset-upload-field-ident" name="upload-field-ident" type="hidden"/>
+                <div class="modal-content">
+                  <div class="modal-header">
+                    <h5 class="modal-title" id="assetUploadModalLabel">Edit Text</h5>
+                    <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
+                      <span aria-hidden="true">&times;</span>
+                    </button>
+                  </div>
+                  <div class="modal-body">
+                      <div class="form-group">
+                            <input id="file" name="file" type="file" class="file form-control" data-allowed-file-extensions='["png"]'>
+                      </div>
+                  </div>
+                  <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <input type="submit"  class="btn btn-primary" value="Upload" />
+                  </div>
+                </div>
+            </form>
+          </div>
+        </div>
+$[/function]
+$[function insertFileUploadModalScript
+  D "Inserts the Javascript portion of the file upload dialog." 
+  (
+  )
+]
+<script>
+var assetUploadModal = document.getElementById('assetUploadModal')
+assetUploadModal.addEventListener('show.bs.modal', function (event) {
+  // Button that triggered the modal
+  var button = event.relatedTarget
+  var fieldName = button.getAttribute('data-bs-field-name')
+  var fieldTitle = button.getAttribute('data-bs-field-title')
+  var modalFieldIdent = document.getElementById('asset-upload-field-ident')
+  var modalTitle = assetUploadModal.querySelector('.modal-title')
+  var modalBodyInput = assetUploadModal.querySelector('.modal-body input')
+  modalFieldIdent.value = fieldName
+  modalTitle.textContent = 'Upload file for ' + fieldTitle
+})
+</script>
+$[/function]

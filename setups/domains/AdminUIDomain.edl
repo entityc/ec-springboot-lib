@@ -1,0 +1,12 @@
+domain AdminUI (${appName}) {
+
+    entity ${entityName} {
+        T "home", "edit"
+        attributes {
+            title        { T "summary", "detail", "headline:title", "breadcrumb:title" }
+            description  { T            "detail", "markdown" }
+        }
+        relationships {
+        }
+    }
+}

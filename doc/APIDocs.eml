@@ -1,0 +1,142 @@
+$[language md]
+$[D summary "Generates documentation for the REST APIs of this microservice."]
+$[D main "This template generates documentation for the REST APIs of this microservice."]
+$[import "controller/markdown/AssetMarkdownFunctions"]
+$[import "controller/markdown/CreateMarkdownFunctions"]
+$[import "controller/markdown/GetMarkdownFunctions"]
+$[import "controller/markdown/UpdateMarkdownFunctions"]
+
+$[* Generate by Module *]
+$[foreach module in space.modules]
+    $[if module.isIncluded]$[continue]$[/if]
+$[*
+    MODULE DOCUMENT
+*]
+    $[capture directory]${module.name|capitalize}/API$[/capture]
+    $[capture filename]README$[/capture]
+    $[file directory filename "md"]
+# ${module.name|title} API
+
+        $[if module.hasDescription]
+${module.description}
+
+The API is broken up into the following sections:
+
+            $[foreach entity in module.entities|sort]
+                $[if entity.isExtern]$[continue]$[/if]
+- [${entity.name}](${entity.name}/${entity.name}API.md)
+            $[/foreach]
+
+        $[/if]
+    $[/file]
+$[*
+    ENTITY DOCUMENTS
+*]
+    $[foreach entity in module.entities]
+        $[if entity.isExtern || entity.isSecondary]$[continue]$[/if]
+        $[capture directory]${module.name|capitalize}/API/${entity.name}$[/capture]
+        $[capture filename]${entity.name}API$[/capture]
+        $[file directory filename "md"]
+            $[let _className = entity|domain:Model|name|words]
+# ${_className}
+
+            $[if entity.hasDescription]
+${entity.description}
+
+            $[/if]
+
+$[*
+    CREATE ENDPOINT
+*]
+            $[call createMarkdown()]
+
+$[*
+    GET LIST ENDPOINT
+*]
+            $[call getListByParentMarkdown()]
+
+$[*
+    GET BY ID ENDPOINT
+*]
+            $[call getByIdMarkdown()]
+
+$[*
+    GET BY RELATIONSHIP ENDPOINTS
+*]
+$[*  This is a redundant endpoint so skip for now
+$[foreach entity.relationships]
+$[if relationship.isParent]
+## Get ${entity|title} List by ${relationship.name|title}
+
+|Method|Path|
+|:---:|:---|
+|GET|`/${entity|domain:APIPath|name}/${relationship|domain:APIPath|name}/{id}?start={start}&limit={limit}`|
+
+Where:
+
+|Param|Description|
+|:---|:---|
+|`id`|The unique ID of the parent `${relationship.to.entity.name}` object.|
+|`start`|The starting index in the full result set.|
+|`limit`|The number of results to return.|
+
+$[/if]
+$[/foreach]
+*]
+$[*
+    UPDATE ENDPOINT
+*]
+            $[call updateMarkdown()]
+$[*
+    UPLOAD ENDPOINTS
+*]
+            $[foreach entity.attributes]
+                $[if attribute.secondaryEntityIsTagged("asset")]
+## Upload ${entity|title} ${attribute|title}
+
+|Method|Path|
+|:---:|:---|
+|POST|`/${(entity|domain:APIPath).domain.namespace|path}/${entity|domain:APIPath|name}/{id}/form/${attribute|domain:APIPath|name}/{ext}`|
+
+Where:
+
+|Param|Description|
+|:---|:---|
+|`id`|The unique ID of the ${entity.name} object.|
+|`ext`|The extension of the file being uploaded.|
+
+                $[/if]
+            $[/foreach]
+
+$[*
+    DELETE BY ID ENDPOINT
+*]
+## Delete ${entity|title} by ID
+
+|Method|Path|
+|:---:|:---|
+|DELETE|`/${(entity|domain:APIPath).domain.namespace|path}/${entity|domain:APIPath|name}/{id}`|
+
+Where:
+
+|Param|Description|
+|:---|:---|
+|`id`|The unique id of the ${entity.name} object to be deleted.|
+
+            $[foreach entity.attributes]
+                $[if attribute.secondaryEntityIsTagged("asset:collection")]
+                    $[let secondaryAttributeEntity = attribute.getTypeEntity()]
+                    $[foreach secondaryAttribute in secondaryAttributeEntity.attributes]
+                        $[call uploadMarkdown(collectionAttribute:attribute,attribute:secondaryAttribute)]
+
+                    $[/foreach]
+                $[elseif attribute.secondaryEntityIsTagged("asset:file")]
+                    $[call uploadMarkdown(collectionAttribute:null)]
+
+                $[/if]
+            $[/foreach]
+
+
+        $[/file]
+    $[/foreach]
+$[/foreach]

@@ -1,0 +1,224 @@
+$[D summary, main "This Java source file with template code implements the controller class for login and signup."]
+$[D "Its endpoints will be used by login and signup HTML."]
+$[if adminUrlPrefix == null || adminUrlPrefix == ""]
+$[let adminUrlPrefix = "admin"]
+$[/if]
+
+$[let useInviteFeature = false]
+$[import "web/thymeleaf-bootstrap/WebPageFunctions"]
+$[if space.domain("Security").hasTag("feature:invite") && (space|domain:Security).hasEntityTagged("invite")]
+    $[let inviteDomainEntity = (space|domain:Security).entityTagged("invite")]
+    $[if inviteDomainEntity.hasAttributeTagged("code")]
+        $[let inviteEntity = inviteDomainEntity.entity]
+        $[let inviteCodeAttribute = inviteDomainEntity.attributeTagged("code")]
+        $[let useInviteFeature = true]
+    $[/if]
+$[/if]
+package ${domain.namespace};
+
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import ${userEntity|domain:Model|fullname};
+import ${userEntity|domain:Repository|fullname};
+import ${userEntity|domain:Service|fullname};
+import ${roleEnum|domain:Model|fullname};
+import ${space.domain("Exception").namespace}.ServiceException;
+$[let securityDomain = space.domain("Security")]
+import ${securityDomain.namespace}.PersistentUserDetailsService;
+import ${securityDomain.namespace}.SecurityService;
+$[if useInviteFeature]
+import ${securityDomain.namespace}.UserInviteAcceptDto;
+import ${inviteEntity|domain:Service|fullname};
+import ${inviteEntity|domain:JSONDTO|fullname};
+$[else]
+import ${securityDomain.namespace}.UserSignupDto;
+$[/if]
+import ${securityDomain.namespace}.jwt.JwtUtils;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.validation.BindingResult;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+
+import javax.servlet.http.Cookie;
+import javax.servlet.http.HttpServletResponse;
+import javax.validation.Valid;
+import java.time.LocalDateTime;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Set;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+
+$[let usernameFieldName = usernameAttribute|domain:Model|name]
+$[let passwordFieldName = passwordAttribute|domain:Model|name]
+$[let enabledFieldName  = userEnabledAttribute|domain:Model|name]
+
+@Controller
+public class LoginSignupWebPageController {
+
+    @Autowired
+    private PersistentUserDetailsService userDetailsService;
+
+    @Autowired
+    PasswordEncoder passwordEncoder;
+
+    @Autowired
+    UserService userService;
+$[if useInviteFeature]
+
+    @Autowired
+    ${inviteEntity|domain:Service|name} inviteService;
+$[/if]
+    @Autowired
+    AuthenticationManager authenticationManager;
+
+    @Autowired
+    SecurityService securityService;
+
+    @Autowired
+    JwtUtils jwtUtils;
+
+    protected final Log logger = LogFactory.getLog(this.getClass());
+
+    @GetMapping(value = "/login")
+    public String login(Model model, String error, String logout, HttpServletResponse res) {
+        model.addAttribute("userNameFieldName", "${usernameFieldName|capitalize}");
+        if (error != null)
+            model.addAttribute("error", "Your username and password is invalid.");
+
+        if (logout != null) {
+            Cookie cookie = new Cookie("token", "invalid");
+            cookie.setPath("/");
+            cookie.setMaxAge(Integer.MAX_VALUE);
+            res.addCookie(cookie);
+            model.addAttribute("message", "You have been logged out successfully.");
+        }
+        return "login";
+    }
+
+    @PostMapping("/login")
+    public String login(@RequestParam String username, @RequestParam String password, HttpServletResponse res) {
+
+        if (!userService.canLogin(username)) {
+            return "redirect:/login";
+        }
+        Authentication authentication = authenticationManager.authenticate(
+                new UsernamePasswordAuthenticationToken(username, password));
+
+        SecurityContextHolder.getContext().setAuthentication(authentication);
+        String jwt = jwtUtils.generateJwtToken(authentication);
+
+        Cookie cookie = new Cookie("token", jwt);
+
+        cookie.setPath("/");
+        cookie.setMaxAge(Integer.MAX_VALUE);
+
+        res.addCookie(cookie);
+
+        User user = userDetailsService.findByEmail(securityService.findLoggedInUsername());
+        Set<Role> roles = user.getRoles();
+    $[call canAccessAdminExpr(rolesArrayName:"roles") -> (rolesExpr:rolesExpr)]
+        boolean canGoToAdminSide = ${rolesExpr};
+
+        return canGoToAdminSide ? "redirect:/${adminUrlPrefix}" : "redirect:/";
+    }
+
+$[if useInviteFeature]
+    @ModelAttribute("user")
+    public UserInviteAcceptDto userInviteAcceptDto() {
+        return new UserInviteAcceptDto();
+    }
+
+    @GetMapping(value = "/invite_accept")
+    public String inviteAccentEntry(Model model) {
+        return "invite_accept";
+    }
+
+    @PostMapping(value = "/invite_accept")
+    public String acceptInvite(@ModelAttribute("user") @Valid UserInviteAcceptDto acceptDto,
+                                      BindingResult result, HttpServletResponse res) throws ServiceException {
+
+        ${userEntity|domain:Model|name} existingUser = userDetailsService.findBy${usernameFieldName|capitalize}(acceptDto.getUsername());
+        if (existingUser == null) {
+            result.rejectValue("${usernameFieldName}", null, "There is no invite for that user.");
+        }
+
+        if (result.hasErrors()) {
+            return "invite_accept";
+        }
+
+        List<${inviteEntity|domain:JSONDTO|name}> invites = inviteService.get${inviteEntity|domain:JSONDTO|name}ListBy${userEntity|domain:Model|name}(existingUser.getId(), 0, 1, false);
+
+        if (invites.size() == 0 || !acceptDto.getInviteCode().equals(invites.get(0).get${inviteCodeAttribute|domain:JSONDTO|name|capitalize}())) {
+            return "invite_accept";
+        }
+        ${inviteEntity|domain:JSONDTO|name} invite = invites.get(0);
+        inviteService.delete${inviteEntity|domain:Model|name}ById(invite.getId());
+        existingUser.set${enabledFieldName|capitalize}(true);
+        existingUser.set${passwordFieldName|capitalize}(passwordEncoder.encode(acceptDto.getPassword()));
+        userService.updateUser(existingUser);
+
+        return login(acceptDto.getUsername(), acceptDto.getPassword(), res);
+    }
+$[else]
+    @ModelAttribute("user")
+    public UserSignupDto userSignupDto() {
+        return new UserSignupDto();
+    }
+
+    @GetMapping(value = "/signup")
+    public String signup(Model model) {
+        return "signup";
+    }
+
+    @PostMapping(value = "/signup")
+    public String registerUserAccount(@ModelAttribute("user") @Valid UserSignupDto userDto,
+                                      BindingResult result) throws ServiceException {
+
+        ${userEntity|domain:Model|name} existing = userDetailsService.findBy${usernameFieldName|capitalize}(userDto.getUsername());
+        if (existing != null) {
+            result.rejectValue("${usernameFieldName}", null, "There is already an account registered with that ${usernameFieldName}");
+        }
+
+        if (result.hasErrors()) {
+            return "signup";
+        }
+
+        save(userDto);
+        return "redirect:${urlPathPrefix}/signup?success";
+    }
+
+    public ${userEntity|domain:Model|name} save(UserSignupDto userSignupDto) throws ServiceException {
+        ${userEntity|domain:Model|name} user = new User();
+$[if userEntity.hasAttributeTagged("name:first")]
+        user.set${userEntity.attributeTagged("name:first")|domain:Model|name|capitalize}(userSignupDto.getFirstName());
+$[/if]
+$[if userEntity.hasAttributeTagged("name:last")]
+        user.set${userEntity.attributeTagged("name:last")|domain:Model|name|capitalize}(userSignupDto.getLastName());
+$[/if]
+        user.set${usernameFieldName|capitalize}(userSignupDto.getUsername());
+        user.set${passwordFieldName|capitalize}(passwordEncoder.encode(userSignupDto.getPassword()));
+$[if roleEnum != null && userEntity.hasAttributeOfTypeTagged("role")]
+        $[let roleClassName = roleEnum|domain:Model|name]
+        HashSet<${roleClassName}> roles = new HashSet<>();
+  $[if roleEnum.hasItemTagged("role:default")]
+        roles.add(${roleClassName}.${roleEnum.itemTagged("role:default")|domain:Model|name});
+  $[/if]
+        user.set${userEntity.attributeOfTypeTagged("role")|domain:Model|name|capitalize}(roles);
+$[/if]
+        return userService.createUser(user);
+    }
+    $[/if]
+}

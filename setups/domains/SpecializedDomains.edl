@@ -1,0 +1,40 @@
+/*
+  Domain Specialization
+ */
+
+domain Database (${appName}) {
+
+    namespace db.migration
+
+    entity User rename platform_user
+}
+
+domain DTO (${appName}) {
+/* If you entity has a to-many and/or to-one relationship with other entities you
+   can include those entities as follows (just substitute the names for your other
+   entities for ChildEntityA and/or ChildEntityB.
+
+    entity ${entityName} {
+        view APIGet {
+            relationships {
+                include to-many entity ChildEntityA with view APIGet
+                include to-one entity ChildEntityB with view APIGet
+            }
+        }
+    }
+*/
+}
+
+domain Repository (${appName})
+{
+    entity ${entityName} {
+        attributes {
+            title       { T "sort:asc" }
+        }
+    }
+}
+
+domain APIPath (${appName}) {
+
+    namespace ${apiPrefixNamespace}
+}

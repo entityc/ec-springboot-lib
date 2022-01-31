@@ -1,0 +1,4 @@
+$[D summary "Generates various documentation about the generated source files."]
+$[import "doc/DatamodelDocs"]
+$[import "doc/APIDocs"]
+$[import "doc/ModuleDocs"]

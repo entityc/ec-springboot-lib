@@ -1,0 +1,151 @@
+$[language java]
+$[domain Model]
+$[foreach space.modules]
+    $[if module.isIncluded]$[continue]$[/if]
+    $[foreach space.entities]
+        $[if entity.isImplicit || entity.isExtern]$[continue]$[/if]
+        $[foreach view in entity.views]
+            $[if ! view.hasForeignAttributes() && ! entity.isSecondary]$[continue]$[/if]
+            $[file domain.namespace|path view|domain|name "java"]
+//
+// This is the Model class for view:
+//
+//   Name:        ${view|domain|name}
+                $[if view.hasDescription]
+//   Description: ${view.description|wrap}
+                $[else]
+                    $[capture viewDescription]This view extends the `${entity.name}` entity to include fields from associated entities.$[/capture]
+//   Description: ${viewDescription|wrap}
+                $[/if]
+//
+// THIS FILE IS GENERATED. DO NOT EDIT!!
+//
+package ${domain.namespace};
+
+import java.util.Date;
+import java.util.HashSet;
+import java.util.Set;
+import java.util.UUID;
+
+import javax.persistence.CollectionTable;
+import javax.persistence.Column;
+import javax.persistence.ElementCollection;
+import javax.persistence.Entity;
+import javax.persistence.FetchType;
+import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.Table;
+import javax.persistence.Embeddable;
+import javax.persistence.Embedded;
+import javax.persistence.AttributeOverrides;
+import javax.persistence.AttributeOverride;
+
+import org.hibernate.annotations.Fetch;
+import org.hibernate.annotations.FetchMode;
+import org.hibernate.annotations.Type;
+
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+                $[foreach view.attributes]
+                    $[if attribute.type.isEnumType]
+import ${attribute.type|domain:Model|fullname};
+                    $[/if]
+                $[/foreach]
+
+                $[if entity.isSecondary]
+@Embeddable
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+                $[else]
+@Entity
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+@Table(name = "${view|domain:Database|name}")
+                $[/if]
+public class ${view|domain|name}
+{
+                $[if entity.hasPrimaryKey]
+    @Id
+                    $[if entity.pkType.isUUIDType]
+    @Type(type="pg-uuid")
+                    $[/if]
+    @Column(name = "${entity.primaryKeyAttribute|domain:Database|name}")
+    private ${entity.pkType|language} ${entity.primaryKeyAttribute|domain|name};
+
+                $[/if]
+                $[foreach view.attributes]
+                    $[if entity.hasPrimaryKey]
+                        $[if attribute.name == entity.primaryKeyAttribute.name]$[continue]$[/if]
+                    $[/if]
+                    $[let domainAttributeName = attribute|domain:Database|name]
+                    $[if attribute.hasDescription]
+    // ${attribute.description}
+                    $[/if]
+                    $[if attribute.isArray]
+                        $[let joinColumnName = view.entity.primaryKeyAttribute|domain:Database|name]
+                        $[capture collectionTableName]${view|domain:Database|name}_${attribute|domain:Database|name}$[/capture]
+                        $[if view.isAttributeReference(attribute.name)]
+                            $[let attributeReference = view.getAttributeReference(attribute.name)]
+                            $[let joinColumnName = attributeReference.resolvedEntity.primaryKeyAttribute|domain:Database|name]
+                            $[capture collectionTableName]${attributeReference.resolvedEntity|domain:Database|name}_${attributeReference.resolvedAttribute|domain:Database|name}$[/capture]
+                        $[/if]
+    @ElementCollection(fetch=FetchType.EAGER)
+    @Fetch(FetchMode.SUBSELECT)
+    @CollectionTable(
+            name = "${collectionTableName}",
+            joinColumns = @JoinColumn(name = "${joinColumnName}")
+    )
+    @Column(name = "value")
+    private Set<${attribute.type|language}> ${attribute|domain|name} = new HashSet<>();
+                    $[else]
+                        $[let attrClassName = attribute.type|language]
+                        $[if attribute.isSecondaryEntityType()]
+                            $[if ! attribute.getTypeEntity().hasViewWithName(view.name)]
+                                $[log fatal]Entity ${(attribute.getTypeEntity()).name} must have view: ${view.name}$[/log]
+                                $[continue]
+                            $[/if]
+                            $[let secondaryEntityView = attribute.getTypeEntity().getViewWithName(view.name)]
+                            $[let attrClassName = secondaryEntityView|domain|name]
+    @AttributeOverrides({
+                            $[foreach secondaryAttribute in secondaryEntityView.attributes]
+            @AttributeOverride(name="${secondaryAttribute|domain:Model|name}", column=@Column(name="${domainAttributeName}_${secondaryAttribute|domain:Database|name}"))$[if ! secondaryAttribute#last],$[/if]
+
+                            $[/foreach]
+    })
+    @Embedded
+                        $[elseif attribute.isCreation]
+    @Column(name = "${domainAttributeName}", insertable = false, updatable = false)
+                        $[elseif attribute.isModification]
+    @Column(name = "${domainAttributeName}", insertable = false, updatable = false)
+                        $[elseif attribute.isSequential]
+    @Column(name = "${domainAttributeName}", insertable = false, updatable = false)
+                        $[else]
+    @Column(name = "${domainAttributeName}")
+                        $[/if]
+                        $[switch attribute.type]
+                            $[case uuid]
+    @Type(type="pg-uuid")
+                            $[default]
+                        $[/switch]
+    private ${attrClassName} ${attribute|domain|name};
+                    $[/if]
+
+                $[/foreach]
+                $[foreach view.relationships]
+                    $[if ! relationship.to.isOne]$[continue]$[/if]
+    @Column(name = "${relationship|domain:Database|name}_id")
+                    $[switch relationship.to.entity.primaryKey.type]
+                        $[case uuid]
+    @Type(type="pg-uuid")
+                        $[default]
+                    $[/switch]
+    ${relationship.to.entity.primaryKey.type|language} ${relationship|domain|name}Id;
+
+                $[/foreach]
+}
+            $[/file]
+        $[/foreach]
+    $[/foreach]$[/foreach]

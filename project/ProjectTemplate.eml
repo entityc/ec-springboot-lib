@@ -1,0 +1,4 @@
+
+$[import "project/PomTemplate"]
+$[import "project/ApplicationPropertiesTemplate"]
+$[import "project/ScriptsTemplate"]

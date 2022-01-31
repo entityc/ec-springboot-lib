@@ -1,0 +1,155 @@
+$[D summary, main "Contains functions for adding a modal dialog for selecting one of a set of enumerated values"]
+$[D summary, main "or multiple items in the set."]
+
+$[function insertEnumEditModalHTML
+  D "Inserts the HTML code for a modal dialog that allows the user to select just one item in the"
+  D "enum." 
+  (adminUrlPrefix
+   D "The admin console's url prefix (e.g., `admin`)" ,
+   entity
+   D "The entity containing the enum attribute." ,
+   entityDtoClassName
+   D "The entity's name in the DTO domain (its DTO class name)." ,
+   attribute
+   D "The attribute that is of the enum type to be used for this modal." 
+  )
+]
+    $[let entityPrefix = entity|domain:APIPath|name|uncapitalize]
+        <div class="modal fade" id="${attribute.type.name}_EditModal" tabindex="-1" role="dialog" aria-labelledby="${attribute.type.name}_EditModalLabel" aria-hidden="true">
+          <div class="modal-dialog modal-sm" role="document">
+            <form th:action="@{/${adminUrlPrefix}/${entityPrefix}/{id}/update(id=${$}{${entityDtoClassName}.id})}" method="post">
+				<input id="${attribute.name|dashes}-edit-field-ident" name="edit-field-ident" type="hidden"/>
+                <div class="modal-content">
+                  <div class="modal-header">
+                    <h5 class="modal-title" id="${attribute.name}_EditModalLabel">Edit Field</h5>
+                    <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
+                      <span aria-hidden="true">&times;</span>
+                    </button>
+                  </div>
+                  <div class="modal-body">
+                      <div class="form-group">
+                          <select id="edit-field-value" name="edit-field-value">
+    $[foreach item in attribute.type.enumType.items]
+        $[let itemTitle = item|title]
+        $[if item.hasTag("title")]
+            $[let itemTitle = item.tagValue("title")]
+        $[/if]
+                              <option value="${item.value}">${itemTitle}</option>
+    $[/foreach]
+                          </select>
+                      </div>
+                  </div>
+                  <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <input type="submit"  class="btn btn-primary" value="Save" />
+                  </div>
+                </div>
+            </form>
+          </div>
+        </div>
+$[/function]
+$[function insertEnumEditModalScript
+  D "Inserts the companion Javascript code for the single enum item select modal." 
+  (attribute
+   D "The attribute that is of the enum type to be used for this modal." 
+  )
+]
+<script>
+var ${attribute.type.name}_EditModal = document.getElementById('${attribute.type.name}_EditModal')
+${attribute.type.name}_EditModal.addEventListener('show.bs.modal', function (event) {
+  // Button that triggered the modal
+  var button = event.relatedTarget
+  var fieldName = button.getAttribute('data-bs-field-name')
+  var fieldTitle = button.getAttribute('data-bs-field-title')
+  var enumItems = button.getAttribute('data-bs-field-value');
+  var modalFieldIdent = document.getElementById('${attribute.name|dashes}-edit-field-ident')
+  var modalTitle = ${attribute.type.name}_EditModal.querySelector('.modal-title')
+  var modalBodySelect = ${attribute.type.name}_EditModal.querySelector('.modal-body select')
+  modalFieldIdent.value = fieldName
+  modalTitle.textContent = 'Edit ' + fieldTitle
+  for ( var i = 0, len = modalBodySelect.options.length; i < len; i++ ) {
+      var opt = modalBodySelect.options[i]
+      for (var j = 0, listLen = enumItems.length; j < listLen; j++) {
+          if (enumItems[j] == opt.value) {
+            opt.selected = true
+            break
+          }
+      }
+  }
+})
+</script>
+$[/function]
+$[function insertManyEnumEditModalHTML
+  D "Inserts the HTML code for a modal dialog that allows the user to select multiple items from the"
+  D "enum." 
+  (adminUrlPrefix
+   D "The admin console's url prefix (e.g., `admin`)" ,
+   entity
+   D "The entity containing the enum attribute." ,
+   entityDtoClassName
+   D "The entity's name in the DTO domain (its DTO class name)." ,
+   attribute
+   D "The attribute that is of the enum type to be used for this modal." 
+  )
+]
+    $[let entityPrefix = entity|domain:APIPath|name|uncapitalize]
+        <div class="modal fade" id="${attribute.type.name}_Multi_EditModal" tabindex="-1" role="dialog" aria-labelledby="${attribute.type.name}_Multi_EditModalLabel" aria-hidden="true">
+          <div class="modal-dialog modal-sm" role="document">
+            <form th:action="@{/${adminUrlPrefix}/${entity|domain:APIPath|name}/{id}/update(id=${$}{${entityDtoClassName}.id})}" method="post">
+				<input id="${attribute.name|dashes}-edit-field-ident" name="edit-field-ident" type="hidden"/>
+                <div class="modal-content">
+                  <div class="modal-header">
+                    <h5 class="modal-title" id="${attribute.type.name}_Multi_EditModalLabel">Edit Field</h5>
+                    <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
+                      <span aria-hidden="true">&times;</span>
+                    </button>
+                  </div>
+                  <div class="modal-body">
+                      <div class="form-group">
+                          <select id="edit-field-value" name="edit-field-value" multiple>
+    $[foreach item in attribute.type.enumType.items]
+                              <option value="${item.value}">${item.name}</option>
+    $[/foreach]
+                          </select>
+                      </div>
+                  </div>
+                  <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <input type="submit"  class="btn btn-primary" value="Save" />
+                  </div>
+                </div>
+            </form>
+          </div>
+        </div>
+$[/function]
+$[function insertManyEnumEditModalScript
+  D "Inserts the companion Javascript code for the multiple enum item select modal." 
+  (attribute
+   D "The attribute that is of the enum type to be used for this modal." 
+  )
+]
+<script>
+var ${attribute.type.name}_Multi_EditModal = document.getElementById('${attribute.type.name}_Multi_EditModal')
+${attribute.type.name}_Multi_EditModal.addEventListener('show.bs.modal', function (event) {
+  // Button that triggered the modal
+  var button = event.relatedTarget
+  var fieldName = button.getAttribute('data-bs-field-name')
+  var fieldTitle = button.getAttribute('data-bs-field-title')
+  var enumItems = button.getAttribute('data-bs-field-value');
+  var modalFieldIdent = document.getElementById('${attribute.name|dashes}-edit-field-ident')
+  var modalTitle = ${attribute.type.name}_Multi_EditModal.querySelector('.modal-title')
+  var modalBodySelect = ${attribute.type.name}_Multi_EditModal.querySelector('.modal-body select')
+  modalFieldIdent.value = fieldName
+  modalTitle.textContent = 'Edit ' + fieldTitle
+  for ( var i = 0, len = modalBodySelect.options.length; i < len; i++ ) {
+      var opt = modalBodySelect.options[i]
+      for (var j = 0, listLen = enumItems.length; j < listLen; j++) {
+          if (enumItems[j] == opt.value) {
+            opt.selected = true
+            break
+          }
+      }
+  }
+})
+</script>
+$[/function]

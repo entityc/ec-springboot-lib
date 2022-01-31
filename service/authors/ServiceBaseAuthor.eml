@@ -1,0 +1,63 @@
+$[D summary, main "The authors in this template add a baseline of template code to the service publisher."]
+
+$[author to org.entitycompiler.springboot.service]
+
+    $[author to outlet commentHeader phase = initial
+      D "Standard source header."
+    ]
+//
+// This Service class is responsible for higher level functions for entity:
+//
+//   Name:        ${entity.name}
+        $[if entity.hasDescription]
+//   Description: ${entity.description|wrap}
+        $[/if]
+//
+// THIS FILE IS GENERATED. DO NOT EDIT!!
+//
+    $[/author]
+
+    $[author to outlet entityLoopTop scope = publisher phase = initial
+      D "Defines some useful template variables for other authors of the service class."
+    ]
+        $[let className = entity|domain|name]
+        $[let modelName = entity|domain:Model|name]
+        $[let modelVariableName = entity|domain:Model|name|uncapitalize]
+        $[let repositoryClassName = entity|domain:Repository|name]
+        $[let repositoryVariableName = entity|domain:Repository|name|uncapitalize]
+        $[let exceptionNamespace = (space.domain("Exception")).namespace]
+        $[let utilsNamespace = (space.domain("Utils")).namespace]
+    $[/author]
+    $[author to outlet members phase = initial
+      D "Adds java imports for model and dto classes."
+    ]
+$[send imports]
+import ${entity|domain:Model|fullname};
+import ${entity|domain:JSONDTO|fullname};
+$[/send]
+    $[/author]
+
+    $[author to outlet constructor scope = publisher phase = initial
+      D "Adds infrastructure to allow easy auto wiring of external resources via the constructor."
+    ]
+    @Autowired
+    public ${className}(
+$[receive distinct constructorArgs]
+    ) {
+$[receive distinct constructorAssigns]
+    }
+        $[let autoWiredDomainEntities = @[]@]
+        $[import "util/AutoWired"]
+$[send imports]
+import org.springframework.beans.factory.annotation.Autowired;
+$[/send]
+    $[/author]
+
+    $[author to outlet constructor
+      D "Auto wiring repository object since that should be commonly used within this publisher."
+    ]
+        $[import "util/AutoWired"]
+        $[call addAutoWired(domainEntity:entity|domain:Repository)]
+    $[/author]
+
+$[/author]

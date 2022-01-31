@@ -1,0 +1,19 @@
+configuration Setup {
+
+    output SetupTargetDir {
+        path "src/ec"
+    }
+    output ProjectTopDir {
+        path ""
+    }
+
+    templates {
+        import from SetupRepo
+        template BasicWebAppSetup {
+            output primary SetupTargetDir
+        }
+        template MakeRunECScript {
+            output primary ProjectTopDir
+        }
+    }
+}

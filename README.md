@@ -54,3 +54,18 @@ You can then import the templates using something like the following:
     }
 ```
 
+## Licensing
+
+All projects of the EntityC Organization are under the BSD 3-clause License.
+
+See [LICENSE.md](LICENSE.md) for details.
+
+## Contributing
+
+Contributors are welcome. Before contributing please read the following [Contributing Guidelines](CONTRIBUTING.md).
+
+## Code of Conduct
+
+The Code of Conduct governs how we behave in public or in private whenever the project will be judged by our actions. We expect it to be honored by everyone who contributes to this project.
+
+See [Code of Conduct](CODE_OF_CONDUCT.md) for details.

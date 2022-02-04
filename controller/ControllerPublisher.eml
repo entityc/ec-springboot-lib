@@ -89,10 +89,6 @@ public class ${className} {
         mapper.getConfiguration().setAmbiguityIgnored(true);
     }
 
-$[outlet members
-  D "Member variables can be placed here."
-]
-$[/outlet]
                 $[let service = entity|domain:Service|name|uncapitalize]
                 $[let pbMapper = entity|domain:DTOMapper|name|uncapitalize]
 $[receive distinct memberDecl]
@@ -106,6 +102,12 @@ $[receive distinct constructorAssigns]
                 $[let autoWiredDomainEntities = @[]@]
                 $[call addAutoWired(domainEntity: entity|domain:Service)]
                 $[call addAutoWired(domainEntity: entity|domain:DTOMapper)]
+
+$[* This outlet must be below the receivers so they can be referenced by the authors! *]
+$[outlet members
+  D "Member variables can be placed here."
+]
+$[/outlet]
 
 $[* TODO: We can effectively move this to where the endpoint is created and its needed *]
                 $[if (entity|domain).hasTag("parent:service") && entity.hasParentRelationship]

@@ -1,6 +1,6 @@
 $[D summary, main "(NEEDS WORK) This template contains the authors that are responsible for generating"]
 $[D summary, main "repository methods associated with release and version management."]
-$[author to org.entitycompiler.springboot.repository]
+$[author to org.entityc.springboot.repository]
     $[author to outlet methods
       D "Adds method associated with release management that use native database queries to speed up"
       D "the endpoints that support release management."

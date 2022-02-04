@@ -1,7 +1,7 @@
 $[D summary, main "This template contains the author that is responsible for generating the save object"]
 $[D summary, main "repository method."]
-$[publisher org.entitycompiler.springboot.repository.save]
-    $[author to org.entitycompiler.springboot.repository]
+$[publisher org.entityc.springboot.repository.save]
+    $[author to org.entityc.springboot.repository]
         $[author to outlet methods
           D "Simply adds a method to override an inherited save method so that outlets can be added."
         ]

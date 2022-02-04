@@ -1,7 +1,7 @@
 $[D summary, main "This template contains the authors that are responsible for generating the get object"]
 $[D summary, main "repository methods."]
-$[publisher org.entitycompiler.springboot.repository.get]
-    $[author to org.entitycompiler.springboot.repository]
+$[publisher org.entityc.springboot.repository.get]
+    $[author to org.entityc.springboot.repository]
         $[author to outlet methods
           D "Adds many get methods from get by ID to getting lists by parent relationships."
         ]

@@ -1,13 +1,13 @@
 $[D summary, main "Contains an author that generates update endpoint methods for a controller class."]
 $[import "security/SecurityFunctions"]
-$[author to org.entitycompiler.springboot.controller]
+$[author to org.entityc.springboot.controller]
     $[author to outlet methods
     D "Adds update endpoints to the controller class for its entity."]
 $[send imports]
 import org.springframework.web.bind.annotation.PutMapping;
 $[/send]
         $[if entity.hasPrimaryKey]
-            $[publisher org.entitycompiler.springboot.controller.update]
+            $[publisher org.entityc.springboot.controller.update]
     @RequestMapping(
         path = "/{id}",
         method = RequestMethod.PUT,

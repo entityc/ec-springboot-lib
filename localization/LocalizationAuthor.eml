@@ -4,7 +4,7 @@ $[D "The template uses authors to publish to various publisher templates such as
 $[D "repository, etc. classes."]
 $[D ""]
 $[import "util/AutoWired"]
-$[author to org.entitycompiler.springboot.service]
+$[author to org.entityc.springboot.service]
     $[author to outlet methods
       D "Adds method to get the localized content object in the user's preferred language.  Also adds"
       D "method to get the localized text in the user's preferred language. These are only added to the"
@@ -79,7 +79,7 @@ $[/send]
     $[/author]
 $[/author]
 
-$[author to org.entitycompiler.springboot.service]
+$[author to org.entityc.springboot.service]
     $[author to outlet methods
       D "Adds a method to create a content ojbect along with a localized content object in a specified language."
     ]
@@ -116,7 +116,7 @@ $[/send]
     $[/author]
 $[/author]
 
-$[author to org.entitycompiler.springboot.service.mapping]
+$[author to org.entityc.springboot.service.mapping]
     $[author to outlet dtoFromModelTop
       D "If this is the content entity, add code to copy the content text in user's preferred language"
       D "into the virtual attribute that holds the preferred language text."
@@ -158,7 +158,7 @@ $[author to org.entitycompiler.springboot.service.mapping]
     $[/author]
 $[/author]
 
-$[author to org.entitycompiler.springboot.repository]
+$[author to org.entityc.springboot.repository]
     $[author to outlet methods]
         $[if space.hasDomain("Localization")]
             $[let entityLocalization = entity|domain:Localization]

@@ -1,6 +1,6 @@
 $[language java]
 $[domain Service]
-$[author to org.entitycompiler.springboot.service]
+$[author to org.entityc.springboot.service]
     $[author to outlet methods]
         $[if entity.space.hasDomain("DocumentBuilder")]
             $[import "documentBuilder/MarkdownDocumentBuilderFunctions"]

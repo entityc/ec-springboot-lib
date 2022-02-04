@@ -2,7 +2,7 @@ $[language java]
 $[domain Service]
 $[import "service/ServiceFunctions"]
 $[import "util/AutoWired"]
-$[author to org.entitycompiler.springboot.service]
+$[author to org.entityc.springboot.service]
     $[author to outlet methods]
         $[function uploadAssetFile
           (entity,

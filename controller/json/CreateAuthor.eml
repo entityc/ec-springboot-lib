@@ -3,7 +3,7 @@ $[D summary, main "This contains an author that generates create endpoint method
 $[import "release/ReleaseFunctions"]
 $[import "security/SecurityFunctions"]
 
-$[author to org.entitycompiler.springboot.controller]
+$[author to org.entityc.springboot.controller]
     $[author to outlet methods
     D "Adds create endpoints to the controller class for its entity."]
 $[send imports]
@@ -24,7 +24,7 @@ $[/send]
                 $[capture extraParentIdVarName], requestObject.get${parentEntity.primaryKeyAttribute|name|capitalize}()$[/capture]
             $[/if]
         $[/if]
-        $[publisher org.entitycompiler.springboot.controller.create]
+        $[publisher org.entityc.springboot.controller.create]
     @RequestMapping(
         method = RequestMethod.POST,
         consumes = "application/json",
@@ -55,7 +55,7 @@ $[/outlet]
         $[foreach entity.relationships]
 $[* We are looking only for relationships that are: required parent one *]
             $[if !relationship.to.isOne || !relationship.isParent || relationship.isOptional]$[continue]$[/if]
-            $[publisher org.entitycompiler.springboot.controller.createWithParent]
+            $[publisher org.entityc.springboot.controller.createWithParent]
     @RequestMapping(
         path = "/${relationship|domain:APIPath|name}/{id}",
         method = RequestMethod.POST,

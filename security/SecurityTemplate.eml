@@ -54,7 +54,7 @@ $[install "security/UserSignupDto.java" destDir]
 $[/if]
 $[install "security/WebConfig.java" destDir]
 
-$[author to org.entitycompiler.springboot.controller]
+$[author to org.entityc.springboot.controller]
     $[author to update]
         $[author to outlet insideTop
           D "Add code at top of update method to basically null out incoming attribute values if the logged"
@@ -104,7 +104,7 @@ $[/send]
     $[/author]
 $[/author]
 
-$[author to org.entitycompiler.springboot.dto]
+$[author to org.entityc.springboot.dto]
     $[author to outlet methods
       D "Add the adjustUpdateForRoles() method to the DTO class."
     ]

@@ -8,10 +8,10 @@ $[D detail "### Save"]
 $[D detail ""]
 $[D detail "This method actually does the work for the update to save the object to the database."]
 $[D detail ""]
-$[publisher org.entitycompiler.springboot.service.update]
+$[publisher org.entityc.springboot.service.update]
     $[import "service/ServiceFunctions"]
     $[import "util/AutoWired"]
-    $[author to org.entitycompiler.springboot.service]
+    $[author to org.entityc.springboot.service]
         $[author to outlet methods]
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public ${modelName} update${entity.name}(${modelName} object) throws ServiceException {

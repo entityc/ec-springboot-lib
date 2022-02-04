@@ -1,7 +1,7 @@
 $[D summary, main "This template contains the author that is responsible for generating the delete object"]
 $[D summary, main "service methods."]
 $[import "util/AutoWired"]
-$[author to org.entitycompiler.springboot.service]
+$[author to org.entityc.springboot.service]
     $[author to outlet methods
       D "**Delete by Parent** Creates a method that can delete all objects for a specified parent"
       D "object. `void delete`*entity*`By`*parent*`Id();`"

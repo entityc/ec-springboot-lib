@@ -14,7 +14,7 @@ $[import "controller/json/AssetAuthor"]
 $[import "controller/json/AssociationAuthor"]
 $[import "util/AutoWired"]
 
-$[publisher org.entitycompiler.springboot.controller]
+$[publisher org.entityc.springboot.controller]
     $[let apiPathPrefix = "/" + ((space|domain:APIPath).domain.namespace|path)]
     $[let exceptionNamespace = (space.domain("Exception")).namespace]
     $[let utilsNamespace = (space.domain("Utils")).namespace]

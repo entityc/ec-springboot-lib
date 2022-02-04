@@ -4,7 +4,7 @@ $[D summary "This template generates the DTO classes for all entites in your spa
 $[D "This template generates the DTO classes for all entites in your space as well as creating a"]
 $[D "README file for the directory that contains them."]
 $[import "security/SecurityFunctions"]
-$[publisher org.entitycompiler.springboot.dto]
+$[publisher org.entityc.springboot.dto]
     $[foreach module in space.modules]
         $[if module.isIncluded]$[continue]$[/if]
         $[foreach entity in module.entities]

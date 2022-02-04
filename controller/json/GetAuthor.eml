@@ -2,7 +2,7 @@ $[language java]
 $[D summary, main "This contains an author that generates various get endpoint methods for a controller class."]
 $[import "security/SecurityFunctions"]
 
-$[author to org.entitycompiler.springboot.controller]
+$[author to org.entityc.springboot.controller]
     $[author to outlet methods
     D "Adds get endpoints to the controller class for its entity."]
 $[send imports]
@@ -15,7 +15,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.http.HttpStatus;
 $[/send]
-        $[publisher org.entitycompiler.springboot.controller.getById
+        $[publisher org.entityc.springboot.controller.getById
           D "Get by ID endpoint"
         ]
             $[if entity.hasPrimaryKey]
@@ -35,7 +35,7 @@ $[/outlet]
             $[/if]
         $[/publisher]
 
-        $[publisher org.entitycompiler.springboot.controller.getList
+        $[publisher org.entityc.springboot.controller.getList
           D "Get List endpoint"
         ]
     @RequestMapping(
@@ -95,7 +95,7 @@ $[/outlet]
     }
 
         $[/publisher]
-        $[publisher org.entitycompiler.springboot.controller.getByRelationship
+        $[publisher org.entityc.springboot.controller.getByRelationship
           D "Get List by Relationship Endpoint"
         ]
             $[foreach relationship in entity.relationships]

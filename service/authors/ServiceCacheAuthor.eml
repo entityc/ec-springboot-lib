@@ -1,6 +1,6 @@
 $[D summary, main "Generates code inside the methods of the Service class to implement in-memory caching."]
 $[D "The caching code is generated based on information annotated in the Service domain."]
-$[author to org.entitycompiler.springboot]
+$[author to org.entityc.springboot]
     $[author to service]
         $[author to outlet members phase = initial
           D "This declares the member variables for the cache objects themselves - one for each"

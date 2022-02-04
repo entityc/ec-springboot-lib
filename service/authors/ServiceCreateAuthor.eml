@@ -6,10 +6,10 @@ $[D "The create method is called by create endpoints implemented in the controll
 $[D "method in turn calls a create method in the repository class however before that it will"]
 $[D "assign a UUID primary key. This is also where it places some of the in-memory caching code. It"]
 $[D "will also set relationships associated with the logged in (principle) user."]
-$[publisher org.entitycompiler.springboot.service.create]
+$[publisher org.entityc.springboot.service.create]
     $[import "service/ServiceFunctions"]
     $[import "util/AutoWired"]
-    $[author to org.entitycompiler.springboot.service]
+    $[author to org.entityc.springboot.service]
         $[author to outlet methods]
 $[send imports]
 import java.util.UUID;

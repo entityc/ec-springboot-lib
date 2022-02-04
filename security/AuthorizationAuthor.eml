@@ -1,6 +1,6 @@
 $[language java]
 $[*----------------------------------------------------------------------------------------------------------------*]
-$[author to org.entitycompiler.springboot.service]
+$[author to org.entityc.springboot.service]
     $[author to outlet methods
       D "Adds service functions to check if the logged in user has permissions to edit objects of a"
       D "certain entity and in the case of the \"user\" entity, if a specific attribute can be updated."
@@ -225,7 +225,7 @@ $[*
     $[/author]
 $[/author]
 $[*----------------------------------------------------------------------------------------------------------------*]
-$[author to org.entitycompiler.springboot.repository]
+$[author to org.entityc.springboot.repository]
     $[author to outlet methods
       D "Adds a method to find a user by its username."
     ]
@@ -242,7 +242,7 @@ $[author to org.entitycompiler.springboot.repository]
     $[/author]
 $[/author]
 $[*----------------------------------------------------------------------------------------------------------------*]
-$[author to org.entitycompiler.springboot.repository]
+$[author to org.entityc.springboot.repository]
     $[author to outlet methods
       D "Adds a method to find access objects by a parent object and for a specific user."
     ]
@@ -263,7 +263,7 @@ $[author to org.entitycompiler.springboot.repository]
     $[/author]
 $[/author]
 $[*----------------------------------------------------------------------------------------------------------------*]
-$[author to org.entitycompiler.springboot.repository]
+$[author to org.entityc.springboot.repository]
     $[author to outlet methods
       D "Adds a method to get a list objects for which a user has read access."
     ]
@@ -306,7 +306,7 @@ $[author to org.entitycompiler.springboot.repository]
     $[/author]
 $[/author]
 $[*----------------------------------------------------------------------------------------------------------------*]
-$[author to org.entitycompiler.springboot.service]
+$[author to org.entityc.springboot.service]
     $[author to outlet methods
       D "Adds a service method to get a list of objects of this entity for which the logged in user has"
       D "read access."

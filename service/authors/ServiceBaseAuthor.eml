@@ -1,6 +1,6 @@
 $[D summary, main "The authors in this template add a baseline of template code to the service publisher."]
 
-$[author to org.entitycompiler.springboot.service]
+$[author to org.entityc.springboot.service]
 
     $[author to outlet commentHeader phase = initial
       D "Standard source header."

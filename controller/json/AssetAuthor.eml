@@ -35,7 +35,7 @@ $[/send]
     $[if hasCollection]
         $[capture methodName]${collectionName|capitalize}${methodName}$[/capture]
     $[/if]
-    $[publisher org.entitycompiler.springboot.controller.assetUpload
+    $[publisher org.entityc.springboot.controller.assetUpload
       D "Asset upload endpoints."
     ]
     @RequestMapping(
@@ -99,7 +99,7 @@ $[/outlet]
     $[/publisher]
 $[/function]
 
-$[author to org.entitycompiler.springboot.controller]
+$[author to org.entityc.springboot.controller]
     $[author to outlet methods D "Adds asset upload endpoints to controller."]
         $[foreach entity.attributes]
             $[if attribute.secondaryEntityIsTagged("asset:collection")]

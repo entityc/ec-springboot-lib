@@ -1,7 +1,7 @@
 $[D summary, main "Generates code inside the methods of the Repository class to implement in-memory caching."]
 $[D "The caching code is generated based on information annotated in the `InMemoryCache`"]
 $[D "domain."]
-$[author to org.entitycompiler.springboot]
+$[author to org.entityc.springboot]
     $[author to repository]
         $[author to outlet members phase = initial
           D "This declares the member variables for the cache objects themselves - one for each"

@@ -1,7 +1,7 @@
 $[D summary, main "This template contains the authors that are responsible for generating repository methods"]
 $[D summary, main "for maintaining many-to-many (association) relationships between objects."]
 
-$[author to org.entitycompiler.springboot.repository]
+$[author to org.entityc.springboot.repository]
     $[author to outlet methods
       D "Adds methods for adding and removing a single association, checking a specific association"
       D "and getting all associations."

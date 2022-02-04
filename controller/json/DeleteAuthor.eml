@@ -1,13 +1,13 @@
 $[D summary, main "This contains an author that generates delete endpoint methods for a controller class."]
 $[import "security/SecurityFunctions"]
-$[author to org.entitycompiler.springboot.controller]
+$[author to org.entityc.springboot.controller]
     $[author to outlet methods
     D "Adds delete endpoints to the controller class for its entity."]
 $[send imports]
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 $[/send]
-        $[publisher org.entitycompiler.springboot.controller.deleteByRelationship
+        $[publisher org.entityc.springboot.controller.deleteByRelationship
           D "Delete by Relationship endpoint"
         ]
             $[if entity.hasParentRelationship]
@@ -23,7 +23,7 @@ $[/outlet]
                 $[/foreach]
             $[/if]
         $[/publisher]
-        $[publisher org.entitycompiler.springboot.controller.deleteById
+        $[publisher org.entityc.springboot.controller.deleteById
           D "Delete by ID endpoint"
         ]
             $[if entity.hasPrimaryKey]

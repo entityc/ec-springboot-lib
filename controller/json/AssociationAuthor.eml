@@ -2,7 +2,7 @@ $[D summary, main "Contains an author used to generate code related to creating 
 $[import "security/SecurityFunctions"]
 $[import "util/AutoWired"]
 
-$[author to org.entitycompiler.springboot.controller]
+$[author to org.entityc.springboot.controller]
     $[author to outlet methods
     D "Adds an \"associatedTo...\" endpoint to the controller."]
         $[foreach relationship in entity.implicitRelationships]
@@ -25,7 +25,7 @@ $[author to org.entitycompiler.springboot.controller]
 $[send imports]
 import ${destMMEntity|domain:Model|fullname};
 $[/send]
-                $[publisher org.entitycompiler.springboot.controller.associate
+                $[publisher org.entityc.springboot.controller.associate
                   D "Associate endpoint"
                 ]
     @RequestMapping(

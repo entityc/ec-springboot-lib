@@ -72,7 +72,7 @@ $[import "security/SecurityFunctions"]
 
 $[let projectBaseApiPath = space.getMetadataValue("appBaseUrlPath")]
 
-$[publisher org.entitycompiler.springboot.web.admin.detail]
+$[publisher org.entityc.springboot.web.admin.detail]
     $[foreach entity in space.entities]
         $[if entity.isImplicit || entity.isExtern || entity.isIncluded || entity.isTransient || entity.isSecondary]$[continue]$[/if]
         $[let domainEntity = entity|domain]

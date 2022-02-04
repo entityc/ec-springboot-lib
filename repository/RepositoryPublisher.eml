@@ -1,7 +1,7 @@
 $[language java]
 $[domain Repository]
 $[D summary, main "Generates code that interfaces model classes with the database."]
-$[publisher org.entitycompiler.springboot.repository]
+$[publisher org.entityc.springboot.repository]
     $[import "release/ReleaseFunctions"]
     $[import "security/SecurityFunctions"]
     $[import "repository/authors/RepositoryGetAuthor"]

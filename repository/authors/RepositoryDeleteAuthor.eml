@@ -1,6 +1,6 @@
 $[D summary, main "This template contains the authors that are responsible for generating the delete object"]
 $[D summary, main "repository methods."]
-$[author to org.entitycompiler.springboot.repository]
+$[author to org.entityc.springboot.repository]
     $[author to outlet methods
       D "Adds delete by parent relationship method."
     ]

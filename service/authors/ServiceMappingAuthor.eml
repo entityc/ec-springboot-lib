@@ -2,8 +2,8 @@ $[language java]
 $[domain Service]
 $[import "service/ServiceFunctions"]
 $[import "util/AutoWired"]
-$[publisher org.entitycompiler.springboot.service.mapping]
-    $[author to org.entitycompiler.springboot.service]
+$[publisher org.entityc.springboot.service.mapping]
+    $[author to org.entityc.springboot.service]
         $[author to outlet methods
           D "Adds methods to map model objects into DTO objects."
         ]

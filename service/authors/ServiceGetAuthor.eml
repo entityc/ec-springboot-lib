@@ -1,9 +1,9 @@
 $[D summary, main "This template contains the authors that are responsible for generating the get object"]
 $[D summary, main "service methods."]
 $[D "This includes methods for getting not just a single object but lists of objects."]
-$[publisher org.entitycompiler.springboot.service.get]
+$[publisher org.entityc.springboot.service.get]
     $[import "util/AutoWired"]
-    $[author to org.entitycompiler.springboot.service]
+    $[author to org.entityc.springboot.service]
         $[author to outlet methods]
 $[outlet init
   D "Used by authors that may want to initialize some variables before using the other outlets."

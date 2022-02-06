@@ -303,7 +303,7 @@ This template builds code associated with user authentication. It uses tags plac
 
 ### Authors
 
-#### To Publisher: `org.entitycompiler.springboot.controller`
+#### To Publisher: `org.entityc.springboot.controller`
 
 
 
@@ -316,7 +316,7 @@ This author publishes to the following outlets:
 | `annotation` | Make sure the user has read permission for these methods.|Connect|Author|
 
 
-#### To Publisher: `org.entitycompiler.springboot.dto`
+#### To Publisher: `org.entityc.springboot.dto`
 
 
 

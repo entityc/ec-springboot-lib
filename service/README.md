@@ -34,7 +34,7 @@ Generates the Spring Boot Service classes for all entities in your project space
 
 ### Publishers
 
-#### `org.entitycompiler.springboot.service`
+#### `org.entityc.springboot.service`
 
 This publisher ultimately builds the Service classes for the Spring Boot application but it relies on many authors to fill it out with methods required to implement the application.
 

@@ -34,7 +34,7 @@ This template generates localization code in the application based on tagging in
 
 ### Authors
 
-#### To Publisher: `org.entitycompiler.springboot.service`
+#### To Publisher: `org.entityc.springboot.service`
 
 
 
@@ -45,7 +45,7 @@ This author publishes to the following outlets:
 | `methods` | Adds method to get the localized content object in the user's preferred language.  Also adds method to get the localized text in the user's preferred language. These are only added to the service class of the localized content entity.|Connect|Author|
 
 
-#### To Publisher: `org.entitycompiler.springboot.service`
+#### To Publisher: `org.entityc.springboot.service`
 
 
 
@@ -56,7 +56,7 @@ This author publishes to the following outlets:
 | `methods` | Adds a method to create a content ojbect along with a localized content object in a specified language.|Connect|Author|
 
 
-#### To Publisher: `org.entitycompiler.springboot.service.mapping`
+#### To Publisher: `org.entityc.springboot.service.mapping`
 
 
 
@@ -68,7 +68,7 @@ This author publishes to the following outlets:
 | `dtoFromModelMiddle` | For each of the virtual attributes that should contain text in the user's preferred language, copy the text from its associated content relationship object.|Connect|Author|
 
 
-#### To Publisher: `org.entitycompiler.springboot.repository`
+#### To Publisher: `org.entityc.springboot.repository`
 
 
 

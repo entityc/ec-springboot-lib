@@ -38,7 +38,7 @@ Generates code that interfaces model classes with the database.
 
 ### Publishers
 
-#### `org.entitycompiler.springboot.repository`
+#### `org.entityc.springboot.repository`
 
 
 

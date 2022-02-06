@@ -4,11 +4,24 @@
 
 This collection of templates allow you to quickly build a Spring Boot microservice that serves both a REST API and a web based Admin UI.
 
-the rest endpoints are for the most part crud... also include support for file upload...
+At present it can be used to build microservices that have the following features:
+
+* Basic CRUD operations (create, read, update and delete).
+* Basic user authentication and authorization.
+* Simple Web Admin interface.
+* Markdown display and edit.
+* Markdown document builder.
+* File upload to AWS S3.
+
+> In its current state it should **not** be used for a production microservice. Your contributions are welcome.
+> With the help of the Spring Boot community the goal is to reach a point where it can be used for production level
+> applications. Until then, it is functional and can certainly serve to build prototype microservices.
 
 ### Prerequisites
 
-This library is specifically written for use with the [Entity Compiler](https://github.com/entityc/entity-compiler). It is recommended to first go through the [Entity Compiler Tutorial](https://github.com/entityc/ec-tutorial) before trying to understand this library.
+This library is specifically written for use with the [Entity Compiler](https://github.com/entityc/entity-compiler).
+It is recommended to first go through the [Entity Compiler Tutorial](https://github.com/entityc/ec-tutorial) before
+trying to understand this library.
 
 ### Technologies
 
@@ -24,7 +37,8 @@ The following are the major technologies are used by this library:
 
 ## How to Use
 
-With your Entity Compiler project setup, the library is used by declaring it as a `repository` in your project's `Space` referencing a specific tag, where the tag corresponds to a version of the library.
+With your Entity Compiler project setup, the library is used by declaring it as a `repository` in your project's
+`Space` referencing a specific tag, where the tag corresponds to a version of the library.
 
 Your repository declaration may look like:
 
@@ -66,6 +80,7 @@ Contributors are welcome. Before contributing please read the following [Contrib
 
 ## Code of Conduct
 
-The Code of Conduct governs how we behave in public or in private whenever the project will be judged by our actions. We expect it to be honored by everyone who contributes to this project.
+The Code of Conduct governs how we behave in public or in private whenever the project will be judged by our actions.
+We expect it to be honored by everyone who contributes to this project.
 
 See [Code of Conduct](CODE_OF_CONDUCT.md) for details.

@@ -32,7 +32,7 @@ This template generates the DTO classes for all entites in your space as well as
 
 ### Publishers
 
-#### `org.entitycompiler.springboot.dto`
+#### `org.entityc.springboot.dto`
 
 
 

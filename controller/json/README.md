@@ -31,7 +31,7 @@ This contains an author that generates code for endpoints that support uploading
 
 ### Publishers
 
-#### `org.entitycompiler.springboot.controller.assetUpload`
+#### `org.entityc.springboot.controller.assetUpload`
 
 Asset upload endpoints.
 
@@ -45,7 +45,7 @@ The following outlets are offered by this publisher:
 
 ### Authors
 
-#### To Publisher: `org.entitycompiler.springboot.controller`
+#### To Publisher: `org.entityc.springboot.controller`
 
 
 
@@ -97,7 +97,7 @@ Contains an author used to generate code related to creating associations betwee
 
 ### Publishers
 
-#### `org.entitycompiler.springboot.controller.associate`
+#### `org.entityc.springboot.controller.associate`
 
 Associate endpoint
 
@@ -110,7 +110,7 @@ The following outlets are offered by this publisher:
 
 ### Authors
 
-#### To Publisher: `org.entitycompiler.springboot.controller`
+#### To Publisher: `org.entityc.springboot.controller`
 
 
 
@@ -139,7 +139,7 @@ This contains an author that generates create endpoint methods for a controller 
 
 ### Publishers
 
-#### `org.entitycompiler.springboot.controller.create`
+#### `org.entityc.springboot.controller.create`
 
 
 
@@ -150,7 +150,7 @@ The following outlets are offered by this publisher:
 | `annotation` | Resides just above the method declaration in the annocation area.|
 
 
-#### `org.entitycompiler.springboot.controller.createWithParent`
+#### `org.entityc.springboot.controller.createWithParent`
 
 
 
@@ -163,7 +163,7 @@ The following outlets are offered by this publisher:
 
 ### Authors
 
-#### To Publisher: `org.entitycompiler.springboot.controller`
+#### To Publisher: `org.entityc.springboot.controller`
 
 
 
@@ -191,18 +191,7 @@ This contains an author that generates delete endpoint methods for a controller 
 
 ### Publishers
 
-#### `org.entitycompiler.springboot.controller.deleteByRelationship`
-
-Delete by Relationship endpoint
-
-The following outlets are offered by this publisher:
-
-| Outlet | Description |
-|---|---|
-| `annotation` | Resides just above the method declaration in the annocation area.|
-
-
-#### `org.entitycompiler.springboot.controller.deleteById`
+#### `org.entityc.springboot.controller.deleteById`
 
 Delete by ID endpoint
 
@@ -213,9 +202,20 @@ The following outlets are offered by this publisher:
 | `annotation` | Resides just above the method declaration in the annocation area.|
 
 
+#### `org.entityc.springboot.controller.deleteByRelationship`
+
+Delete by Relationship endpoint
+
+The following outlets are offered by this publisher:
+
+| Outlet | Description |
+|---|---|
+| `annotation` | Resides just above the method declaration in the annocation area.|
+
+
 ### Authors
 
-#### To Publisher: `org.entitycompiler.springboot.controller`
+#### To Publisher: `org.entityc.springboot.controller`
 
 
 
@@ -244,18 +244,7 @@ This contains an author that generates various get endpoint methods for a contro
 
 ### Publishers
 
-#### `org.entitycompiler.springboot.controller.getByRelationship`
-
-Get List by Relationship Endpoint
-
-The following outlets are offered by this publisher:
-
-| Outlet | Description |
-|---|---|
-| `annotation` | Resides just above the method declaration in the annocation area.|
-
-
-#### `org.entitycompiler.springboot.controller.getList`
+#### `org.entityc.springboot.controller.getList`
 
 Get List endpoint
 
@@ -266,7 +255,7 @@ The following outlets are offered by this publisher:
 | `annotation` | Resides just above the method declaration in the annocation area.|
 
 
-#### `org.entitycompiler.springboot.controller.getById`
+#### `org.entityc.springboot.controller.getById`
 
 Get by ID endpoint
 
@@ -277,9 +266,20 @@ The following outlets are offered by this publisher:
 | `annotation` | Resides just above the method declaration in the annocation area.|
 
 
+#### `org.entityc.springboot.controller.getByRelationship`
+
+Get List by Relationship Endpoint
+
+The following outlets are offered by this publisher:
+
+| Outlet | Description |
+|---|---|
+| `annotation` | Resides just above the method declaration in the annocation area.|
+
+
 ### Authors
 
-#### To Publisher: `org.entitycompiler.springboot.controller`
+#### To Publisher: `org.entityc.springboot.controller`
 
 
 
@@ -308,7 +308,7 @@ Contains an author that generates update endpoint methods for a controller class
 
 ### Publishers
 
-#### `org.entitycompiler.springboot.controller.update`
+#### `org.entityc.springboot.controller.update`
 
 
 
@@ -322,7 +322,7 @@ The following outlets are offered by this publisher:
 
 ### Authors
 
-#### To Publisher: `org.entitycompiler.springboot.controller`
+#### To Publisher: `org.entityc.springboot.controller`
 
 
 

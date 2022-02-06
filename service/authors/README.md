@@ -36,7 +36,7 @@ The authors in this template add a baseline of template code to the service publ
 
 ### Authors
 
-#### To Publisher: `org.entitycompiler.springboot.service`
+#### To Publisher: `org.entityc.springboot.service`
 
 
 
@@ -82,7 +82,7 @@ Generates code inside the methods of the Service class to implement in-memory ca
 
 ### Authors
 
-#### To Publisher: `org.entitycompiler.springboot`
+#### To Publisher: `org.entityc.springboot`
 
 
 
@@ -136,7 +136,7 @@ This template contains the author that is responsible for generating the create 
 
 ### Publishers
 
-#### `org.entitycompiler.springboot.service.create`
+#### `org.entityc.springboot.service.create`
 
 
 
@@ -150,7 +150,7 @@ The following outlets are offered by this publisher:
 
 ### Authors
 
-#### To Publisher: `org.entitycompiler.springboot.service`
+#### To Publisher: `org.entityc.springboot.service`
 
 
 
@@ -181,7 +181,7 @@ This template contains the author that is responsible for generating the delete 
 
 ### Authors
 
-#### To Publisher: `org.entitycompiler.springboot.service`
+#### To Publisher: `org.entityc.springboot.service`
 
 
 
@@ -210,7 +210,7 @@ This template contains the authors that are responsible for generating the get o
 
 ### Publishers
 
-#### `org.entitycompiler.springboot.service.get`
+#### `org.entityc.springboot.service.get`
 
 
 
@@ -225,7 +225,7 @@ The following outlets are offered by this publisher:
 
 ### Authors
 
-#### To Publisher: `org.entitycompiler.springboot.service`
+#### To Publisher: `org.entityc.springboot.service`
 
 
 

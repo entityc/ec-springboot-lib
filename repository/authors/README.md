@@ -31,7 +31,7 @@ This template contains the authors that are responsible for generating repositor
 
 ### Authors
 
-#### To Publisher: `org.entitycompiler.springboot.repository`
+#### To Publisher: `org.entityc.springboot.repository`
 
 
 
@@ -54,7 +54,7 @@ Generates code inside the methods of the Repository class to implement in-memory
 
 ### Authors
 
-#### To Publisher: `org.entitycompiler.springboot`
+#### To Publisher: `org.entityc.springboot`
 
 
 
@@ -79,7 +79,7 @@ This template contains the authors that are responsible for generating the delet
 
 ### Authors
 
-#### To Publisher: `org.entitycompiler.springboot.repository`
+#### To Publisher: `org.entityc.springboot.repository`
 
 
 
@@ -102,7 +102,7 @@ This template contains the authors that are responsible for generating the get o
 
 ### Publishers
 
-#### `org.entitycompiler.springboot.repository.get`
+#### `org.entityc.springboot.repository.get`
 
 
 
@@ -116,7 +116,7 @@ The following outlets are offered by this publisher:
 
 ### Authors
 
-#### To Publisher: `org.entitycompiler.springboot.repository`
+#### To Publisher: `org.entityc.springboot.repository`
 
 
 
@@ -139,7 +139,7 @@ This author publishes to the following outlets:
 
 ### Authors
 
-#### To Publisher: `org.entitycompiler.springboot.repository`
+#### To Publisher: `org.entityc.springboot.repository`
 
 
 
@@ -157,7 +157,7 @@ This template contains the author that is responsible for generating the save ob
 
 ### Publishers
 
-#### `org.entitycompiler.springboot.repository.save`
+#### `org.entityc.springboot.repository.save`
 
 
 
@@ -171,7 +171,7 @@ The following outlets are offered by this publisher:
 
 ### Authors
 
-#### To Publisher: `org.entitycompiler.springboot.repository`
+#### To Publisher: `org.entityc.springboot.repository`
 
 
 

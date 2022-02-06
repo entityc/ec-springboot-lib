@@ -101,7 +101,7 @@ Although the headline is composed of attributes that are shown and editable belo
 
 ### Publishers
 
-#### `org.entitycompiler.springboot.web.admin.detail`
+#### `org.entityc.springboot.web.admin.detail`
 
 
 
@@ -182,7 +182,7 @@ In the `AdminUI` domain, just tag the entities you want to be included as top le
 
 ### Publishers
 
-#### `org.entitycompiler.springboot.web.admin.home`
+#### `org.entityc.springboot.web.admin.home`
 
 
 

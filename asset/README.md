@@ -26,7 +26,7 @@ Installs classes associated with managing file assets on a service such as S3.
 
 ### Authors
 
-#### To Publisher: `org.entitycompiler.springboot.dto`
+#### To Publisher: `org.entityc.springboot.dto`
 
 
 

@@ -39,7 +39,7 @@ This template is responsible for generating the Controller classes of the micro-
 
 ### Publishers
 
-#### `org.entitycompiler.springboot.controller`
+#### `org.entityc.springboot.controller`
 
 
 

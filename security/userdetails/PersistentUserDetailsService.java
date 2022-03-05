@@ -51,4 +51,8 @@ public class PersistentUserDetailsService implements UserDetailsService {
         ${mapVariableName}.put(${usernameAttribute|domain:Model|name}, obj);
         return obj;
     }
+
+    public void updateUser(${modelClassName} user) {
+        ${mapVariableName}.put(user.get${usernameAttribute|domain:Model|name|capitalize}(), user);
+    }
 }

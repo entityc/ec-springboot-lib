@@ -185,7 +185,7 @@ $[else]
 
     @PostMapping(value = "/signup")
     public String registerUserAccount(@ModelAttribute("user") @Valid UserSignupDto userDto,
-                                      BindingResult result) throws ServiceException {
+                                      BindingResult result, HttpServletResponse res) throws ServiceException {
 
         ${userEntity|domain:Model|name} existing = userDetailsService.findBy${usernameFieldName|capitalize}(userDto.getUsername());
         if (existing != null) {
@@ -197,7 +197,7 @@ $[else]
         }
 
         save(userDto);
-        return "redirect:${urlPathPrefix}/signup?success";
+        return login(userDto.getUsername(), userDto.getPassword(), res);
     }
 
     public ${userEntity|domain:Model|name} save(UserSignupDto userSignupDto) throws ServiceException {
@@ -218,7 +218,9 @@ $[if roleEnum != null && userEntity.hasAttributeOfTypeTagged("role")]
   $[/if]
         user.set${userEntity.attributeOfTypeTagged("role")|domain:Model|name|capitalize}(roles);
 $[/if]
-        return userService.createUser(user);
+        ${userEntity|domain:Model|name} createdUser = userService.createUser(user);
+        userDetailsService.updateUser(createdUser);
+        return createdUser;
     }
     $[/if]
 }

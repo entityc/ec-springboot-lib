@@ -109,7 +109,9 @@ $[publisher org.entityc.springboot.web.admin.detail]
   <nav aria-label="breadcrumb">
     <ol class="breadcrumb">
       <li class="breadcrumb-item"> <a th:href="@{/${adminUrlPrefix}}">Admin Home</a> </li>
+            $[if domainEntity.hasTag("home")]
       <li class="breadcrumb-item"> <a th:href="@{/${adminUrlPrefix}/${entity|domain:APIPath|name}}">${entity|title|plural}</a> </li>
+            $[/if]
             $[let parentNumber = 1]
             $[foreach parentEntity in entity.primaryParentAncestory]
                 $[call breadcrumbExpression(entity: parentEntity, dtoEntity: parentEntity|domain:JSONDTO)->(thExpression: breadcrumbExpression)]

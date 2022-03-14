@@ -9,6 +9,9 @@ $[outlet init
   D "Used by authors that may want to initialize some variables before using the other outlets."
 ]
 $[/outlet]
+$[*************]
+$[* GET BY ID *]
+$[*************]
             $[if entity.hasPrimaryKey]
                 $[let responseDtoName = entity|domain:JSONDTO|name]
                 $[let responseModelName = entity|domain:Model|name]
@@ -55,13 +58,21 @@ $[/outlet]
     }
 
             $[/if]
+
+$[***********]
+$[*  COUNT  *]
+$[***********]
+    public long get${responseModelName}Count() throws ServiceException {
+        return ${repositoryVariableName}.count();
+    }
+
 $[************]
 $[* GET LIST *]
 $[************]
             $[let responseDtoName = entity|domain:JSONDTO|name]
             $[let responseModelName = entity|domain:Model|name]
             $[let repositoryVariableName = entity|domain:Repository|name|uncapitalize]
-    public List<${responseModelName}> get${responseModelName}List(int start, int limit) throws ServiceException {
+    public List<${responseModelName}> get${responseModelName}List(long start, int limit) throws ServiceException {
         try {
             return ${repositoryVariableName}.get${responseModelName}List(start, limit);
         } catch (DataAccessException ex) {
@@ -69,7 +80,7 @@ $[************]
         }
     }
 
-    public List<${responseDtoName}> get${responseDtoName}List(int start, int limit, boolean hierarchical) throws ServiceException {
+    public List<${responseDtoName}> get${responseDtoName}List(long start, int limit, boolean hierarchical) throws ServiceException {
         try {
             List<${responseDtoName}> dtoList = new ArrayList<>();
             List<${responseModelName}> list = ${repositoryVariableName}.get${responseModelName}List(start, limit);
@@ -106,7 +117,7 @@ $[****************************]
                 $[capture fullResponseName]List<${responseClassName}>$[/capture]
     public ${fullResponseName} get${responseInMethodName}ListBy${attribute.name|capitalize}(
         ${attribute.type|language} ${attribute.name},
-        int start,
+        long start,
         int limit,
         boolean hierarchical) throws ServiceException {
 
@@ -164,7 +175,7 @@ $[*******************************]
                 $[capture fullResponseName]List<${responseClassName}>$[/capture]
     public ${fullResponseName} get${responseInMethodName}ListBy${relationship.name|capitalize}(
         ${relationship.to.entity.pkType|language} ${toPrimaryKeyName},
-        int start,
+        long start,
         int limit,
         boolean hierarchical) throws ServiceException {
 

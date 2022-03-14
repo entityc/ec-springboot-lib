@@ -301,7 +301,7 @@ $[author to org.entityc.springboot.repository]
                     "WHERE at.user_id=?1 AND at.${readAttribute|domain:Database|name} " +
                     "ORDER BY ${sortByAttribute|domain:Database|name} ${ascending ? "ASC":"DESC"} " +
                     "LIMIT ?3 OFFSET ?2", nativeQuery = true)
-    List<${modelName}> get${modelName}ListFor${userModelName}(${userEntity.pkType|language} userId, int start, int limit);
+    List<${modelName}> get${modelName}ListFor${userModelName}(${userEntity.pkType|language} userId, long start, int limit);
         $[/if]
     $[/author]
 $[/author]
@@ -325,7 +325,7 @@ $[author to org.entityc.springboot.service]
         Gets a list of ${entity.name} objects that the logged in user has permission to read.
         [Template] ${__template.name}:${__outlet.name} < ${__author.template.name}
      */
-    public List<${dtoName}> get${dtoName}ListFor${userModelName}(int start, int limit, boolean hierarchical) throws ServiceException {
+    public List<${dtoName}> get${dtoName}ListFor${userModelName}(long start, int limit, boolean hierarchical) throws ServiceException {
         ${userEntity|domain:Model|name} user = userDetailsService.findBy${usernameAttribute|domain:Model|name|capitalize}(securityService.findLoggedInUsername());
         Set<Role> roles = user.getRoles();
         List<${modelName}> list = null;

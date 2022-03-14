@@ -30,7 +30,7 @@ $[author to org.entityc.springboot.repository]
                  "FROM ${manyToManyEntity|domain:Database|name} " +
                  "WHERE ${destPKDBName} = ?1) " +
              "ORDER BY pt.created_on DESC LIMIT ?3 OFFSET ?2", nativeQuery = true)
-    List<${modelName}> get${modelName}ListAssociatedWith${destMMEntity|domain:Model|name}(${destPKType} ${destPKVarName}, int start, int limit);
+    List<${modelName}> get${modelName}ListAssociatedWith${destMMEntity|domain:Model|name}(${destPKType} ${destPKVarName}, long start, int limit);
 
     @Modifying
     @Query(value =

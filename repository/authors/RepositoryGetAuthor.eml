@@ -63,7 +63,7 @@ $[/send]
             "ORDER BY ${sortByAttribute|domain:Database|name} ${ascending ? "ASC":"DESC"} " +
             $[/if]
             "LIMIT ?2 OFFSET ?1", nativeQuery = true)
-    List<${responseModelName}> get${responseModelName}List(int start, int limit);
+    List<${responseModelName}> get${responseModelName}List(long start, int limit);
 
             $[if entity.hasAttributeTagged("release:lock")]
                 $[let lockedAttribute = entity.attributeTagged("release:lock")]
@@ -101,7 +101,7 @@ $[/send]
             "ORDER BY ${sortByAttribute|domain:Database|name} ${ascending ? "ASC":"DESC"} " +
                     $[/if]
             "LIMIT ?3 OFFSET ?2", nativeQuery = true)
-    List<${responseModelName}> get${responseModelName}ListBy${attribute.name|capitalize}(${attribute.type|language} ${attribute|domain|name}, int start, int limit);
+    List<${responseModelName}> get${responseModelName}ListBy${attribute.name|capitalize}(${attribute.type|language} ${attribute|domain|name}, long start, int limit);
 
                 $[/if]
             $[/foreach]
@@ -122,7 +122,7 @@ $[/send]
             "ORDER BY ${sortByAttribute|domain:Database|name} ${ascending ? "ASC":"DESC"} " +
                     $[/if]
             "LIMIT ?3 OFFSET ?2", nativeQuery = true)
-    List<${responseModelName}> get${responseModelName}ListBy${relationship.name|capitalize}(${relationship.to.entity.primaryKey.type|language} ${relationship|domain|name}Id, int start, int limit);
+    List<${responseModelName}> get${responseModelName}ListBy${relationship.name|capitalize}(${relationship.to.entity.primaryKey.type|language} ${relationship|domain|name}Id, long start, int limit);
 
                 $[/if]
             $[/foreach]

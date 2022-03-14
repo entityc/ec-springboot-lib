@@ -100,7 +100,7 @@ $[* TODO - This came from the service class get list endpoints, instead of modif
   $[let lockedDeclInsert = "boolean lockedOnly, "]
   $[let lockAttribute = entity.attributeTagged("release:lock")]
   $[/if]
-      public List<${responseModelName}> get${responseModelName}List(${lockedDeclInsert}int start, int limit) throws ServiceException {
+      public List<${responseModelName}> get${responseModelName}List(${lockedDeclInsert}long start, int limit) throws ServiceException {
           try {
   $[if hasLockAttribute]
               if (lockedOnly) {
@@ -116,7 +116,7 @@ $[* TODO - This came from the service class get list endpoints, instead of modif
           }
       }
 
-      public List<${responseDtoName}> get${responseDtoName}List(${lockedDeclInsert}int start, int limit, boolean hierarchical) throws ServiceException {
+      public List<${responseDtoName}> get${responseDtoName}List(${lockedDeclInsert}long start, int limit, boolean hierarchical) throws ServiceException {
           try {
               List<${responseDtoName}> dtoList = new ArrayList<>();
   $[if hasLockAttribute]

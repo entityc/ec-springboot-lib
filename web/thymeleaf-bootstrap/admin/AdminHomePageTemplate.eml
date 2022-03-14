@@ -105,6 +105,46 @@ $[file "resources/templates" filename "html"]
     </form>
         $[/if]
 	<div class="container" th:unless="${$}{#lists.isEmpty(${topEntityListName})}">
+        $[if topEntity.hasTag("paging:size")]
+        $[let pageSize = topEntity.tagValue("paging:size")]
+    <nav aria-label="...">
+      <ul th:unless="${$}{lastPage==0}" class="pagination justify-content-end">
+        <li th:unless="${$}{page>0}" class="page-item disabled">
+          <span class="page-link">Previous</span>
+        </li>
+        <li th:if="${$}{page>0}" class="page-item">
+          <a class="page-link" th:href="@{'/${adminUrlPrefix}/${topEntity|domain:APIPath|name}?page=' + ${$}{page-1}}">Previous</a>
+        </li>
+        <li th:if="${$}{page>2}" class="page-item">
+            <a class="page-link" th:href="@{'/${adminUrlPrefix}/${topEntity|domain:APIPath|name}?page=' + ${$}{page-3}}" th:text="${$}{page-2}">prev</a>
+        </li>
+        <li th:if="${$}{page>1}" class="page-item">
+            <a class="page-link" th:href="@{'/${adminUrlPrefix}/${topEntity|domain:APIPath|name}?page=' + ${$}{page-2}}" th:text="${$}{page-1}">prev</a>
+        </li>
+        <li th:if="${$}{page>0}" class="page-item">
+            <a class="page-link" th:href="@{'/${adminUrlPrefix}/${topEntity|domain:APIPath|name}?page=' + ${$}{page-1}}" th:text="${$}{page}">prev</a>
+        </li>
+        <li class="page-item active" aria-current="page">
+          <span class="page-link" th:text="${$}{page+1}">page</span>
+        </li>
+        <li th:if="${$}{page<lastPage}" class="page-item">
+            <a class="page-link" th:href="@{'/${adminUrlPrefix}/${topEntity|domain:APIPath|name}?page=' + ${$}{page+1}}" th:text="${$}{page+2}">next</a>
+        </li>
+        <li th:if="${$}{page<(lastPage-1)}" class="page-item">
+            <a class="page-link" th:href="@{'/${adminUrlPrefix}/${topEntity|domain:APIPath|name}?page=' + ${$}{page+2}}" th:text="${$}{page+3}">next</a>
+        </li>
+        <li th:if="${$}{page<(lastPage-2)}" class="page-item">
+            <a class="page-link" th:href="@{'/${adminUrlPrefix}/${topEntity|domain:APIPath|name}?page=' + ${$}{page+3}}" th:text="${$}{page+4}">next</a>
+        </li>
+        <li th:unless="${$}{page<lastPage}" class="page-item disabled">
+          <span class="page-link">Next</span>
+        </li>
+        <li th:if="${$}{page<lastPage}" class="page-item">
+          <a class="page-link" th:href="@{'/${adminUrlPrefix}/${topEntity|domain:APIPath|name}?page=' + ${$}{page+1}}">Next</a>
+        </li>
+      </ul>
+    </nav>
+        $[/if]
 		<table class="table table-striped">
 		<thead>
 		<tr>
@@ -202,21 +242,35 @@ $[receive distinct serviceDeclarations]
 
     $[call findRoleEnum()->(roleEnum: roleEnum, defaultEnumItem: defaultEnumItem)]
     $[foreach topEntity in (space|domain).entitiesTagged("home")]
+        $[let hasPaging = topEntity.hasTag("paging:size")]
     @GetMapping(value = {"/${adminUrlPrefix}/${topEntity|domain:APIPath|name}"})
-    public String ${topEntity.name|uncapitalize}Home(Model model) throws ServiceException {
+    public String ${topEntity.name|uncapitalize}Home(Model model$[if hasPaging], @Param("page") Long page$[/if]) throws ServiceException {
         ${userEntity|domain:Model|name} user = userDetailsService.findBy${usernameAttribute|domain:Model|name|capitalize}(securityService.findLoggedInUsername());
 $[receive distinct varDeclaration]
         $[let topEntityListName = (topEntity|name|uncapitalize) + "List"]
         $[let serviceClassName = topEntity|domain:Service|name]
 $[send imports]
 import ${topEntity|domain:Service|fullname};
+import org.springframework.data.repository.query.Param;
 $[/send]
 $[send serviceDeclarations]
     @Autowired private ${serviceClassName} ${serviceClassName|uncapitalize};
 $[/send]
+        $[let pageArgs = "0, 10000"]
+        $[ if hasPaging ]$[let pageSize = topEntity.tagValue("paging:size")]$[capture pageArgs]page * ${pageSize}, ${pageSize}$[/capture]$[/if]
+        $[if hasPaging]
+        if (page == null) {
+            page = 0L;
+        }
+        $[/if]
+        long totalItemCount = ${serviceClassName|uncapitalize}.get${topEntity|domain:Model|name}Count();
         $[let objectLevelAccess = (topEntity|domain:Security).hasTag("access:object:level")]
         $[if objectLevelAccess]
-        model.addAttribute("${topEntityListName}", ${serviceClassName|uncapitalize}.get${topEntity|domain:JSONDTO|name}ListFor${userEntity|domain:Model|name}(0,100, true));
+        model.addAttribute("${topEntityListName}", ${serviceClassName|uncapitalize}.get${topEntity|domain:JSONDTO|name}ListFor${userEntity|domain:Model|name}(${pageArgs}, true));
+            $[if hasPaging]
+        model.addAttribute("${topEntity|name|uncapitalize}Count", ${serviceClassName|uncapitalize}.get${topEntity|domain:Model|name}Count());
+        model.addAttribute("lastPage", (totalItemCount-1) / ${pageSize});
+            $[/if]
         $[else]
             $[let userEntity = (space|domain:Security).entityTagged("user")]
             $[if userEntity != null]
@@ -231,13 +285,20 @@ $[/send]
                 $[call rolesContains(accessType: "read", rolesArrayName: "roles", entity: topEntity)->(hasRoles: hasRoles, rolesExpr: rolesExpr)]
                 $[if hasRoles]
         if (${rolesExpr}) {
-            model.addAttribute("${topEntityListName}", ${serviceClassName|uncapitalize}.get${topEntity|domain:JSONDTO|name}List(0,100, true));
+            model.addAttribute("${topEntityListName}", ${serviceClassName|uncapitalize}.get${topEntity|domain:JSONDTO|name}List(${pageArgs}, true));
+                    $[if hasPaging]
+            model.addAttribute("${topEntity|name|uncapitalize}Count", totalItemCount);
+            model.addAttribute("lastPage", (totalItemCount-1) / ${pageSize});
+                    $[/if]
         }
                 $[/if]
             $[/if]
         $[/if]
         model.addAttribute("canAdd${topEntity|name}", ${serviceClassName|uncapitalize}.canCreate());
         model.addAttribute("loggedInUser", user);
+                    $[if hasPaging]
+        model.addAttribute("page", page);
+                    $[/if]
         return "admin_${topEntity.name}_home";
     }
     $[/foreach]

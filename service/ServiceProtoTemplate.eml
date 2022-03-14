@@ -509,7 +509,7 @@ $[if hasLockAttribute]
 $[let lockedDeclInsert = "boolean lockedOnly, "]
 $[let lockAttribute = entity.attributeTagged("release:lock")]
 $[/if]
-    public List<${responseModelName}> get${responseModelName}List(${lockedDeclInsert}int start, int limit) throws ServiceException {
+    public List<${responseModelName}> get${responseModelName}List(${lockedDeclInsert}long start, int limit) throws ServiceException {
         try {
 $[if hasLockAttribute]
             if (lockedOnly) {
@@ -525,7 +525,7 @@ $[/if]
         }
     }
 
-    public List<${responseDtoName}> get${responseDtoName}List(${lockedDeclInsert}int start, int limit, boolean hierarchical) throws ServiceException {
+    public List<${responseDtoName}> get${responseDtoName}List(${lockedDeclInsert}long start, int limit, boolean hierarchical) throws ServiceException {
         try {
             List<${responseDtoName}> dtoList = new ArrayList<>();
 $[if hasLockAttribute]
@@ -547,7 +547,7 @@ $[/if]
         }
     }
 
-    public ${fullProtobufClassName}List get${protobufClassName}PBList(${lockedDeclInsert}int start, int limit, boolean hierarchical) throws ServiceException {
+    public ${fullProtobufClassName}List get${protobufClassName}PBList(${lockedDeclInsert}long start, int limit, boolean hierarchical) throws ServiceException {
         try {
             ${fullProtobufClassName}List.Builder pbList = ${fullProtobufClassName}List.newBuilder();
 $[if hasLockAttribute]
@@ -586,7 +586,7 @@ $[let responseInMethodName = isDtoVariant ? responseDtoName : isModelVariant ? r
 $[capture fullResponseName]$[if isPBVariant]${responseClassName}List$[else]List<${responseClassName}>$[/if]$[/capture]
     public ${fullResponseName} get${responseInMethodName}ListBy${attribute.name|capitalize}(
         ${attribute.type|language} ${attribute.name},
-        int start,
+        long start,
         int limit,
         boolean hierarchical) throws ServiceException {
 
@@ -649,7 +649,7 @@ $[let toPrimaryKeyName = relationship.to.entity.primaryKeyAttribute.name]
 $[capture fullResponseName]$[if isPBVariant]${responseClassName}List$[else]List<${responseClassName}>$[/if]$[/capture]
     public ${fullResponseName} get${responseInMethodName}ListBy${relationship.name|capitalize}(
         ${relationship.to.entity.pkType|language} ${toPrimaryKeyName},
-        int start,
+        long start,
         int limit,
         boolean hierarchical) throws ServiceException {
 

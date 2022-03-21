@@ -43,9 +43,9 @@ $[let setupRepo = space.getRepository("SetupRepo")]
     repository DomainRepo {
         type github
         organization "${setupRepo.organization}"
-        name "${setupRepo.repoName}"
+        name "${stdLibRepoName}"
         path "domains"
-        tag "${repoTag}"
+        tag "${stdLibRepoTag}"
     }
     // Microservice
     import DTO, JSONDTO, DTOMapper, Model, Repository, Service, Database, Controller, Security, Utils, Exception from DomainRepo
@@ -64,9 +64,9 @@ $[let setupRepo = space.getRepository("SetupRepo")]
     repository LanguageRepo {
         type github
         organization "${setupRepo.organization}"
-        name "${setupRepo.repoName}"
+        name "${stdLibRepoName}"
         path "languages"
-        tag "${repoTag}"
+        tag "${stdLibRepoTag}"
     }
     import Java, Markdown from LanguageRepo
 

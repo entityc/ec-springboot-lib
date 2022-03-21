@@ -168,12 +168,12 @@ $[* ATTRIBUTES *]
                                 $[capture canEditVariable]canEdit${entity|name}$[/capture]
         <tr>
 			<th th:text="#{${entity|domain:StaticLocalization|name}.${domainAttribute|domain:StaticLocalization|name}}" scope="col" width="250">${domainAttribute|title}</th>
-            <td>
+            <td style="width:auto">
                 <div class="mb-3">
                   <img th:src="@{${$}{(${attributeName} == null || ${urlAttributeName} == null) ? '/images/DefaultConceptImage.png' : ${urlAttributeName}}}" width="128" height="128"/>
                 </div>
             </td>
-            <td>
+            <td style="width:1%">
             <button th:if="${$}{${canEditVariable}}" type="button" class="btn btn-primary"
                 data-bs-toggle="modal" data-bs-target="#${editModalType}UploadModal" data-bs-field-name="${domainAttribute|name}"
                 data-bs-field-title="${domainAttribute|title}">Edit</button>
@@ -234,14 +234,14 @@ $[* ATTRIBUTES *]
                                 $[/if]
                                 $[switch domainAttribute.type]
                                     $[case date]
-   			<td th:text="${$}{#dates.format(${dtoVariable}.${domainAttribute.name}, 'dd-MMM-yyyy')}"$[if domainAttribute#first] scope="row"$[/if]></td>
+   			<td th:text="${$}{#dates.format(${dtoVariable}.${domainAttribute.name}, 'dd-MMM-yyyy')}"$[if domainAttribute#first] scope="row"$[/if] style="width:auto"></td>
                                     $[case enum]
-			<td th:text="${$}{${fieldName}_text}"$[if domainAttribute#first] scope="row"$[/if]></td>
+			<td th:text="${$}{${fieldName}_text}"$[if domainAttribute#first] scope="row"$[/if] style="width:auto"></td>
                                     $[default]
-			<td th:text="${$}{${dtoVariable}.${domainAttribute.name}}"$[if domainAttribute#first] scope="row"$[/if]></td>
+			<td th:text="${$}{${dtoVariable}.${domainAttribute.name}}"$[if domainAttribute#first] scope="row"$[/if] style="width:auto"></td>
                                 $[/switch]
                             $[/if]
-            <td>
+            <td style="width:1%">
                             $[call checkIfAttributeIsEditable(attribute: domainAttribute.attribute)->(editable: editable)]
                             $[if editable]
                                 $[let editModalType = "string"]
@@ -315,8 +315,8 @@ $[* RELATIONSHIPS *]
                         $[if optShowMarkdownIcon]
             <td></td>
                         $[/if]
-			<td th:text="${$}{${valueVariableField}==null?'':${valueVariableName}}"$[if domainRelationship#first] scope="row"$[/if]></td>
-			<td>
+			<td th:text="${$}{${valueVariableField}==null?'':${valueVariableName}}"$[if domainRelationship#first] scope="row"$[/if] style="width:100%"></td>
+			<td style="width:auto">
             <button th:if="${$}{${canEditVariable}}" type="button" class="btn btn-primary"
                 data-bs-toggle="modal" data-bs-target="#${domainRelationship.name}_EditModal" data-bs-field-name="${domainRelationship|name}"
                 data-bs-field-title="${domainRelationship|title}"
@@ -363,7 +363,7 @@ $[* treat to-one relationships like attributes assigned to an object of the rela
                 $[/if]
             $[/foreach]
 	</div>
-            $[foreach relationship in domainEntity.relationships]
+            $[foreach relationship in domainEntity.declaredDomainRelationships]
                 $[if !relationship.hasTag("detail")]$[continue]$[/if]
                 $[if relationship.isOneToMany]
                     $[let toEntity = relationship.to.entity]
@@ -377,7 +377,7 @@ $[* treat to-one relationships like attributes assigned to an object of the rela
                 <div class="col-md-auto">
      	            <h3>${relationship|title}</h3>
                 </div>
-                <div class="col-md-auto">
+                <div class="col-md-auto ms-auto">
                     <form th:if="${$}{canAdd${toEntity|name}}" th:action="@{/${adminUrlPrefix}/${actionUrl}}" method="post">
                         <input type="submit" name="${toEntity.name}add" id="${toEntity.name}-add"
                                class="btn btn-primary" value="+" />
@@ -390,15 +390,15 @@ $[* treat to-one relationships like attributes assigned to an object of the rela
 		<tr>
                     $[foreach attribute in toEntity.declaredDomainAttributes]
                         $[if attribute.hasTag("summary")]
-		  <th th:text="#{${toEntity|domain:StaticLocalization|name}.${attribute|domain:StaticLocalization|name}}" scope="col">${attribute|title}</th>
+		  <th th:text="#{${toEntity|domain:StaticLocalization|name}.${attribute|domain:StaticLocalization|name}}" scope="col" style="width:auto">${attribute|title}</th>
                         $[/if]
                     $[/foreach]
                     $[foreach toEntityRelationship in toEntity.declaredDomainRelationships]
                         $[if toEntityRelationship.hasTag("summary")]
-	      <th th:text="#{${toEntity|domain:StaticLocalization|name}.${toEntityRelationship|domain:StaticLocalization|name}}" scope="col">${toEntityRelationship|title}</th>
+	      <th th:text="#{${toEntity|domain:StaticLocalization|name}.${toEntityRelationship|domain:StaticLocalization|name}}" scope="col" style="width:auto">${toEntityRelationship|title}</th>
                         $[/if]
                     $[/foreach]
-          <th th:text="Action" data-width="100" data-width-unit="px">Action</th>
+          <th th:text="Action" style="width:1%">Action</th>
         </tr>
 		</thead>
 		<tbody>
@@ -407,9 +407,11 @@ $[* treat to-one relationships like attributes assigned to an object of the rela
                         $[if attribute.hasTag("summary")]
                             $[switch attribute.type]
                                 $[case date]
-   			<td th:text="${$}{#dates.format(item.${attribute.name}, 'dd-MMM-yyyy')}"$[if attribute#first] scope="row"$[/if]></td>
+   			<td th:text="${$}{#dates.format(item.${attribute.name}, 'dd-MMM-yyyy')}"$[if attribute#first] scope="row"$[/if] style="width:auto"></td>
+   			                    $[case enum]
+			<td th:text="${$}{item.${attribute.name}.title}"$[if attribute#first] scope="row"$[/if] style="width:auto"></td>
                                 $[default]
-			<td th:text="${$}{item.${attribute.name}}"$[if attribute#first] scope="row"$[/if]></td>
+			<td th:text="${$}{item.${attribute.name}}"$[if attribute#first] scope="row"$[/if] style="width:auto"></td>
                             $[/switch]
                         $[/if]
                     $[/foreach]
@@ -422,7 +424,7 @@ $[* treat to-one relationships like attributes assigned to an object of the rela
 			<td th:text="${$}{${relItemExpr}}"></td>
                         $[/if]
                     $[/foreach]
-            <td><a class="btn btn-secondary active" role="button" aria-pressed="true" th:href="@{'/${adminUrlPrefix}/${toEntity|domain:APIPath|name}/' + ${$}{item.id} + '/detail'}">Open</a></td>
+            <td style="width:1%"><a class="btn btn-secondary active" role="button" aria-pressed="true" th:href="@{'/${adminUrlPrefix}/${toEntity|domain:APIPath|name}/' + ${$}{item.id} + '/detail'}">Open</a></td>
 		</tr>
 		</tbody>
 		</table>

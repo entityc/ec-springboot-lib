@@ -68,6 +68,19 @@ This template builds what are called Model classes. A Model class is used to rep
 | **Tags** |`template` `release` `title` |
 | **Domains** |`Model` `Database` |
 
+### Publishers
+
+#### `springboot.model`
+
+
+
+The following outlets are offered by this publisher:
+
+| Outlet | Description |
+|---|---|
+| `classAnnotations` | Annotations on the entity model class.|
+
+
 ### Functions
 
 #### Build Overrides

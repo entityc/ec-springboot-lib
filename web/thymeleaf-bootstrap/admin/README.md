@@ -40,7 +40,7 @@ This template generates an admin detail page for an entity. It allows an admin t
 
 | |References|
 |---|---|
-| **Tags** |`summary` `flatten` `display:attribute` `content:text` `asset:file` `selectable` `markdown` `access:object:level` `detail` `content:localized` `user` `url` |
+| **Tags** |`summary` `display:attribute` `content:text` `asset:file` `selectable` `access:object:level` `content:localized` `url` `home` `flatten` `markdown` `detail` `user` |
 | **Domains** |`AdminUI` `Model` `StaticLocalization` `Service` `JSONDTO` `Localization` `Security` `APIPath` |
 
 At the very top of the page is the same navigation bar from the home screen. The screen has other features that you can customize.
@@ -164,7 +164,7 @@ This template generates the websites Admin Home page. This page contains the ent
 
 | |References|
 |---|---|
-| **Tags** |`summary` `role` `edit` `markdown` `access:object:level` `user` `home` |
+| **Tags** |`summary` `paging:size` `role` `edit` `markdown` `access:object:level` `user` `home` |
 | **Domains** |`AdminUI` `Model` `StaticLocalization` `Service` `JSONDTO` `Localization` `Security` `APIPath` |
 
 Options for how it generates the admin home page are specified in the `AdminUI` domain with specific tags.The following features are customizable:

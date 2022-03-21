@@ -8,7 +8,7 @@ $[let entityName = (#entityName:"Widget")]
 $[let appName = (#appName:"BasicApp")]
 $[let apiPrefixNamespace = (#apiPrefixNamespace:"myapp")]
 $[let appBasePackage = (#appBasePackage:"com.example.myapp")]
-$[let repoTag = "v0.18.12"]
+$[let repoTag = "v0.9.4"]
 
 $[* Entities *]
 $[install "entities/App.edl" "entities"]

@@ -32,7 +32,7 @@ $[let setupRepo = space.getRepository("SetupRepo")]
         type github
         organization "${setupRepo.organization}"
         name "${setupRepo.repoName}"
-        path "templates/server/springboot"
+        path ""
         tag "${repoTag}"
     }
     // Templates are imported in Configuration.edl

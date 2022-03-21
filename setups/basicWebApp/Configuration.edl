@@ -39,7 +39,7 @@ configuration CodeGen {
         template ServerDocumentation  in "doc" {
             output primary Docs
         }
-        template Microservice {
+        template Microservice in "system" {
             output primary ServerCode
         }
 

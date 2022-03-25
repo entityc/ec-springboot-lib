@@ -197,6 +197,16 @@ $[*******************************]
         }
     }
 
+    public Long get${responseInMethodName}CountBy${relationship.name|capitalize}(
+        ${relationship.to.entity.pkType|language} ${toPrimaryKeyName}) throws ServiceException {
+
+        try {
+            return ${repositoryVariableName}.count${responseModelName}By${relationship.name|capitalize}Id(${toPrimaryKeyName});
+        } catch (DataAccessException ex) {
+            throw new DaoException(ex.getMessage(), ex);
+        }
+    }
+
             $[/function]
             $[foreach entity.relationships]
                 $[if !relationship.isParent]$[continue]$[/if]

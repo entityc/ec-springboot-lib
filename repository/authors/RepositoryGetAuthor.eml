@@ -124,6 +124,13 @@ $[/send]
             "LIMIT ?3 OFFSET ?2", nativeQuery = true)
     List<${responseModelName}> get${responseModelName}ListBy${relationship.name|capitalize}(${relationship.to.entity.primaryKey.type|language} ${relationship|domain|name}Id, long start, int limit);
 
+    /**
+     * Gets the count of ${responseModelName} objects that all share the same reference to an object of ${relationship.to.entity.name}.
+     * @param ${relationship|domain|name}Id The ID of the ${relationship.to.entity.name} object to which all results will share.
+     * @return Count of ${responseModelName} objects that exist.
+     */
+    Long count${responseModelName}By${relationship.name|capitalize}Id(${relationship.to.entity.primaryKey.type|language} ${relationship|domain|name}Id);
+
                 $[/if]
             $[/foreach]
         $[/author]

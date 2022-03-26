@@ -1,6 +1,5 @@
 $[domain WebUserUI]
-$[D summary "This template generates HTML code associated with user Login and Sign Up."]
-$[D "This template generates HTML code associated with user Login and Sign Up."]
+$[D summary, main "This template generates HTML code associated with user Login and Sign Up."]
 $[import "security/SecurityFunctions"]
 $[call findUserEntity()->(userEntity: userEntity, passwordAttribute: passwordAttribute, usernameAttribute: usernameAttribute)]
 $[let userEnabledAttribute = (userEntity|domain:Security).attributeTagged("login:enabled")]

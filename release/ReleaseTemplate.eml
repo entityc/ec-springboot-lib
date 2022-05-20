@@ -1,0 +1,53 @@
+$[ import "security/SecurityFunctions" ]
+
+$[ import "release/ControllerReleaseAuthor"]
+$[ import "release/ServiceReleaseAuthor"]
+$[ import "release/RepositoryReleaseAuthor"]
+
+$[* TODO - This came from the service class get list endpoints, instead of modifying regular get list endoints
+  new ones should be created specifically for locking.
+
+  $[let hasLockAttribute = entity.hasAttributeTagged("release:lock")]
+  $[let lockedDeclInsert = ""]
+  $[if hasLockAttribute]
+  $[let lockedDeclInsert = "boolean lockedOnly, "]
+  $[let lockAttribute = entity.attributeTagged("release:lock")]
+  $[/if]
+      public List<${responseModelName}> get${responseModelName}List(${lockedDeclInsert}long start, int limit) throws ServiceException {
+          try {
+  $[if hasLockAttribute]
+              if (lockedOnly) {
+                  return ${repositoryVariableName}.getLocked${responseModelName}List(start, limit);
+              } else {
+                  return ${repositoryVariableName}.get${responseModelName}List(start, limit);
+              }
+  $[else]
+              return ${repositoryVariableName}.get${responseModelName}List(start, limit);
+  $[/if]
+          } catch (DataAccessException ex) {
+              throw new DaoException(ex.getMessage(), ex);
+          }
+      }
+
+      public List<${responseDtoName}> get${responseDtoName}List(${lockedDeclInsert}long start, int limit, boolean hierarchical) throws ServiceException {
+          try {
+              List<${responseDtoName}> dtoList = new ArrayList<>();
+  $[if hasLockAttribute]
+              List<${responseModelName}> list;
+              if (lockedOnly) {
+                  list = ${repositoryVariableName}.getLocked${responseModelName}List(start, limit);
+              } else {
+                  list = ${repositoryVariableName}.get${responseModelName}List(start, limit);
+              }
+  $[else]
+              List<${responseModelName}> list = ${repositoryVariableName}.get${responseModelName}List(start, limit);
+  $[/if]
+              for(${responseModelName} modelObject : list) {
+                  dtoList.add(dtoFromModel(modelObject, hierarchical));
+              }
+              return dtoList;
+          } catch (DataAccessException ex) {
+              throw new DaoException(ex.getMessage(), ex);
+          }
+      }
+*]

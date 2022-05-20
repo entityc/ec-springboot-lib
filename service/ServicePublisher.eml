@@ -7,6 +7,7 @@ $[import "service/authors/ServiceBaseAuthor"]
 $[import "service/authors/ServiceCRUDAuthors"]
 $[*import "service/authors/ServiceCacheAuthor"*]
 $[import "service/authors/ServiceUploadAuthor"]
+$[import "service/authors/ServiceProtobufMappingAuthor"]
 $[publisher org.entityc.springboot.service
   D "This publisher ultimately builds the Service classes for the Spring Boot application but it"
   D "relies on many authors to fill it out with methods required to implement the application."

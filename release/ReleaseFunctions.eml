@@ -1,6 +1,6 @@
-$[D summary "This template has functions specific for detecting and extracting information about a"]
-$[D summary "release management structure."]
-$[D "
+$[ D summary "This template has functions specific for detecting and extracting information about a" ]
+$[ D summary "release management structure." ]
+$[ D "
 When your application involves release and version management of some entity, this template has functions that can be useful. The template is centered around the support of a particular structure of entities that have specific relationships between eachother.
 
 The entities involved in the pattern shown below are as follows:
@@ -26,132 +26,160 @@ Tag->           release:top    release:binder    release:version    release:obje
 ```
 
 These functions help support the detection of this pattern not just in terms of the tags but also the relationships between the entities.
-"]
-$[function lookForVersionReleaseStructure
-  D "Given a version release (VR) entity, this will try to locate the version (V) and object (O)"
-  D "entities of the structure." 
-  (versionReleaseEntity
-   D "The version release (VR) where it starts its search." 
-  )->
-  (results
-   D "It returns an array with [VR, O, V] if it finds the O and V, otherwise just returns [VR]." 
-  )
+" ]
+$[ function lookForVersionReleaseStructure
+   D "Given a version release (VR) entity, this will try to locate the version (V) and object (O)"
+   D "entities of the structure." 
+   (versionReleaseEntity
+    D "The version release (VR) where it starts its search." 
+   )->
+   (results
+    D "It returns an array with [VR, O, V] if it finds the O and V, otherwise just returns [VR]." 
+   )
 ]
-    $[if versionReleaseEntity.hasTag("release:binder")]
-        $[let _results = @[versionReleaseEntity]@]
-        $[let _o = null]
-        $[let _v = null]
-        $[let _foundO = false]
-        $[let _foundV = false]
-        $[foreach _vrRelationship in versionReleaseEntity.relationships]
-            $[if _vrRelationship.to.entity.hasTag("release:object")]
-                $[let _o = _vrRelationship.to.entity]$[let _foundO = true]
-            $[elseif _vrRelationship.to.entity.hasTag("release:version")]
-                $[let _v = _vrRelationship.to.entity]$[let _foundV = true]
-            $[/if]
-        $[/foreach]
-        $[if _foundO && _foundV]
-            $[do _results.add(_o)]
-            $[do _results.add(_v)]
-            $[let results = _results]
-        $[/if]
-    $[/if]
-$[/function]
+    $[ if versionReleaseEntity.hasTag("release:binder") ]
+        $[ let _results = @[versionReleaseEntity]@ ]
+        $[ let _o = null ]
+        $[ let _v = null ]
+        $[ let _foundO = false ]
+        $[ let _foundV = false ]
+        $[ foreach _vrRelationship in versionReleaseEntity.relationships ]
+            $[ if _vrRelationship.to.entity.hasTag("release:object") ]
+                $[ let _o = _vrRelationship.to.entity ]$[ let _foundO = true ]
+            $[ elseif _vrRelationship.to.entity.hasTag("release:version") ]
+                $[ let _v = _vrRelationship.to.entity ]$[ let _foundV = true ]
+            $[/ if ]
+        $[/ foreach ]
+        $[ if _foundO && _foundV ]
+            $[ do _results.add(_o) ]
+            $[ do _results.add(_v) ]
+            $[ let results = _results ]
+        $[/ if ]
+    $[/ if ]
+$[/ function ]
 
-$[function getReleaseBinderRelationships
-  D "Given a version release (VR) entity, this locates and returns the release (R), object (O) and"
-  D "version (V) entities." 
-  (versionReleaseEntity
-   D "The version release (VR) entity." 
-  )->
-  (results
-   D "Returns an array with [R, O, V] if it finds them, otherwise it returns an empty array and logs"
-   D "messages about what it couldn't find." 
-  )
+$[ function getReleaseBinderRelationships
+   D "Given a version release (VR) entity, this locates and returns the release (R), object (O) and"
+   D "version (V) entities." 
+   (versionReleaseEntity
+    D "The version release (VR) entity." 
+   )->
+   (results
+    D "Returns an array with [R, O, V] if it finds them, otherwise it returns an empty array and logs"
+    D "messages about what it couldn't find." 
+   )
 ]
-    $[if versionReleaseEntity.hasTag("release:binder")]
-        $[let _results = @[]@]
-        $[let _tRel = null]
-        $[let _oRel = null]
-        $[let _vRel = null]
-        $[let _foundTRel = false]
-        $[let _foundORel = false]
-        $[let _foundVRel = false]
-        $[foreach _vrRelationship in versionReleaseEntity.relationships]
-            $[let _toEntity = _vrRelationship.to.entity]
-            $[if _vrRelationship.isParent && _toEntity.hasTag("release:top")]
-                $[let _tRel = _vrRelationship]$[let _foundTRel = true]
-            $[elseif _toEntity.hasTag("release:object")]
-                $[let _oRel = _vrRelationship]$[let _foundORel = true]
-            $[elseif _toEntity.hasTag("release:version")]
-                $[let _vRel = _vrRelationship]$[let _foundVRel = true]
-            $[/if]
-        $[/foreach]
-        $[if _foundTRel && _foundORel && _foundVRel]
-            $[do _results.add(_tRel)]
-            $[do _results.add(_oRel)]
-            $[do _results.add(_vRel)]
-            $[let results = _results]
-        $[else]
-            $[if ! _foundTRel]
-                $[log info]Couldn't find release top!$[/log]
-            $[/if]
-            $[if ! _foundORel]
-                $[log info]Couldn't find release object!$[/log]
-            $[/if]
-            $[if ! _foundVRel]
-                $[log info]Couldn't find release version for ${versionReleaseEntity.name}!$[/log]
-            $[/if]
-        $[/if]
-    $[/if]
-$[/function]
+    $[ if versionReleaseEntity.hasTag("release:binder") ]
+        $[ let _results = @[]@ ]
+        $[ let _tRel = null ]
+        $[ let _oRel = null ]
+        $[ let _vRel = null ]
+        $[ let _foundTRel = false ]
+        $[ let _foundORel = false ]
+        $[ let _foundVRel = false ]
+        $[ foreach _vrRelationship in versionReleaseEntity.relationships ]
+            $[ let _toEntity = _vrRelationship.to.entity ]
+            $[ if _vrRelationship.isParent && _toEntity.hasTag("release:top") ]
+                $[ let _tRel = _vrRelationship ]$[ let _foundTRel = true ]
+            $[ elseif _toEntity.hasTag("release:object") ]
+                $[ let _oRel = _vrRelationship ]$[ let _foundORel = true ]
+            $[ elseif _toEntity.hasTag("release:version") ]
+                $[ let _vRel = _vrRelationship ]$[ let _foundVRel = true ]
+            $[/ if ]
+        $[/ foreach ]
+        $[ if _foundTRel && _foundORel && _foundVRel ]
+            $[ do _results.add(_tRel) ]
+            $[ do _results.add(_oRel) ]
+            $[ do _results.add(_vRel) ]
+            $[ let results = _results ]
+        $[ else ]
+            $[ if !_foundTRel ]
+                $[ log info ]Couldn't find release top!$[/ log ]
+            $[/ if ]
+            $[ if !_foundORel ]
+                $[ log info ]Couldn't find release object!$[/ log ]
+            $[/ if ]
+            $[ if !_foundVRel ]
+                $[ log info ]Couldn't find release version for ${versionReleaseEntity.name}!$[/ log ]
+            $[/ if ]
+        $[/ if ]
+    $[/ if ]
+$[/ function ]
 
-$[function lookForReleaseStructure
-  D "Given the top release (R) entity, it attempts to locate all the version release (VR) entities"
-  D "- with their associated O and V entities - and gathers these in an array. So what is returned"
-  D "will be an array of [VR,O,V] arrays." 
-  (topReleaseEntity
-   D "The top release (R) entity." 
-  )->
-  (results
-   D "Returns an array for each [VR, O, V] set it finds that have a relationship with the specified R"
-   D "entity." 
-  )
+$[ function lookForReleaseStructure
+   D "Given the top release (R) entity, it attempts to locate all the version release (VR) entities"
+   D "- with their associated O and V entities - and gathers these in an array. So what is returned"
+   D "will be an array of [VR,O,V] arrays." 
+   (topReleaseEntity
+    D "The top release (R) entity." 
+   )->
+   (results
+    D "Returns an array for each [VR, O, V] set it finds that have a relationship with the specified R"
+    D "entity." 
+   )
 ]
-    $[if topReleaseEntity.hasTag("release:top")]
-        $[let _foundVR = false]
-        $[let _results = @[]@]
-        $[foreach _topRelationship in topReleaseEntity.relationships]
-            $[call lookForVersionReleaseStructure(versionReleaseEntity:_topRelationship.to.entity)->(results:versionReleaseStructure)]
-            $[if versionReleaseStructure != null && versionReleaseStructure.count == 3]
-                $[do _results.add(versionReleaseStructure)]
-            $[/if]
-        $[/foreach]
-        $[if topReleaseEntity.hasPrimaryParentRelationship]
-            $[let topReleaseParentEntity = topReleaseEntity.primaryParentRelationship.to.entity]
-        $[/if]
-        $[let results = _results]
-    $[/if]
-$[/function]
+    $[ if topReleaseEntity.hasTag("release:top") ]
+        $[ let _foundVR = false ]
+        $[ let _results = @[]@ ]
+        $[ foreach _topRelationship in topReleaseEntity.relationships ]
+            $[ call lookForVersionReleaseStructure(versionReleaseEntity: _topRelationship.to.entity)->(results: versionReleaseStructure) ]
+            $[ if versionReleaseStructure != null && versionReleaseStructure.count == 3 ]
+                $[ do _results.add(versionReleaseStructure) ]
+            $[/ if ]
+        $[/ foreach ]
+$[* if topReleaseEntity.hasPrimaryParentRelationship ]
+            $[ let topReleaseParentEntity = topReleaseEntity.primaryParentRelationship.to.entity ]
+        $[/ if *]
+        $[ if _results.count > 0 ]
+            $[ let results = _results ]
+        $[ else ]
+            $[ let results = null ]
+        $[/ if ]
+    $[/ if ]
+$[/ function ]
 
-$[function hasRelationshipWithEntityTagged
-  D "Given an entity, this looks for all other entities that the provided entity has a"
-  D "relationship and if at least one is found to be tagged with the provided tag it returns true. If"
-  D "none are found it returns false." 
-  (fromEntity
-   D "The entity from which the tagged entity has a relationship." ,
-   tag
-   D "The tag." 
-  )->
-  (result
-   D "Returns true if any entities tagged with provided tag are found. Otherwise returns false." 
-  )
+$[ function hasRelationshipWithEntityTagged
+   D "Given an entity, this looks for all other entities that the provided entity has a"
+   D "relationship and if at least one is found to be tagged with the provided tag it returns true. If"
+   D "none are found it returns false." 
+   (fromEntity
+    D "The entity from which the tagged entity has a relationship." ,
+    tag
+    D "The tag." 
+   )->
+   (result
+    D "Returns true if any entities tagged with provided tag are found. Otherwise returns false." 
+   )
 ]
-    $[let result = false]
-    $[foreach fromEntity.relationships]
-        $[if relationship.to.entity.hasTag(tag)]
-            $[let result = true]
-            $[break]
-        $[/if]
-    $[/foreach]
-$[/function]
+    $[ let result = false ]
+    $[ foreach fromEntity.relationships ]
+        $[ if relationship.to.entity.hasTag(tag) ]
+            $[ let result = true ]
+            $[ break ]
+        $[/ if ]
+    $[/ foreach ]
+$[/ function ]
+
+$[ function getReleaseEntityForVersionEntity
+   D "" 
+   (versionEntity
+    D "The version entity (V) contained in the returned release entity." 
+   )->
+   (releaseEntity
+    D "The release entity (R) that represents releases of the specified object entities." 
+   )
+]
+    $[ let releaseEntity = null ]
+    $[ if versionEntity.hasTag("release:version") ]
+        $[ let binderRelationship = versionEntity.relationshipToEntityTagged("release:binder") ]
+        $[ if binderRelationship != null && binderRelationship.to.isMany ]
+            $[ let binderEntity = binderRelationship.to.entity ]
+            $[ let topReleaseRelationship = binderEntity.relationshipToEntityTagged("release:top") ]
+            $[ if topReleaseRelationship != null ]
+                $[ let topReleaseEntity = topReleaseRelationship.to.entity ]
+                $[ let releaseEntity = topReleaseEntity ]
+            $[/ if ]
+        $[/ if ]
+    $[/ if ]
+
+$[/ function ]

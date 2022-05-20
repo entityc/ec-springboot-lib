@@ -1,55 +1,55 @@
-$[D summary, main "This template contains the authors that are responsible for generating the get object"]
-$[D summary, main "repository methods."]
-$[publisher org.entityc.springboot.repository.get]
-    $[author to org.entityc.springboot.repository]
-        $[author to outlet methods
-          D "Adds many get methods from get by ID to getting lists by parent relationships."
+$[ D summary, main "This template contains the authors that are responsible for generating the get object" ]
+$[ D summary, main "repository methods." ]
+$[ publisher org.entityc.springboot.repository.get ]
+    $[ author to org.entityc.springboot.repository ]
+        $[ author to outlet methods
+           D "Adds many get methods from get by ID to getting lists by parent relationships."
         ]
-            $[let hasCreationDate = false]
-            $[foreach attribute in entity.effectiveAttributes|type single]
-                $[if attribute.isCreation]
-                    $[let hasCreationDate = true]
-                    $[let creationDateAttribute = attribute]
-                    $[break]
-                $[/if]
-            $[/foreach]
-            $[let sortByAttribute = null]
-            $[let ascending = true]
-            $[foreach attribute in entity.effectiveAttributes|type single]
-                $[if (attribute|domain).hasTag("sort:asc")]
-                    $[let sortByAttribute = attribute]
-                    $[let ascending = true]
-                $[elseif (attribute|domain).hasTag("sort:desc")]
-                    $[let sortByAttribute = attribute]
-                    $[let ascending = false]
-                $[/if]
-            $[/foreach]
-            $[if sortByAttribute == null && hasCreationDate]
-                $[let sortByAttribute = creationDateAttribute]
-                $[let ascending = false]
-            $[/if]
-            $[let responseEntity = entity]
-            $[let responseModelName = responseEntity|domain:Model|name]
-            $[let responseDatabaseName = responseEntity|domain:Database|name]
-            $[if responseEntity.hasPrimaryKey]
+            $[ let hasCreationDate = false ]
+            $[ foreach attribute in entity.effectiveAttributes|type single ]
+                $[ if attribute.isCreation ]
+                    $[ let hasCreationDate = true ]
+                    $[ let creationDateAttribute = attribute ]
+                    $[ break ]
+                $[/ if ]
+            $[/ foreach ]
+            $[ let sortByAttribute = null ]
+            $[ let ascending = true ]
+            $[ foreach attribute in entity.effectiveAttributes|type single ]
+                $[ if (attribute|domain).hasTag("sort:asc") ]
+                    $[ let sortByAttribute = attribute ]
+                    $[ let ascending = true ]
+                $[ elseif (attribute|domain).hasTag("sort:desc") ]
+                    $[ let sortByAttribute = attribute ]
+                    $[ let ascending = false ]
+                $[/ if ]
+            $[/ foreach ]
+            $[ if sortByAttribute == null && hasCreationDate ]
+                $[ let sortByAttribute = creationDateAttribute ]
+                $[ let ascending = false ]
+            $[/ if ]
+            $[ let responseEntity = entity ]
+            $[ let responseModelName = responseEntity|domain:Model|name ]
+            $[ let responseDatabaseName = responseEntity|domain:Database|name ]
+            $[ if responseEntity.hasPrimaryKey ]
     default Optional<${responseModelName}> getById(${responseEntity.pkType|language} id) {
-$[outlet preGet
-  D "This is right **before** the object is fetched from the repository by its ID (in variable"
-  D "`id`)."
+$[ outlet preGet
+   D "This is right **before** the object is fetched from the repository by its ID (in variable"
+   D "`id`)."
 ]
-$[/outlet]
+$[/ outlet ]
         Optional<${responseModelName}> object = findById(id);
-$[outlet postGet
-  D "This is right **after** the object was fetched from the repository by its ID (object in"
-  D "variable `object`)."
+$[ outlet postGet
+   D "This is right **after** the object was fetched from the repository by its ID (object in"
+   D "variable `object`)."
 ]
-$[/outlet]
+$[/ outlet ]
         return object;
     }
-            $[/if]
-$[send imports]
+            $[/ if ]
+$[ send imports ]
 import ${responseEntity|domain:Model|fullname};
-$[/send]
+$[/ send ]
     /**
      * Gets the full list of ${responseModelName} objects with paging.
      * @param start The starting index.
@@ -59,33 +59,18 @@ $[/send]
     @Query(value =
             "SELECT * " +
             "FROM ${responseDatabaseName} " +
-            $[if sortByAttribute != null]
+            $[ if sortByAttribute != null ]
             "ORDER BY ${sortByAttribute|domain:Database|name} ${ascending ? "ASC":"DESC"} " +
-            $[/if]
+            $[/ if ]
             "LIMIT ?2 OFFSET ?1", nativeQuery = true)
     List<${responseModelName}> get${responseModelName}List(long start, int limit);
 
-            $[if entity.hasAttributeTagged("release:lock")]
-                $[let lockedAttribute = entity.attributeTagged("release:lock")]
-    /**
-     * Gets the full list of locked ${responseModelName} objects with paging.
-     * @param start The starting index.
-     * @param limit The maximum number or results to return.
-     * @return List of ${responseModelName} objects fetched.
-     */
-    @Query(value =
-            "SELECT * " +
-            "FROM ${responseDatabaseName} " +
-            "WHERE ${lockedAttribute|domain:Database|name} = true " +
-                $[if sortByAttribute != null]
-            "ORDER BY ${sortByAttribute|domain:Database|name} ${ascending ? "ASC":"DESC"} " +
-                $[/if]
-            "LIMIT ?2 OFFSET ?1", nativeQuery = true)
-    List<${responseModelName}> getLocked${responseModelName}List(int start, int limit);
-
-            $[/if]
-            $[foreach entity.attributes]
-                $[if attribute.isParent]
+$[ outlet methods
+   D "A good place to add additional repository get methods."
+]
+$[/ outlet ]
+            $[ foreach entity.attributes ]
+                $[ if attribute.isParent ]
     /**
      * Gets the list of ${responseModelName} objects that all share the same value for attribute ${attribute.name}.
      * @param ${attribute|domain|name} The value for ${attribute.name}.
@@ -97,16 +82,16 @@ $[/send]
             "SELECT * " +
             "FROM ${responseDatabaseName} " +
             "WHERE ${attribute|domain:Database|name} = ?1 " +
-                    $[if sortByAttribute != null]
+                    $[ if sortByAttribute != null ]
             "ORDER BY ${sortByAttribute|domain:Database|name} ${ascending ? "ASC":"DESC"} " +
-                    $[/if]
+                    $[/ if ]
             "LIMIT ?3 OFFSET ?2", nativeQuery = true)
     List<${responseModelName}> get${responseModelName}ListBy${attribute.name|capitalize}(${attribute.type|language} ${attribute|domain|name}, long start, int limit);
 
-                $[/if]
-            $[/foreach]
-            $[foreach entity.relationships]
-                $[if relationship.isParent]
+                $[/ if ]
+            $[/ foreach ]
+            $[ foreach entity.relationships ]
+                $[ if relationship.to.isOne ]
     /**
      * Gets the list of ${responseModelName} objects that all share the same reference to an object of ${relationship.to.entity.name}.
      * @param ${relationship|domain|name}Id The ID of the ${relationship.to.entity.name} object to which all results will share.
@@ -118,9 +103,9 @@ $[/send]
             "SELECT * " +
             "FROM ${responseDatabaseName} " +
             "WHERE ${relationship|domain:Database|name}_id = ?1 " +
-                    $[if sortByAttribute != null]
+                    $[ if sortByAttribute != null ]
             "ORDER BY ${sortByAttribute|domain:Database|name} ${ascending ? "ASC":"DESC"} " +
-                    $[/if]
+                    $[/ if ]
             "LIMIT ?3 OFFSET ?2", nativeQuery = true)
     List<${responseModelName}> get${responseModelName}ListBy${relationship.name|capitalize}(${relationship.to.entity.primaryKey.type|language} ${relationship|domain|name}Id, long start, int limit);
 
@@ -131,8 +116,8 @@ $[/send]
      */
     Long count${responseModelName}By${relationship.name|capitalize}Id(${relationship.to.entity.primaryKey.type|language} ${relationship|domain|name}Id);
 
-                $[/if]
-            $[/foreach]
-        $[/author]
-    $[/author]
-$[/publisher]
+                $[/ if ]
+            $[/ foreach ]
+        $[/ author ]
+    $[/ author ]
+$[/ publisher ]

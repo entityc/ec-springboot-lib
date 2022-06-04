@@ -13,6 +13,7 @@ $[ import "controller/json/DeleteAuthor" ]
 $[ import "controller/json/AssetAuthor" ]
 $[ import "controller/json/AssociationAuthor" ]
 $[ import "util/AutoWired" ]
+$[ import "doc/SourceHeaders" ]
 
 $[ publisher org.entityc.springboot.controller ]
     $[ let apiPathPrefix = "/" + ((space|domain:APIPath).domain.namespace|path) ]
@@ -31,19 +32,7 @@ $[ publisher org.entityc.springboot.controller ]
             $[ let serviceClassName = entity|domain:Service|name ]
             $[ let dtoClassName = entity|domain:JSONDTO|name ]
             $[ file domain.namespace|path entity|domain|name "java" ]
-//
-// This Controller class is responsible for implementing the API endpoint for entity:
-//
-//   Name:        ${entity.name}
-                $[ if entity.hasDescription ]
-//   Description: ${entity.description|wrap}
-                $[/ if ]
-                $[ if entity.hasTags ]
-//   Tags:        [${entity.tagsSeparatedBy("][")}]
-                $[/ if ]
-//
-// THIS FILE IS GENERATED. DO NOT EDIT!!
-//
+                $[ call entityHeader(title:"This Controller class is responsible for implementing the API endpoint for the following entity.") ]
 package ${domain.namespace};
 
 import org.springframework.web.bind.annotation.RequestMapping;

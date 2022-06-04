@@ -5,6 +5,8 @@ The following templates are related to exceptions.
 
 [//]: # ( =====preserve===== end-Introduction ===== )
 
+> This document was created by template: `[ecStdLibTemplatesLocal]local:../ec-std-lib/templates/TemplateMarkdown`
+
 <a name="template-summary"></a>
 ## Template Summary
 

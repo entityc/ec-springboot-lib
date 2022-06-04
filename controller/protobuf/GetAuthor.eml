@@ -1,11 +1,14 @@
 $[ language java ]
-$[ D summary, main "This contains an author that generates various get endpoint methods for a controller class." ]
+$[ D summary, main "This contains an author that generates various get endpoint methods for a controller class" ]
+$[ D summary, main "based on protobuf requests and responses." ]
 $[ import "security/SecurityFunctions" ]
 
-$[ author to org.entityc.springboot.controller ]
+$[ author to org.entityc.springboot.controller.protobuf ]
     $[ author to outlet methods
        D "Adds get endpoints to the controller class for its entity."
     ]
+        $[ let protobufNamespace = (space.domain("ProtobufDTO")).namespace ]
+        $[ capture fullProtobufClassName ]${module.name|capitalize}.${entity|domain:ProtobufDTO|name}$[/ capture ]
 $[ send imports ]
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
@@ -15,6 +18,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.http.HttpStatus;
+import ${protobufNamespace}.${module.name|capitalize};
 $[/ send ]
         $[ publisher org.entityc.springboot.controller.getById
            D "Get by ID endpoint"
@@ -24,14 +28,14 @@ $[/ send ]
     @RequestMapping(
         path = "/{id}",
         method = RequestMethod.GET,
-        produces = "application/json"
+        produces = "application/x-protobuf-lite"
     )
 $[ outlet annotation
    D "Resides just above the method declaration in the annocation area."
 ]
 $[/ outlet ]
-    public ${dtoClassName} get${modelName}ById(@PathVariable("id") ${entity.pkType|language} id) throws ServiceException {
-        return ${service}.get${entity|domain:JSONDTO|name|capitalize}ById(id);
+    public ${fullProtobufClassName} get${entity|domain:Model|name}PBById(@PathVariable("id") ${entity.pkType|language} id) throws ServiceException {
+        return ${service}.get${entity|domain:Model|name|capitalize}PBById(id);
     }
 
             $[/ if ]
@@ -43,13 +47,13 @@ $[/ outlet ]
     // [Template] ${__template.name}:${__outlet.name} < ${__author.template.name}
     @RequestMapping(
         method = RequestMethod.GET,
-        produces = "application/json"
+        produces = "application/x-protobuf-lite"
     )
 $[ outlet annotation
    D "Resides just above the method declaration in the annocation area."
 ]
 $[/ outlet ]
-    public ResponseEntity<List<${dtoClassName}>> get${modelName}List(
+    public ResponseEntity<${fullProtobufClassName}List> get${entity|domain:Model|name}PBList(
             $[ let hasParentId = entity.hasPrimaryParentRelationship ]
             $[ if hasParentId ]
                 $[ let relationship = entity.primaryParentRelationship ]
@@ -76,23 +80,19 @@ $[ outlet declarations
 $[/ outlet ]
         final int queryStart = ResourceUtils.defaultTo(start, 0);
         final int queryLimit = ResourceUtils.defaultTo(limit, 10);
-        List<${dtoClassName}> results = null;
+        ${fullProtobufClassName}List results = null;
             $[ let indent = hasParentId ? "    ":"" ]
             $[ if hasParentId ]
         if (${parentId} != ${isNativeId ? "0":"null"}) {
-$[ outlet parentGet ]
-            results = ${service}.get${entity|domain:JSONDTO|name|capitalize}ListBy${parentName}(${parentIdArg}, queryStart, queryLimit, false);
-$[/ outlet ]
+            results = ${service}.get${modelName|capitalize}PBListBy${parentName}(${parentIdArg}, queryStart, queryLimit, false);
         } else {
             $[/ if ]
-$[ outlet noParentGet ]
-        ${indent}results = ${service}.get${entity|domain:JSONDTO|name|capitalize}List(queryStart, queryLimit, false);
-$[/ outlet ]
+        ${indent}results = ${service}.get${modelName|capitalize}PBList(queryStart, queryLimit, false);
             $[ if hasParentId ]
         }
             $[/ if ]
         HttpHeaders headers = new HttpHeaders();
-        headers.add("X-Total-Count", "" + results.size());
+        headers.add("X-Total-Count", "" + results.getItemCount());
         headers.add("Access-Control-Expose-Headers", "X-Total-Count");
         return new ResponseEntity(results, headers, HttpStatus.OK);
     }
@@ -107,21 +107,21 @@ $[/ outlet ]
     @RequestMapping(
         path = "/${relationship|domain:APIPath|name}/{id}",
         method = RequestMethod.GET,
-        produces = "application/json"
+        produces = "application/x-protobuf-lite"
     )
 $[ outlet annotation
    D "Resides just above the method declaration in the annocation area."
 ]
 $[/ outlet ]
-    public ResponseEntity<List<${dtoClassName}>> get${modelName}ListBy${relationship.name|capitalize}(
+    public ResponseEntity<${fullProtobufClassName}List> get${entity|domain:Model|name}PBListBy${relationship.name|capitalize}(
         @PathVariable("id") ${relationship.to.entity.primaryKey.type|language} ${relationship.name}Id,
         @RequestParam("start") Integer start,
         @RequestParam("limit") Integer limit) throws ServiceException {
         final int queryStart = ResourceUtils.defaultTo(start, 0);
         final int queryLimit = ResourceUtils.defaultTo(limit, 10);
-        List<${dtoClassName}> results = ${service}.get${entity|domain:JSONDTO|name|capitalize}ListBy${relationship.name|capitalize}(${relationship.name}Id, queryStart, queryLimit, true);
+        ${fullProtobufClassName}List results = ${service}.get${entity|domain:Model|name|capitalize}PBListBy${relationship.name|capitalize}(${relationship.name}Id, queryStart, queryLimit, true);
         HttpHeaders headers = new HttpHeaders();
-        headers.add("X-Total-Count", "" + results.size());
+        headers.add("X-Total-Count", "" + results.getItemCount());
         headers.add("Access-Control-Expose-Headers", "X-Total-Count");
         return new ResponseEntity(results, headers, HttpStatus.OK);
     }

@@ -6,7 +6,8 @@ $[*
 *]
 $[ let destDir = domain.namespace|path ]
 $[ install "mapper/ModelMapperConfig.java" destDir ]
-$[ import "mapper/MapperProtoTemplate"]
+$[ import "doc/SourceHeaders" ]
+$[ import "mapper/MapperProtoTemplate" ]
 $[ publisher org.entityc.springboot.mapper ]
     $[ file destDir "README" "md" ]
 # Mapper Classes
@@ -30,19 +31,7 @@ $[/ outlet ]
             $[ let modelNamespace = (space.domain("Model")).namespace ]
             $[ let mapperClassName = entity|domain:DTOMapper|name ];
             $[ file domain.namespace|path mapperClassName "java" ]
-//
-// This Mapper class is responsible for mapping between various representations of the following entity:
-//
-//   Name:        ${entity.name}
-                $[ if entity.hasDescription ]
-//   Description: ${entity.description|wrap}
-                $[/ if ]
-                $[ if entity.hasTags ]
-//   Tags:        [${entity.tagsSeparatedBy("][")}]
-                $[/ if ]
-//
-// THIS FILE IS GENERATED. DO NOT EDIT!!
-//
+                $[ call entityHeader(title: "This Mapper class is responsible for mapping between various representations of the following entity.") ]
 package ${domain.namespace};
 
 import java.util.Date;

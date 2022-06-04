@@ -5,6 +5,8 @@ This directory contains functions specifically for generating endpoint documenta
 
 [//]: # ( =====preserve===== end-Introduction ===== )
 
+> This document was created by template: `[ecStdLibTemplatesLocal]local:../ec-std-lib/templates/TemplateMarkdown`
+
 <a name="template-summary"></a>
 ## Template Summary
 

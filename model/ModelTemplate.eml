@@ -69,6 +69,7 @@ $[ function buildOverrides
     $[/ foreach ]
 $[/ function ]
 
+$[ import "doc/SourceHeaders" ]
 $[ file domain.namespace|path "README" "md" ]
 # Model Classes
 
@@ -119,19 +120,7 @@ $[ foreach module in space.modules if !module.isIncluded ]
     $[ foreach entity in space.entities if !(entity.isImplicit || entity.isExtern || entity.isTransient) ]
         $[ file domain.namespace|path entity|domain|name "java" ]
             $[ publisher springboot.model ]
-//
-// This is the Model class for entity:
-//
-//   Name:        ${entity.name}
-                $[ if entity.hasDescription ]
-//   Description: ${entity.description|wrap}
-                $[/ if ]
-                $[ if entity.hasTags ]
-//   Tags:        [${entity.tagsSeparatedBy("][")}]
-                $[/ if ]
-//
-// THIS FILE IS GENERATED. DO NOT EDIT!!
-//
+                $[ call entityHeader(title: "This is the Model class for following entity.") ]
 package ${domain.namespace};
 
 import java.util.Date;
@@ -288,11 +277,11 @@ $[/ send ]
 
                     $[ if attribute.isSecondaryEntityType() ]
                         $[ let secondaryDEntity = attribute.typeEntity|domain:Model ]
-                        $[if attribute.isArray ]
+                        $[ if attribute.isArray ]
     public Set<${secondaryDEntity.name}> get${attribute|domain|name|capitalize}() {
         return ${attribute|domain|name};
     }
-                        $[else]
+                        $[ else ]
     public ${secondaryDEntity.name} get${attribute|domain|name|capitalize}() {
         if (${attribute|domain|name} == null) {
             ${attribute|domain|name} = new ${secondaryDEntity.name}();
@@ -302,12 +291,12 @@ $[/ send ]
                         $[/ if ]
 
                     $[/ if ]
-                    $[if attribute.type.isBooleanType]
+                    $[ if attribute.type.isBooleanType ]
     public boolean is${attribute|domain|name|capitalize}() {
         return ${attribute|domain|name} != null && ${attribute|domain|name};
     }
 
-                    $[/if]
+                    $[/ if ]
                 $[/ foreach ]
 $[*  RELATIONSHIPS *]
                 $[ foreach relationship in (entity|domain|view:Default).relationships ]
@@ -330,20 +319,8 @@ $[ foreach space.modules ]
     $[ foreach module.enums ]
         $[ if enum.isExtern ]$[ continue ]$[/ if ]
         $[ file domain.namespace|path enum|domain|name "java" ]
-//
-// This is class for enum:
-//
-//   Name:        ${enum.name}
-            $[ if enum.hasDescription ]
-//   Description: ${entity.description|wrap}
-            $[/ if ]
-            $[ if enum.hasTags ]
-//   Tags:        [${entity.tagsSeparatedBy("][")}]
-            $[/ if ]
             $[ let needsProtobufMapping = space.hasDomain("ProtobufDTO") ]
-//
-// THIS FILE IS GENERATED. DO NOT EDIT!!
-//
+            $[ call enumHeader(title: "This class is for the implementation of the following enum.") ]
 package ${domain.namespace};
 
 public enum ${enum|domain|name} {

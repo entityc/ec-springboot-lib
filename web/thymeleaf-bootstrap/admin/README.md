@@ -5,6 +5,8 @@ This directory contains templates associated with generating the Admin web conso
 
 [//]: # ( =====preserve===== end-Introduction ===== )
 
+> This document was created by template: `[ecStdLibTemplatesLocal]local:../ec-std-lib/templates/TemplateMarkdown`
+
 <a name="template-summary"></a>
 ## Template Summary
 
@@ -47,7 +49,7 @@ At the very top of the page is the same navigation bar from the home screen. The
 
  ### Breadcrumb Bar
 
- Just below the top navigation is what is referred to as a "breadcrumb" bar. This bar will allow you to see the depth of screens you have traversed and let you click on a prior level to go back. Each depth (iten on the bar) represents some entity in your model. If a particular entity has a one-to-many relationship with another entity, that represents another level. As the admin goes to deeper levels items are added to the bar.
+ Just below the top navigation is what is referred to as a breadcrumb bar. This bar will allow you to see the depth of screens you have traversed and let you click on a prior level to go back. Each depth (iten on the bar) represents some entity in your model. If a particular entity has a one-to-many relationship with another entity, that represents another level. As the admin goes to deeper levels items are added to the bar.
 
 Each item in this bar is formatted as:
 
@@ -81,7 +83,7 @@ Although the headline is composed of attributes that are shown and editable belo
 
  ### Object Fields
 
- The next section of the page shows attributes (fields) of the page object as a table where the first column is the attribute name and the second column is its value. The third column will populate with an "Edit" button for fields that are not a creation or modification date.
+ The next section of the page shows attributes (fields) of the page object as a table where the first column is the attribute name and the second column is its value. The third column will populate with an **Edit** button for fields that are not a creation or modification date.
 
  String fields are by default considered just plain text. However, this template also supports a string field that is to contain Markdown. For string fields that you want to contain Markdown, simply tag those attributes in the `AdminUI` domain with `markdown`. Not only will string values for these attributes be displayed as markdown (that is rendered to HTML - with GitHub flavored style) but also will invoke a web based markdown editor when you want to edit the field.
 

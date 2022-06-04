@@ -1,5 +1,5 @@
 $[ language java ]
-$[ D summary, main "This contains an author that generates create endpoint methods for a controller class based" ]
+$[ D summary, main "This contains an author that generates update endpoint methods for a controller class based" ]
 $[ D summary, main "on protobuf requests and responses." ]
 $[ author to org.entityc.springboot.controller.protobuf ]
     $[ author to outlet methods ]
@@ -7,16 +7,17 @@ $[ author to org.entityc.springboot.controller.protobuf ]
         $[ capture fullProtobufClassName ]${module.name|capitalize}.${entity|domain:ProtobufDTO|name}$[/ capture ]
 $[ send imports ]
 import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestMethod;
 import ${protobufNamespace}.${module.name|capitalize};
 $[/ send ]
-        $[ publisher org.entityc.springboot.controller.create ]
+        $[ publisher org.entityc.springboot.controller.update ]
     // [Template] ${__template.name}:${__outlet.name} < ${__author.template.name}
     @RequestMapping(
-        method = RequestMethod.POST,
+        path = "/{id}",
+        method = RequestMethod.PUT,
         consumes = "application/x-protobuf-lite",
         produces = "application/x-protobuf-lite"
     )
@@ -25,9 +26,12 @@ $[ outlet annotation
    D "Resides just above the method declaration in the annocation area."
 ]
 $[/ outlet ]
-    public ${fullProtobufClassName} create${modelName}(@RequestBody ${fullProtobufClassName} requestDto) throws ServiceException {
+            $[ let pkidtype = entity.pkType|language ]
+            $[ let pkidname = entity.primaryKeyAttribute|domain:Model|name|capitalize ]
+    public ${fullProtobufClassName} update${modelName}(@PathVariable("id") ${pkidtype} id, @RequestBody ${fullProtobufClassName} requestDto) throws ServiceException {
         ${modelName} requestObject = ${pbMapper}.toModelFromProtobuf(requestDto);
-        ${modelName} resultObject = ${service}.create${modelName}(requestObject);
+        requestObject.set${pkidname}(id);
+        ${modelName} resultObject = ${service}.update${modelName}(requestObject);
         return ${pbMapper}.toProtobufFromModel(resultObject);
     }
         $[/ publisher ]

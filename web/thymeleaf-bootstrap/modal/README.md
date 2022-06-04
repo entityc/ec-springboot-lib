@@ -7,6 +7,8 @@ These files are related to creating various web modal dialogs. These dialogs are
 
 [//]: # ( =====preserve===== end-Introduction ===== )
 
+> This document was created by template: `[ecStdLibTemplatesLocal]local:../ec-std-lib/templates/TemplateMarkdown`
+
 <a name="template-summary"></a>
 ## Template Summary
 

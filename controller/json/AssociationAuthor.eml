@@ -28,6 +28,7 @@ $[/send]
                 $[publisher org.entityc.springboot.controller.associate
                   D "Associate endpoint"
                 ]
+    // [Template] ${__template.name}:${__outlet.name} < ${__author.template.name}
     @RequestMapping(
             path = "{id}/${destMMEntity|domain:APIPath|name}",
             method = RequestMethod.POST,

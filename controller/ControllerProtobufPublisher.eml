@@ -8,12 +8,12 @@ $[ D "security/permission checks, then ultimately call methods on Service classe
 $[ D "the endpoints." ]
 
 $[ import "controller/protobuf/CreateAuthor" ]
-$[* import "controller/protobuf/UpdateAuthor" *]
-$[* import "controller/protobuf/GetAuthor" *]
-$[* import "controller/protobuf/DeleteAuthor" *]
+$[ import "controller/protobuf/UpdateAuthor" ]
+$[ import "controller/protobuf/GetAuthor" ]
 $[* import "controller/protobuf/AssetAuthor" *]
 $[* import "controller/protobuf/AssociationAuthor" *]
 $[ import "util/AutoWired" ]
+$[ import "doc/SourceHeaders" ]
 
 $[ publisher org.entityc.springboot.controller.protobuf ]
     $[ let apiPathPrefix = "/" + ((space|domain:APIPath).domain.namespace|path) ]
@@ -32,19 +32,7 @@ $[ publisher org.entityc.springboot.controller.protobuf ]
             $[ let serviceClassName = entity|domain:Service|name ]
             $[ let dtoClassName = entity|domain:ProtobufDTO|name ]
             $[ file domain.namespace|path (entity|domain|name + "Proto") "java" ]
-//
-// This Controller class is responsible for implementing the API endpoint for entity:
-//
-//   Name:        ${entity.name}
-                $[ if entity.hasDescription ]
-//   Description: ${entity.description|wrap}
-                $[/ if ]
-                $[ if entity.hasTags ]
-//   Tags:        [${entity.tagsSeparatedBy("][")}]
-                $[/ if ]
-//
-// THIS FILE IS GENERATED. DO NOT EDIT!!
-//
+                $[ call entityHeader(title:"This Controller class is responsible for implementing the Protobuf-based API endpoint for the following entity.") ]
 package ${domain.namespace};
 
 import org.springframework.web.bind.annotation.RequestMapping;

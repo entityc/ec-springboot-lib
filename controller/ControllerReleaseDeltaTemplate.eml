@@ -16,6 +16,7 @@ $[ function makeReleaseDeltaController
     role
     D "The role required to create release deltas." 
    ) ]
+    $[ import "doc/SourceHeaders" ]
     $[ let exceptionNamespace = (space.domain("Exception")).namespace ]
     $[ let utilsNamespace = (space.domain("Utils")).namespace ]
     $[ let domainModule = entity.module|domain:Controller ];
@@ -26,19 +27,7 @@ $[ function makeReleaseDeltaController
     $[ capture fullProtobufClassName ]${entity.module|domain:ProtobufDTO|name}.${protobufClassName}$[/ capture ]
     $[ let protobufNamespace = (space.domain("ProtobufDTO")).namespace ]
     $[ file domain.namespace|path entity|domain:Controller|name "java" ]
-//
-// This Controller class is responsible for implementing the API endpoint for entity:
-//
-//   Name:        ${entity.name}
-        $[ if entity.hasDescription ]
-//   Description: ${entity.description|wrap}
-        $[/ if ]
-        $[ if entity.hasTags ]
-//   Tags:        [${entity.tagsSeparatedBy("][")}]
-        $[/ if ]
-//
-// THIS FILE IS GENERATED. DO NOT EDIT!!
-//
+        $[ call entityHeader(title:"This Controller class is responsible for implementing the API endpoints related to the following release delta entity.") ]
 package ${domain.namespace};
 
 import org.springframework.beans.factory.annotation.Autowired;

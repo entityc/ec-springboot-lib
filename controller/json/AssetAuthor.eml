@@ -38,6 +38,7 @@ $[/send]
     $[publisher org.entityc.springboot.controller.assetUpload
       D "Asset upload endpoints."
     ]
+    // [Template] ${__template.name}:${__outlet.name} < ${__author.template.name}
     @RequestMapping(
         path = "/{id}/form/${assetPath}/{ext}",
         method = RequestMethod.POST
@@ -73,6 +74,7 @@ $[/outlet]
         ${service}.upload${methodName}(${modelVariableName}, file.getContentType(), byteArray, extension);
     }
 
+    // [Template] ${__template.name}:${__outlet.name} < ${__author.template.name}
     @RequestMapping(
         path = "/{id}/file/${assetPath}/{ext}",
         method = RequestMethod.POST,

@@ -1,20 +1,11 @@
 $[D summary, main "The authors in this template add a baseline of template code to the service publisher."]
-
+$[ import "doc/SourceHeaders" ]
 $[author to org.entityc.springboot.service]
 
     $[author to outlet commentHeader phase = initial
       D "Standard source header."
     ]
-//
-// This Service class is responsible for higher level functions for entity:
-//
-//   Name:        ${entity.name}
-        $[if entity.hasDescription]
-//   Description: ${entity.description|wrap}
-        $[/if]
-//
-// THIS FILE IS GENERATED. DO NOT EDIT!!
-//
+    $[call entityHeader(title:"s Service class is responsible for higher level functions for the following entity.") ]
     $[/author]
 
     $[author to outlet entityLoopTop scope = publisher phase = initial

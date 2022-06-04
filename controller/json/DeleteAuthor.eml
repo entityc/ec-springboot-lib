@@ -11,8 +11,9 @@ $[/send]
           D "Delete by Relationship endpoint"
         ]
             $[if entity.hasParentRelationship]
-                $[foreach entity.relationships]$[if !relationship.isParent || relationship.isOptional]$[continue]$[/if]
-    @DeleteMapping("/${relationship|domain:APIPath|name}/{id}/batch")
+                $[foreach relationship in entity.relationships if relationship.isParent && !relationship.isOptional]
+    // [Template] ${__template.name}:${__outlet.name} < ${__author.template.name}
+    @DeleteMapping("/${relationship|domain:APIPath|name}/{id}")
 $[outlet annotation
   D "Resides just above the method declaration in the annocation area."
 ]
@@ -28,10 +29,12 @@ $[/outlet]
         ]
             $[if entity.hasPrimaryKey]
                 $[let pkidtype = entity.pkType|language]
+    // [Template] ${__template.name}:${__outlet.name} < ${__author.template.name}
     @DeleteMapping("/{id}")
 $[outlet annotation
   D "Resides just above the method declaration in the annocation area."
 ]
+// something should go here
 $[/outlet]
     public void delete${modelName}ById(@PathVariable("id") ${pkidtype} id) throws ServiceException {
         ${service}.delete${modelName}ById(id);

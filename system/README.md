@@ -5,6 +5,8 @@ These templates are associated with the system or application as a whole.
 
 [//]: # ( =====preserve===== end-Introduction ===== )
 
+> This document was created by template: `[ecStdLibTemplatesLocal]local:../ec-std-lib/templates/TemplateMarkdown`
+
 <a name="template-summary"></a>
 ## Template Summary
 
@@ -22,7 +24,7 @@ Generates the following microservice classes: Model, DTO, Mapper, Repository, an
 
 | |References|
 |---|---|
-| **Domains** |`Repository` `Utils` `InMemoryCache` `Model` `Database` `Service` `JSONDTO` `Security` `APIPath` `Controller` `DTOMapper` `Exception` |
+| **Domains** |`InMemoryCache` `Service` `Security` `Controller` `DTOMapper` `Exception` `Repository` `Utils` `Model` `Database` `JSONDTO` `ProtobufDTO` `APIPath` |
 
 ### Imported Templates
 

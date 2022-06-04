@@ -136,7 +136,23 @@ $[************]
             throw new DaoException(ex.getMessage(), ex);
         }
     }
+            $[ if !(entity.module|domain:ProtobufDTO).hasTag("noproto") ]
 
+                $[ let protobufClassName = entity|domain:ProtobufDTO|name ]
+                $[ capture fullProtobufClassName ]${entity.module|domain:ProtobufDTO|name}.${protobufClassName}$[/ capture ]
+    public ${fullProtobufClassName}List get${protobufClassName}PBList(long start, int limit, boolean hierarchical) throws ServiceException {
+        try {
+            ${fullProtobufClassName}List.Builder pbList = ${fullProtobufClassName}List.newBuilder();
+            List<${responseModelName}> list = ${repositoryVariableName}.get${responseModelName}List(start, limit);
+            for(${responseModelName} modelObject : list) {
+                pbList.addItem(protobufFromModel(modelObject));
+            }
+            return pbList.build();
+        } catch (DataAccessException ex) {
+            throw new DaoException(ex.getMessage(), ex);
+        }
+    }
+            $[/ if ]
 $[****************************]
 $[* GET LIST BY (attributes) *]
 $[****************************]
@@ -156,9 +172,16 @@ $[****************************]
                 $[ let responseDtoName = entity|domain:JSONDTO|name ]
                 $[ let isDtoVariant = responseDomain.name == "JSONDTO" ]
                 $[ let isModelVariant = responseDomain.name == "Model" ]
-                $[ let responseClassName = isDtoVariant ? responseDtoName:responseModelName ]
-                $[ let responseInMethodName = isDtoVariant ? responseDtoName:responseModelName ]
-                $[ capture fullResponseName ]List<${responseClassName}>$[/ capture ]
+                $[ let isProtobufVariant = responseDomain.name == "ProtobufDTO" ]
+                $[ let protobufClassName = entity|domain:ProtobufDTO|name ]
+                $[ capture fullProtobufClassName ]${entity.module|domain:ProtobufDTO|name}.${protobufClassName}$[/ capture ]
+                $[ let responseClassName = isDtoVariant ? responseDtoName:isModelVariant ? responseModelName:fullProtobufClassName ]
+                $[ let responseInMethodName = isDtoVariant ? responseDtoName:isModelVariant ? responseModelName:protobufClassName + "PB" ]
+                $[ if isModelVariant || isDtoVariant ]
+                    $[ capture fullResponseName ]List<${responseClassName}>$[/ capture ]
+                $[ else ]
+                    $[ capture fullResponseName ]${fullProtobufClassName}List$[/ capture ]
+                $[/ if ]
     public ${fullResponseName} get${responseInMethodName}ListBy${attribute.name|capitalize}(
         ${attribute.type|language} ${attribute.name},
         long start,
@@ -166,15 +189,23 @@ $[****************************]
         boolean hierarchical) throws ServiceException {
 
         try {
-                $[ let listName = "list" ]
-                $[ if isDtoVariant ]
-                    $[ let listName = "dtoList" ]
+                $[ if isModelVariant || isDtoVariant ]
+                    $[ let listName = "list" ]
+                    $[ if isDtoVariant ]
+                        $[ let listName = "dtoList" ]
             List<${responseDtoName}> dtoList = new ArrayList<>();
+                    $[/ if ]
                 $[/ if ]
             List<${responseModelName}> list = ${repositoryVariableName}.get${responseModelName}ListBy${attribute.name|capitalize}(${attribute.name}, start, limit);
                 $[ if isDtoVariant ]
             for(${responseModelName} modelObject : list) {
                 ${listName}.add(dtoFromModel(modelObject, hierarchical));
+            }
+                $[ elseif isProtobufVariant ]
+            ${fullResponseName}.Builder pbList = ${fullResponseName}.newBuilder();
+                    $[ let listName = "pbList.build()" ]
+            for(${responseModelName} modelObject : list) {
+                pbList.addItem(protobufFromModel(modelObject, hierarchical));
             }
                 $[/ if ]
             return ${listName};
@@ -184,8 +215,7 @@ $[****************************]
     }
 
             $[/ function ]
-            $[ foreach entity.attributes ]
-                $[ if !attribute.isParent ]$[ continue ]$[/ if ]
+            $[ foreach attribute in entity.attributes if attribute.isParent ]
                 $[ if attribute.type.isEnumType ]
 $[ send imports ]
 import ${attribute.type|domain:Model|fullname};
@@ -193,6 +223,9 @@ $[/ send ]
                 $[/ if ]
                 $[ call makeGetListByAttributeMethod(responseDomain: space.domain("Model"), attribute: attribute, entity: entity) ]
                 $[ call makeGetListByAttributeMethod(responseDomain: space.domain("JSONDTO"), attribute: attribute, entity: entity) ]
+                $[ if !(entity.module|domain:ProtobufDTO).hasTag("noproto") ]
+                    $[ call makeGetListByAttributeMethod(responseDomain: space.domain("ProtobufDTO"), attribute: attribute, entity: entity) ]
+                $[/ if ]
             $[/ foreach ]
 $[*******************************]
 $[* GET LIST BY (relationships) *]

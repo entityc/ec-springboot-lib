@@ -5,15 +5,52 @@ The purpose of the Controller class is to implement the REST endpoints for your 
 
 [//]: # ( =====preserve===== end-Introduction ===== )
 
+> This document was created by template: `[ecStdLibTemplatesLocal]local:../ec-std-lib/templates/TemplateMarkdown`
+
 <a name="template-summary"></a>
 ## Template Summary
 
 |Template|Description|
 |---|---|
+| [`ControllerProtobufPublisher`](#controller-protobuf-publisher) | This generates a controller class that has many normal CRUD operations along with asset upload operations - all based on **protobuf** objects instead of json. |
 | [`ControllerPublisher`](#controller-publisher) | This generates a controller class that has many normal CRUD operations along with asset upload operations. |
 | [`ControllerReleaseDeltaTemplate`](#controller-release-delta-template) | This template creates a Controller class that is specifically for a release delta endpoint. |
 
 Each of the template files will be covered in more detail below.
+
+<a name="controller-protobuf-publisher"></a>
+## Controller Protobuf Publisher
+
+This template is responsible for generating the protobuf-based Controller classes of the micro-service. These classes essentially define endpoints, perform some security/permission checks, then ultimately call methods on Service classes that service the endpoints.
+
+| |References|
+|---|---|
+| **Tags** |`parent:service` `rest:none` |
+| **Domains** |`Model` `Service` `ProtobufDTO` `Controller` `Security` `APIPath` `DTOMapper` |
+
+### Imported Templates
+
+| Name | Description |
+|---|---|
+| [`AutoWired`](../util) | Helps to generate constructor based @Autowired code. |
+| [`CreateAuthor`](json) | This contains an author that generates create endpoint methods for a controller class based on protobuf requests and responses. |
+| [`GetAuthor`](json) | This contains an author that generates various get endpoint methods for a controller class based on protobuf requests and responses. |
+| [`SourceHeaders`](../doc) |  |
+| [`UpdateAuthor`](json) | This contains an author that generates update endpoint methods for a controller class based on protobuf requests and responses. |
+
+### Publishers
+
+#### `org.entityc.springboot.controller.protobuf`
+
+
+
+The following outlets are offered by this publisher:
+
+| Outlet | Description |
+|---|---|
+| `members` | Member variable declarations can be placed here.|
+| `methods` | Methods can be placed here.|
+
 
 <a name="controller-publisher"></a>
 ## Controller Publisher
@@ -35,6 +72,7 @@ This template is responsible for generating the Controller classes of the micro-
 | [`CreateAuthor`](json) | This contains an author that generates create endpoint methods for a controller class. |
 | [`DeleteAuthor`](json) | This contains an author that generates delete endpoint methods for a controller class. |
 | [`GetAuthor`](json) | This contains an author that generates various get endpoint methods for a controller class. |
+| [`SourceHeaders`](../doc) |  |
 | [`UpdateAuthor`](json) | Contains an author that generates update endpoint methods for a controller class. |
 
 ### Publishers
@@ -47,7 +85,7 @@ The following outlets are offered by this publisher:
 
 | Outlet | Description |
 |---|---|
-| `members` | Member variables can be placed here.|
+| `members` | Member variable declarations can be placed here.|
 | `methods` | Methods can be placed here.|
 
 
@@ -60,6 +98,12 @@ This template creates a Controller class that is specifically for a release delt
 |---|---|
 | **Tags** |`release:delta` |
 | **Domains** |`Model` `Service` `JSONDTO` `ProtobufDTO` `Controller` `APIPath` |
+
+### Imported Templates
+
+| Name | Description |
+|---|---|
+| [`SourceHeaders`](../doc) |  |
 
 ### Functions
 

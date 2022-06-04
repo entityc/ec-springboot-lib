@@ -369,7 +369,7 @@ $[* treat to-one relationships like attributes assigned to an object of the rela
 	</div>
             $[ foreach relationship in domainEntity.declaredDomainRelationships ]
                 $[ if !relationship.hasTag("detail") ]$[ continue ]$[/ if ]
-                $[ if relationship.isOneToMany ]
+                $[ if relationship.relationship.isOneToMany ]
                     $[ let toEntity = relationship.to.entity ]
                     $[ if toEntity == null ]$[ log fatal ]Something is wrong with relationship ${relationship|fullname}!$[/ log ]$[/ if ]
                     $[ let actionUrl = (toEntity|domain:APIPath|name) + "/add" ]
@@ -433,7 +433,7 @@ $[* treat to-one relationships like attributes assigned to an object of the rela
 		</tbody>
 		</table>
 	</div>
-                $[ elseif relationship.isManyToMany ]
+                $[ elseif relationship.relationship.isManyToMany ]
     <!-- put many to many picker here -->
                 $[/ if ]
             $[/ foreach ]
@@ -797,6 +797,10 @@ $[/ send ]
                             $[ capture fieldValue ]Integer.valueOf(fieldValue)$[/ capture ]
                         $[ case int64 ]
                             $[ capture fieldValue ]Long.valueOf(fieldValue)$[/ capture ]
+                        $[ case float ]
+                            $[ capture fieldValue ]Float.valueOf(fieldValue)$[/ capture ]
+                        $[ case double ]
+                            $[ capture fieldValue ]Double.valueOf(fieldValue)$[/ capture ]
                         $[ case enum ]
 $[ send imports ]
 import ${domainAttribute.type.enumType|domain:Model|fullname};

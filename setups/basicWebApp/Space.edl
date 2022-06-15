@@ -40,7 +40,7 @@ $[/if]
     import AdminUI, WebUserUI, StaticLocalization from DomainRepo
     // Extra
     $[if extraDomains != null]
-    import ${extraDomains|join delim=", "} from DomainRepo
+    import ${extraDomains|join delim:", "} from DomainRepo
     $[/if]
 
     repository LocalDomains {

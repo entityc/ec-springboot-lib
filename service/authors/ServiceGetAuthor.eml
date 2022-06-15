@@ -5,6 +5,39 @@ $[ publisher org.entityc.springboot.service.get ]
     $[ import "util/AutoWired" ]
     $[ author to org.entityc.springboot.service ]
         $[ author to outlet methods ]
+            $[ function GetResponseVarsForDomain
+               D "This is used by many of the other functions in this template to create variables based on a"
+               D "response domain." 
+               (entity
+                D "The entity the variables are based on." ,
+                responseDomain
+                D "The response domain. Currently Model, JSONDTO and ProtobufDTO are supported." 
+               )->
+               (responseClassName
+                D "The Java class name corresponding to the response object." ,
+                responseInMethodName
+                D "When creating method names that correspond to the response domain, this value should be"
+                D "used." ,
+                cacheVariableName
+                D "If a cache is defined, this would be the name of the cache."
+               )
+            ]
+                $[ if responseDomain.name == "JSONDTO" ]
+                    $[ let responseClassName = entity|domain:JSONDTO|name ]
+                    $[ let responseInMethodName = responseClassName ]
+                    $[ let cacheVariableName = "jsonCache" ]
+                $[ elseif responseDomain.name == "ProtobufDTO" ]
+                    $[ let protobufClassName = entity|domain:ProtobufDTO|name ]
+                    $[ capture fullProtobufClassName ]${entity.module|domain:ProtobufDTO|name}.${protobufClassName}$[/ capture ]
+                    $[ let responseClassName = fullProtobufClassName ]
+                    $[ let responseInMethodName = protobufClassName + "PB" ]
+                    $[ let cacheVariableName = "protobufCache" ]
+                $[ else ]
+                    $[ let responseClassName = entity|domain:Model|name ]
+                    $[ let responseInMethodName = responseClassName ]
+                    $[ let cacheVariableName = "modelCache" ]
+                $[/ if ]
+            $[/ function ]
 $[ outlet init
    D "Used by authors that may want to initialize some variables before using the other outlets."
 ]
@@ -33,12 +66,7 @@ $[*************]
                 useCache,
                 useSingleCache
                ) ]
-                $[ let protobufClassName = entity|domain:ProtobufDTO|name ]
-                $[ capture fullProtobufClassName ]${entity.module|domain:ProtobufDTO|name}.${protobufClassName}$[/ capture ]
-                $[ let responseDtoName = entity|domain:JSONDTO|name ]
-                $[ let responseModelName = entity|domain:Model|name ]
-                $[ let responseClassName = responseDomain.name == "JSONDTO" ? responseDtoName:responseDomain.name == "Model" ? responseModelName:fullProtobufClassName ]
-                $[ let responseInMethodName = responseDomain.name == "JSONDTO" ? responseDtoName:responseDomain.name == "Model" ? responseModelName:protobufClassName + "PB" ]
+                $[ call GetResponseVarsForDomain(entity: entity, responseDomain: responseDomain)->(responseClassName: responseClassName, responseInMethodName: responseInMethodName, cacheVariableName: cacheVariableName) ]
                 $[ let repositoryVariableName = entity|domain:Repository|name|uncapitalize ]
                 $[ let pkidtype = entity.pkType|language ]
                 $[ let pkidname = entity.primaryKeyAttribute|domain:Service|name ]
@@ -47,13 +75,6 @@ $[*************]
             ${responseClassName} responseObject = null;
                 $[ let indent = "" ]
                 $[ if useCache && useSingleCache ]
-                    $[ if responseDomain.name == "JSONDTO" ]
-                        $[ let cacheVariableName = "jsonCache" ]
-                    $[ elseif responseDomain.name == "Model" ]
-                        $[ let cacheVariableName = "modelCache" ]
-                    $[ else ]
-                        $[ let cacheVariableName = "protobufCache" ]
-                    $[/ if ]
             // check the cache first
             if (${cacheVariableName}.containsKey(id)) {
                 responseObject = ${cacheVariableName}.get(id);
@@ -102,7 +123,7 @@ $[*************]
             $[ if entity.hasPrimaryKey ]
                 $[ call makeGetByIdServiceMethod(responseDomain: space.domain("Model"), entity: entity, useCache: useCache, useSingleCache: useSingleCache) ]
                 $[ call makeGetByIdServiceMethod(responseDomain: space.domain("JSONDTO"), entity: entity, useCache: useCache, useSingleCache: useSingleCache) ]
-                $[ if !(entity.module|domain:ProtobufDTO).hasTag("noproto") ]
+                $[ if space.hasDomain("ProtobufDTO") && !(entity.module|domain:ProtobufDTO).hasTag("noproto") ]
                     $[ call makeGetByIdServiceMethod(responseDomain: space.domain("ProtobufDTO"), entity: entity, useCache: useCache, useSingleCache: useSingleCache) ]
                 $[/ if ]
             $[/ if ]
@@ -136,7 +157,7 @@ $[************]
             throw new DaoException(ex.getMessage(), ex);
         }
     }
-            $[ if !(entity.module|domain:ProtobufDTO).hasTag("noproto") ]
+            $[ if space.hasDomain("ProtobufDTO") && !(entity.module|domain:ProtobufDTO).hasTag("noproto") ]
 
                 $[ let protobufClassName = entity|domain:ProtobufDTO|name ]
                 $[ capture fullProtobufClassName ]${entity.module|domain:ProtobufDTO|name}.${protobufClassName}$[/ capture ]
@@ -167,16 +188,12 @@ $[****************************]
                 D "The attribute to which the results are relative." 
                )
             ]
+                $[ call GetResponseVarsForDomain(entity: entity, responseDomain: responseDomain)->(responseClassName: responseClassName, responseInMethodName: responseInMethodName, cacheVariableName: cacheVariableName) ]
                 $[ let repositoryVariableName = entity|domain:Repository|name|uncapitalize ]
                 $[ let responseModelName = entity|domain:Model|name ]
-                $[ let responseDtoName = entity|domain:JSONDTO|name ]
                 $[ let isDtoVariant = responseDomain.name == "JSONDTO" ]
                 $[ let isModelVariant = responseDomain.name == "Model" ]
                 $[ let isProtobufVariant = responseDomain.name == "ProtobufDTO" ]
-                $[ let protobufClassName = entity|domain:ProtobufDTO|name ]
-                $[ capture fullProtobufClassName ]${entity.module|domain:ProtobufDTO|name}.${protobufClassName}$[/ capture ]
-                $[ let responseClassName = isDtoVariant ? responseDtoName:isModelVariant ? responseModelName:fullProtobufClassName ]
-                $[ let responseInMethodName = isDtoVariant ? responseDtoName:isModelVariant ? responseModelName:protobufClassName + "PB" ]
                 $[ if isModelVariant || isDtoVariant ]
                     $[ capture fullResponseName ]List<${responseClassName}>$[/ capture ]
                 $[ else ]
@@ -223,7 +240,7 @@ $[/ send ]
                 $[/ if ]
                 $[ call makeGetListByAttributeMethod(responseDomain: space.domain("Model"), attribute: attribute, entity: entity) ]
                 $[ call makeGetListByAttributeMethod(responseDomain: space.domain("JSONDTO"), attribute: attribute, entity: entity) ]
-                $[ if !(entity.module|domain:ProtobufDTO).hasTag("noproto") ]
+                $[ if space.hasDomain("ProtobufDTO") && !(entity.module|domain:ProtobufDTO).hasTag("noproto") ]
                     $[ call makeGetListByAttributeMethod(responseDomain: space.domain("ProtobufDTO"), attribute: attribute, entity: entity) ]
                 $[/ if ]
             $[/ foreach ]
@@ -243,16 +260,13 @@ $[*******************************]
                 D "The repository get method can have a flavor such as Locked so this can be set to use that flavor." 
                )
             ]
-                $[ let protobufClassName = entity|domain:ProtobufDTO|name ]
-                $[ capture fullProtobufClassName ]${entity.module|domain:ProtobufDTO|name}.${protobufClassName}$[/ capture ]
+                $[ call GetResponseVarsForDomain(entity: entity, responseDomain: responseDomain)->(responseClassName: responseClassName, responseInMethodName: responseInMethodName, cacheVariableName: cacheVariableName) ]
                 $[ let isDtoVariant = responseDomain.name == "JSONDTO" ]
                 $[ let isModelVariant = responseDomain.name == "Model" ]
                 $[ let isPBVariant = responseDomain.name == "ProtobufDTO" ]
                 $[ let repositoryVariableName = entity|domain:Repository|name|uncapitalize ]
                 $[ let responseModelName = entity|domain:Model|name ]
                 $[ let responseDtoName = entity|domain:JSONDTO|name ]
-                $[ let responseClassName = isDtoVariant ? responseDtoName:isModelVariant ? responseModelName:fullProtobufClassName ]
-                $[ let responseInMethodName = isDtoVariant ? responseDtoName:isModelVariant ? responseModelName:protobufClassName + "PB" ]
                 $[ let toPrimaryKeyName = relationship.to.entity.primaryKeyAttribute.name ]
                 $[ capture fullResponseName ]$[ if isPBVariant ]${responseClassName}List$[ else ]List<${responseClassName}>$[/ if ]$[/ capture ]
     public ${fullResponseName} get${getFlavor}${responseInMethodName}ListBy${relationship.name|capitalize}(
@@ -265,10 +279,10 @@ $[*******************************]
                 $[ let listName = "list" ]
                 $[ if isDtoVariant ]
                     $[ let listName = "dtoList" ]
-            List<${responseDtoName}> dtoList = new ArrayList<>();
+            List<${responseClassName}> dtoList = new ArrayList<>();
                 $[ elseif isPBVariant ]
                     $[ let listName = "pbList" ]
-            ${fullProtobufClassName}List.Builder pbList = ${fullProtobufClassName}List.newBuilder();
+            ${responseClassName}List.Builder pbList = ${responseClassName}List.newBuilder();
                 $[/ if ]
             List<${responseModelName}> list = ${repositoryVariableName}.get${getFlavor}${responseModelName}ListBy${relationship.name|capitalize}(${toPrimaryKeyName}, start, limit);
                 $[ if isDtoVariant || isPBVariant ]
@@ -305,7 +319,7 @@ $[*******************************]
                 $[ let getFlavor = null ]
                 $[ call makeGetListByRelationshipMethod(responseDomain: space.domain("Model"), relationship: relationship, entity: entity, getFlavor: getFlavor) ]
                 $[ call makeGetListByRelationshipMethod(responseDomain: space.domain("JSONDTO"), relationship: relationship, entity: entity, getFlavor: getFlavor) ]
-                $[ if !(entity.module|domain:ProtobufDTO).hasTag("noproto") ]
+                $[ if space.hasDomain("ProtobufDTO") && !(entity.module|domain:ProtobufDTO).hasTag("noproto") ]
                     $[ call makeGetListByRelationshipMethod(responseDomain: space.domain("ProtobufDTO"), relationship: relationship, entity: entity, getFlavor: getFlavor) ]
                 $[/ if ]
 $[ outlet parentRelationship ]
@@ -313,7 +327,7 @@ $[/ outlet ]
                 $[ if getFlavor != null ]
                     $[ call makeGetListByRelationshipMethod(responseDomain: space.domain("Model"), relationship: relationship, entity: entity, getFlavor: getFlavor) ]
                     $[ call makeGetListByRelationshipMethod(responseDomain: space.domain("JSONDTO"), relationship: relationship, entity: entity, getFlavor: getFlavor) ]
-                    $[ if !(entity.module|domain:ProtobufDTO).hasTag("noproto") ]
+                    $[ if space.hasDomain("ProtobufDTO") && !(entity.module|domain:ProtobufDTO).hasTag("noproto") ]
                         $[ call makeGetListByRelationshipMethod(responseDomain: space.domain("ProtobufDTO"), relationship: relationship, entity: entity, getFlavor: getFlavor) ]
                     $[/ if ]
                 $[/ if ]

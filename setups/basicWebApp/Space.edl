@@ -24,19 +24,6 @@ $[/if]
 
     import Platform, App from LocalEntities
 
-$[let setupRepo = space.getRepository("SetupRepo")]
-    /**
-      Templates
-     */
-    repository ServerTemplates {
-        type github
-        organization "${setupRepo.organization}"
-        name "${setupRepo.repoName}"
-        path ""
-        tag "${repoTag}"
-    }
-    // Templates are imported in Configuration.edl
-
     /**
       Domains
      */
@@ -51,6 +38,10 @@ $[let setupRepo = space.getRepository("SetupRepo")]
     import DTO, JSONDTO, DTOMapper, Model, Repository, Service, Database, Controller, Security, Utils, Exception from DomainRepo
     // Web
     import AdminUI, WebUserUI, StaticLocalization from DomainRepo
+    // Extra
+    $[if extraDomains != null]
+    import ${extraDomains|join delim=", "} from DomainRepo
+    $[/if]
 
     repository LocalDomains {
         type local

@@ -9,10 +9,10 @@ configuration Setup {
 
     templates {
         import from SetupRepo
-        template BasicWebAppSetup {
+        template BasicWebAppSetupTemplate {
             output primary SetupTargetDir
         }
-        template MakeRunECScript {
+        template MakeRunECScriptTemplate {
             output primary ProjectTopDir
         }
     }

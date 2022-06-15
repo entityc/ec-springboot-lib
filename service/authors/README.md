@@ -280,6 +280,30 @@ This function generates a method to get a list of objects relative to some speci
 
 
 
+#### Get Response Vars for Domain
+
+```
+GetResponseVarsForDomain(entity, responseDomain) -> (responseClassName, responseInMethodName, cacheVariableName)
+```
+
+This is used by many of the other functions in this template to create variables based on a response domain.
+
+##### Inputs
+
+|Name|Description|
+|---|---|
+|`entity`|The entity the variables are based on.|
+|`responseDomain`|The response domain. Currently Model, JSONDTO and ProtobufDTO are supported.|
+
+##### Outputs
+
+|Name|Description|
+|---|---|
+|`responseClassName`|The Java class name corresponding to the response object.|
+|`responseInMethodName`|When creating method names that correspond to the response domain, this value should be used.|
+|`cacheVariableName`|If a cache is defined, this would be the name of the cache.|
+
+
 #### Make Get by Id Service Method
 
 ```

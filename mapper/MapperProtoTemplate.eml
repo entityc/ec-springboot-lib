@@ -3,7 +3,7 @@ $[ domain DTOMapper ]
 
 $[ author to org.entityc.springboot.mapper ]
     $[ author to outlet methods ]
-        $[ if !(module|domain:ProtobufDTO).hasTag("noproto") ]
+        $[ if space.hasDomain("ProtobufDTO") && !(module|domain:ProtobufDTO).hasTag("noproto") ]
 
             $[ let protobufNamespace = (space.domain("ProtobufDTO")).namespace ]
 $[ send imports ]
@@ -62,6 +62,9 @@ $[********************************************************************
         ${indent}builder.set${protobufAttributeNameInMethod}(modelObject.${getname}${modelAttributeNameInMethod}Url());
                 $[ elseif attribute.isArray ]
                     $[ if attribute.type.isEnumType ]
+                        $[if attribute.type.isExtern ]
+                        // extern ${attribute.type.module|domain:ProtobufDTO|name}
+                        $[/if]
                         $[ let methodName = "toString" ]
                         $[ foreach item in attribute.type.items ]
                             $[ if (item|domain|name) != (item|domain:ProtobufDTO|name) ]

@@ -39,7 +39,7 @@ $[/if]
     // Web
     import AdminUI, WebUserUI, StaticLocalization from DomainRepo
     // Extra
-    $[if extraDomains != null]
+    $[if extraDomains != null && extraDomains.count > 0]
     import ${extraDomains|join delim:", "} from DomainRepo
     $[/if]
 

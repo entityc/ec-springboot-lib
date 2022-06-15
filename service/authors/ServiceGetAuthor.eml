@@ -67,6 +67,7 @@ $[*************]
                 useSingleCache
                ) ]
                 $[ call GetResponseVarsForDomain(entity: entity, responseDomain: responseDomain)->(responseClassName: responseClassName, responseInMethodName: responseInMethodName, cacheVariableName: cacheVariableName) ]
+                $[ let responseModelName = entity|domain:Model|name ]
                 $[ let repositoryVariableName = entity|domain:Repository|name|uncapitalize ]
                 $[ let pkidtype = entity.pkType|language ]
                 $[ let pkidname = entity.primaryKeyAttribute|domain:Service|name ]

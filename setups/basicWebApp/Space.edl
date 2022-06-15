@@ -38,8 +38,8 @@ $[/if]
     import DTO, JSONDTO, DTOMapper, Model, Repository, Service, Database, Controller, Security, Utils, Exception from DomainRepo
     // Web
     import AdminUI, WebUserUI, StaticLocalization from DomainRepo
-    // Extra
     $[if extraDomains != null && extraDomains.count > 0]
+    // Extra
     import ${extraDomains|join delim:", "} from DomainRepo
     $[/if]
 

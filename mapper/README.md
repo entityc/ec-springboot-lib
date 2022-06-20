@@ -23,8 +23,7 @@ Generates code associated with mapping data from a JSON DTO to a Model and vice 
 
 | |References|
 |---|---|
-| **Tags** |`login:password` |
-| **Domains** |`Model` `JSONDTO` `ProtobufDTO` `Security` `DTOMapper` |
+| **Domains** |`Model` `JSONDTO` `ProtobufDTO` `DTOMapper` |
 
 ### Imported Templates
 

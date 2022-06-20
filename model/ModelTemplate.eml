@@ -328,7 +328,7 @@ public enum ${enum|domain|name} {
                 $[ if item.hasDescription ]
     // ${item.description}
                 $[/ if ]
-                $[let extraConstructorArg = needsProtobufMapping ? (", \"" + item|domain|name + "\"") : ""]
+                $[ let extraConstructorArg = needsProtobufMapping ? ", \"" + (item|domain|name) + "\"":"" ]
                 $[ let title = item|title ]
                 $[ if item.hasTag("title") ]
                     $[ let title = item.tagValue("title") ]

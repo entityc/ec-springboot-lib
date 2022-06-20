@@ -337,6 +337,7 @@ $[*-----------------------------------------------------------------------------
             $[ call insertDateEditModalHTML() ]
             $[ call insertStringEditModalHTML() ]
             $[ call insertBooleanEditModalHTML() ]
+$[* Add HTML for Enums (both single and array (many)), don't allow duplicates *]
             $[ let singleEnumsInserted = @[]@ ]
             $[ let manyEnumsInserted = @[]@ ]
             $[ foreach domainAttribute in domainEntity.getFlatDeclaredAttributeList(@["enum","entity"]@) ]
@@ -359,16 +360,14 @@ $[*-----------------------------------------------------------------------------
                     $[/ if ]
                 $[/ if ]
             $[/ foreach ]
-$[* treat to-one relationships like attributes assigned to an object of the relationships entity *]
-            $[ foreach domainRelationship in domainEntity.declaredDomainRelationships ]
-                $[ if !domainRelationship.hasTag("detail") ]$[ continue ]$[/ if ]
+$[* Treat to-one relationships like attributes assigned to an object of the relationships entity *]
+            $[ foreach domainRelationship in domainEntity.declaredDomainRelationships if domainRelationship.hasTag("detail") ]
                 $[ if domainRelationship.to.isOne ]
                     $[ call insertEntitySelectModalHTML(relationship: domainRelationship.relationship) ]
                 $[/ if ]
             $[/ foreach ]
 	</div>
-            $[ foreach relationship in domainEntity.declaredDomainRelationships ]
-                $[ if !relationship.hasTag("detail") ]$[ continue ]$[/ if ]
+            $[ foreach relationship in domainEntity.declaredDomainRelationships if relationship.hasTag("detail")]
                 $[ if relationship.relationship.isOneToMany ]
                     $[ let toEntity = relationship.to.entity ]
                     $[ if toEntity == null ]$[ log fatal ]Something is wrong with relationship ${relationship|fullname}!$[/ log ]$[/ if ]
@@ -652,7 +651,11 @@ $[/ send ]
         $[/ foreach ]
         $[ foreach toEntity in toOneEntities ]
         {
+            $[if toEntity.hasParentRelationshipToEntity(entity)]
+            List<${toEntity|domain:JSONDTO|name}> list = ${toEntity|domain:Service|name|uncapitalize}.get${toEntity|domain:JSONDTO|name}ListBy${entity|domain:Model|name}(id, 0, 1000, true);
+            $[else]
             List<${toEntity|domain:JSONDTO|name}> list = ${toEntity|domain:Service|name|uncapitalize}.get${toEntity|domain:JSONDTO|name}List(0, 1000, true);
+            $[/if]
             model.addAttribute("${toEntity|domain:JSONDTO|name|uncapitalize}List", list);
         }
         $[/ foreach ]

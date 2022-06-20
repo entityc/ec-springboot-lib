@@ -39,7 +39,7 @@ Contains a set of functions that produce web page code that is in common with th
 
 | |References|
 |---|---|
-| **Tags** |`new` `role` `user:principle` `headline:number` `user:created` `content` `headline:title` `breadcrumb:title` `user:modified` `canAccess` `breadcrumb:number` `headline:prefix` `breadcrumb:prefix` |
+| **Tags** |`role` `user:principle` `headline:number` `user:created` `required` `content` `headline:title` `breadcrumb:title` `user:modified` `canAccess` `breadcrumb:number` `headline:prefix` `breadcrumb:prefix` |
 | **Domains** |`AdminUI` `Localization` `Security` |
 
 ### Functions

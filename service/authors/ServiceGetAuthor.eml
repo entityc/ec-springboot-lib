@@ -233,7 +233,7 @@ $[****************************]
     }
 
             $[/ function ]
-            $[ foreach attribute in entity.attributes if attribute.isParent ]
+            $[ foreach attribute in entity.attributes if attribute.isParent && !attribute.isSequential ]
                 $[ if attribute.type.isEnumType ]
 $[ send imports ]
 import ${attribute.type|domain:Model|fullname};

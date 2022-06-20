@@ -181,7 +181,7 @@ $[/send]
          populateUser(model);
         $[let toOneEntities = @[]@]
         $[foreach relationship in entity.relationships]
-            $[if relationship.to.isOne && !relationship.isParent && (relationship|domain:AdminUI).hasTag("selectable")]
+            $[ if relationship.to.isOne && !(!relationship.isOptional && relationship.isParent) && (relationship|domain:AdminUI).hasTag("selectable") ]
                 $[let toEntity = relationship.to.entity]
                 $[if !toOneEntities.contains(toEntity)]
                     $[do toOneEntities.add(toEntity)]

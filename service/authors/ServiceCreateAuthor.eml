@@ -40,8 +40,7 @@ $[/outlet]
           D "(principle) user."
         ]
             $[if entity.hasPrimaryParentRelationship]
-                $[foreach relationship in entity.relationships]
-                    $[if !relationship.to.isOne]$[continue]$[/if]
+                $[foreach relationship in entity.relationships if relationship.to.isOne]
                     $[let toPrimaryKeyName = relationship.to.entity.primaryKeyAttribute.name]
                     $[if relationship.isParent && !relationship.isOptional]
     @Transactional(propagation = Propagation.REQUIRES_NEW)

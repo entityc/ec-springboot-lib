@@ -79,9 +79,9 @@ $[********************************************************************
 
                 $[/ if ]
                 $[ let showAttributeComment = true ]
-                $[ foreach domainAttribute in (entity|domain:JSONDTO|view:APIGet).attributes|sort ]
+                $[ foreach domainAttribute in (entity|domain:JSONDTO|view:APIGet).attributes|sort
+                        if !domainAttribute.attribute.isVirtual && !(domainAttribute.attribute|domain:DTOMapper).hasTag("exclude")]
                     $[ let attribute = domainAttribute.attribute ]
-                    $[ if attribute.isVirtual || space.hasDomain("Security") && (attribute|domain:Security).hasTag("login:password") ]$[ continue ]$[/ if ]
                     $[ let nullable = attribute.type|language hasNullable ]
                     $[ let attributeType = attribute.type ]
                     $[ if attribute.isSecondaryEntityType ]

@@ -6,6 +6,8 @@ service classes.
 
 [//]: # ( =====preserve===== end-Introduction ===== )
 
+> This document was created by template: `local:/../ec-std-lib/templates/document/TemplateMarkdown`
+
 <a name="template-summary"></a>
 ## Template Summary
 
@@ -22,7 +24,7 @@ Generates the Spring Boot Service classes for all entities in your project space
 
 | |References|
 |---|---|
-| **Domains** |`Repository` `Model` `Service` `JSONDTO` `Security` `APIPath` `DTOMapper` |
+| **Domains** |`Repository` `Model` `Service` `JSONDTO` `ProtobufDTO` `Security` `APIPath` `DTOMapper` |
 
 ### Imported Templates
 
@@ -30,6 +32,7 @@ Generates the Spring Boot Service classes for all entities in your project space
 |---|---|
 | [`ServiceBaseAuthor`](authors) | The authors in this template add a baseline of template code to the service publisher. |
 | [`ServiceCRUDAuthors`](authors) | This template simply imports the CRUD authors that are basic to the application. |
+| [`ServiceProtobufMappingAuthor`](authors) |  |
 | [`ServiceUploadAuthor`](authors) |  |
 
 ### Publishers

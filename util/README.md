@@ -5,6 +5,8 @@ The templates and classes here provide some utility functions to the application
 
 [//]: # ( =====preserve===== end-Introduction ===== )
 
+> This document was created by template: `local:/../ec-std-lib/templates/document/TemplateMarkdown`
+
 <a name="template-summary"></a>
 ## Template Summary
 

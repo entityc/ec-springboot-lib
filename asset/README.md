@@ -5,6 +5,8 @@ These templates generate code associated with assets.
 
 [//]: # ( =====preserve===== end-Introduction ===== )
 
+> This document was created by template: `local:/../ec-std-lib/templates/document/TemplateMarkdown`
+
 <a name="template-summary"></a>
 ## Template Summary
 
@@ -32,7 +34,7 @@ Installs classes associated with managing file assets on a service such as S3.
 
 This author publishes to the following outlets:
 
-| Outlet | Description | Phase | Scope
+| Outlet | Description | Phase | Scope |
 |---|---|---|---|
 | `methods` | Adds a method `isImageType()` to DTO class that represents a file.|Connect|Author|
 

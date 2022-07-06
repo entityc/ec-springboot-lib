@@ -1,16 +1,17 @@
-$[D summary, main "Contains functions for adding a modal dialog that allows a user to select a local file for the"]
-$[D summary, main "purpose of uploading it to the server."]
+$[ D summary, main "Contains functions for adding a modal dialog that allows a user to select a local file for the" ]
+$[ D summary, main "purpose of uploading it to the server." ]
 
-$[function insertFileUploadModalHTML
-  D "Inserts the HTML code needed to create a file upload dialog." 
-  (adminUrlPrefix
-   D "The admin console's url prefix (e.g., `admin`)" ,
-   entity
-   D "The entity associated with the file upload. At runtime, the attribute associated with the"
-   D "upload can be set." ,
-   entityDtoClassName
-   D "This is simply the DTO class name for the entity." 
-  )
+$[ function insertFileUploadModalHTML
+   D "Inserts the HTML code needed to create a file upload dialog. The code is only specific to the entity since the"
+   D "asset attribute is passed via the upload button specific to it - passed with `data-bs-field-name`"
+   (adminUrlPrefix
+    D "The admin console's url prefix (e.g., `admin`)" ,
+    entity
+    D "The entity associated with the file upload. At runtime, the attribute associated with the"
+    D "upload can be set." ,
+    entityDtoClassName
+    D "This is simply the DTO class name for the entity." 
+   )
 ]
         <div class="modal fade" id="assetUploadModal" tabindex="-1" role="dialog" aria-labelledby="assetUploadModalLabel" aria-hidden="true">
           <div class="modal-dialog modal-xl" role="document">
@@ -25,7 +26,7 @@ $[function insertFileUploadModalHTML
                   </div>
                   <div class="modal-body">
                       <div class="form-group">
-                            <input id="file" name="file" type="file" class="file form-control" data-allowed-file-extensions='["png"]'>
+                            <input id="file" name="file" type="file" class="file form-control">$[*  data-allowed-file-extensions='["png","xml"]' *]
                       </div>
                   </div>
                   <div class="modal-footer">
@@ -36,11 +37,11 @@ $[function insertFileUploadModalHTML
             </form>
           </div>
         </div>
-$[/function]
-$[function insertFileUploadModalScript
-  D "Inserts the Javascript portion of the file upload dialog." 
-  (
-  )
+$[/ function ]
+$[ function insertFileUploadModalScript
+   D "Inserts the Javascript portion of the file upload dialog." 
+   (
+   )
 ]
 <script>
 var assetUploadModal = document.getElementById('assetUploadModal')
@@ -56,4 +57,4 @@ assetUploadModal.addEventListener('show.bs.modal', function (event) {
   modalTitle.textContent = 'Upload file for ' + fieldTitle
 })
 </script>
-$[/function]
+$[/ function ]

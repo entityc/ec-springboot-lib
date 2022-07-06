@@ -5,6 +5,8 @@ Contains templates that generate various documentation for a server.
 
 [//]: # ( =====preserve===== end-Introduction ===== )
 
+> This document was created by template: `local:/../ec-std-lib/templates/document/TemplateMarkdown`
+
 <a name="template-summary"></a>
 ## Template Summary
 

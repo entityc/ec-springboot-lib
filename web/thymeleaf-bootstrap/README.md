@@ -5,6 +5,8 @@ This directory contains all the files associated with generating web interfaces.
 
 [//]: # ( =====preserve===== end-Introduction ===== )
 
+> This document was created by template: `local:/../ec-std-lib/templates/document/TemplateMarkdown`
+
 <a name="template-summary"></a>
 ## Template Summary
 
@@ -37,7 +39,7 @@ Contains a set of functions that produce web page code that is in common with th
 
 | |References|
 |---|---|
-| **Tags** |`new` `role` `user:principle` `headline:number` `user:created` `content` `headline:title` `breadcrumb:title` `user:modified` `canAccess` `breadcrumb:number` `headline:prefix` `breadcrumb:prefix` |
+| **Tags** |`role` `user:principle` `headline:number` `user:created` `required` `content` `headline:title` `breadcrumb:title` `user:modified` `canAccess` `breadcrumb:number` `headline:prefix` `breadcrumb:prefix` |
 | **Domains** |`AdminUI` `Localization` `Security` |
 
 ### Functions

@@ -1,0 +1,34 @@
+$[function entityHeader(title, entity, __template)]
+//
+// ${title|wrap}
+//
+//   Name:        ${entity.name}
+            $[if entity.hasDescription]
+//   Description: ${entity.description|wrap}
+            $[/if]
+            $[if entity.hasTags]
+//   Tags:        [${entity.tagsSeparatedBy("][")}]
+            $[/if]
+//
+// THIS FILE IS GENERATED. DO NOT EDIT!!
+//
+// Template: ${__template.uri}
+//
+$[/function]
+$[function enumHeader(title, enum, __template)]
+//
+// ${title}
+//
+//   Name:        ${enum.name}
+            $[ if enum.hasDescription ]
+//   Description: ${entity.description|wrap}
+            $[/ if ]
+            $[ if enum.hasTags ]
+//   Tags:        [${entity.tagsSeparatedBy("][")}]
+            $[/ if ]
+//
+// THIS FILE IS GENERATED. DO NOT EDIT!!
+//
+// Template: ${__template.uri}
+//
+$[/function]

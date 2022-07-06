@@ -7,19 +7,18 @@ $[import "service/authors/ServiceBaseAuthor"]
 $[import "service/authors/ServiceCRUDAuthors"]
 $[*import "service/authors/ServiceCacheAuthor"*]
 $[import "service/authors/ServiceUploadAuthor"]
+$[import "service/authors/ServiceProtobufMappingAuthor"]
 $[publisher org.entityc.springboot.service
   D "This publisher ultimately builds the Service classes for the Spring Boot application but it"
   D "relies on many authors to fill it out with methods required to implement the application."
 ]
-    $[foreach space.modules]
-        $[if module.isIncluded]$[continue]$[/if]
+    $[foreach module in space.modules if !module.isIncluded]
 $[outlet moduleLoopTop
   D "This is just inside the module foreach. An author could use this to filter out modules, for"
   D "instance."
 ]
 $[/outlet]
-        $[foreach entity in module.entities]
-            $[if entity.isSecondary || entity.isImplicit || entity.isExtern || entity.isTransient]$[continue]$[/if]
+        $[foreach entity in module.entities if !(entity.isSecondary || entity.isImplicit || entity.isExtern || entity.isTransient)]
 $[outlet entityLoopTop
   D "This is just inside the entity foreach. An author could use this to filter out entities, for"
   D "instance."

@@ -7,6 +7,8 @@ These files are related to creating various web modal dialogs. These dialogs are
 
 [//]: # ( =====preserve===== end-Introduction ===== )
 
+> This document was created by template: `local:/../ec-std-lib/templates/document/TemplateMarkdown`
+
 <a name="template-summary"></a>
 ## Template Summary
 
@@ -251,7 +253,7 @@ Contains functions for adding a modal dialog that allows a user to select a loca
 insertFileUploadModalHTML(adminUrlPrefix, entity, entityDtoClassName)
 ```
 
-Inserts the HTML code needed to create a file upload dialog.
+Inserts the HTML code needed to create a file upload dialog. The code is only specific to the entity since the asset attribute is passed via the upload button specific to it - passed with `data-bs-field-name`
 
 ##### Inputs
 

@@ -128,7 +128,10 @@ $[function preAuthorizeEntity
 '${item.name}'$[if !item#last], $[/if]
                 $[/foreach]
             $[/capture]
-    @PreAuthorize("hasAnyRole(${hasRoleExpr})")
+$[send imports]
+import org.springframework.security.access.prepost.PreAuthorize;
+$[/send]
+    @PreAuthorize("hasAnyRole(${hasRoleExpr})") // [Template] ${__template.name}:${__outlet.name} < ${__author.template.name}
         $[/if]
     $[/if]
 $[/function]

@@ -24,6 +24,18 @@ configuration CodeGen {
         path "schema"
     }
 
+$[let setupRepo = space.getRepository("SetupRepo")]
+    /**
+      Templates
+     */
+    repository ServerTemplates {
+        type github
+        organization "${setupRepo.organization}"
+        name "${setupRepo.repoName}"
+        path ""
+        tag "${repoTag}"
+    }
+
     transform Postgres {
         output primary DatabaseMigrationResources
         output schema DatabaseSchema

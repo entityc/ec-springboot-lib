@@ -5,8 +5,14 @@ These templates are associated with generating code for release management.
 
 [//]: # ( =====preserve===== end-Introduction ===== )
 
+> This document was created by template: `local:/../ec-std-lib/templates/document/TemplateMarkdown`
+
 <a name="template-summary"></a>
 ## Template Summary
+
+|Template|Description|
+|---|---|
+| [`ServiceReleaseAuthor`](#service-release-author) | Adds version release related methods to an entity's service class. |
 
 The following templates only contain functions.
 
@@ -117,6 +123,29 @@ Given a version release (VR) entity, this will try to locate the version (V) and
 |`results`|It returns an array with [VR, O, V] if it finds the O and V, otherwise just returns [VR].|
 
 
+#### Get Release Entity for Version Entity
+
+```
+getReleaseEntityForVersionEntity(versionEntity) -> (releaseEntity)
+```
+
+
+
+
+
+##### Inputs
+
+|Name|Description|
+|---|---|
+|`versionEntity`|The version entity (V) contained in the returned release entity.|
+
+##### Outputs
+
+|Name|Description|
+|---|---|
+|`releaseEntity`|The release entity (R) that represents releases of the specified object entities.|
+
+
 #### Look for Release Structure
 
 ```
@@ -136,5 +165,52 @@ Given the top release (R) entity, it attempts to locate all the version release 
 |Name|Description|
 |---|---|
 |`results`|Returns an array for each [VR, O, V] set it finds that have a relationship with the specified R entity.|
+
+
+<a name="service-release-author"></a>
+## Service Release Author
+
+Adds version release related methods to an entity's service class. It only does this for entities that represent the top of a special tag-based release structure of entities.
+
+| |References|
+|---|---|
+| **Tags** |`release:lock` `release:binder` `release:top` |
+| **Domains** |`Repository` `Model` `Service` `Security` |
+
+### Imported Templates
+
+| Name | Description |
+|---|---|
+| [`AutoWired`](../util) | Helps to generate constructor based @Autowired code. |
+| `ReleaseFunctions` | This template has functions specific for detecting and extracting information about a release management structure. |
+| [`ServiceFunctions`](../service) |  |
+
+### Authors
+
+#### To Publisher: `org.entityc.springboot.service.update`
+
+
+
+This author publishes to the following outlets:
+
+| Outlet | Description | Phase | Scope |
+|---|---|---|---|
+| `aboveSave` | *no description*|Connect|Author|
+| `saveTop` | *no description*|Connect|Author|
+
+
+#### To Publisher: `org.entityc.springboot.service`
+
+
+
+This author publishes to the following outlets:
+
+| Outlet | Description | Phase | Scope |
+|---|---|---|---|
+| `methods` | Adds method that Deletes all linked element versions from a release.|Connect|Author|
+| `methods` | Adds method that populates the release with the latest versions of all elements associated with a release.|Connect|Author|
+| `methods` | Adds method that populates the release with another release.|Connect|Author|
+| `methods` | Adds methods related to locking.|Connect|Author|
+| `parentRelationship` | *no description*|Connect|Publisher|
 
 

@@ -1,0 +1,35 @@
+$[ language java ]
+$[ D summary, main "This contains an author that generates create endpoint methods for a controller class based" ]
+$[ D summary, main "on protobuf requests and responses." ]
+$[ author to org.entityc.springboot.controller.protobuf ]
+    $[ author to outlet methods ]
+        $[ let protobufNamespace = (space.domain("ProtobufDTO")).namespace ]
+        $[ capture fullProtobufClassName ]${module.name|capitalize}.${entity|domain:ProtobufDTO|name}$[/ capture ]
+$[ send imports ]
+import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.ResponseStatus;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RequestMethod;
+import ${protobufNamespace}.${module.name|capitalize};
+$[/ send ]
+        $[ publisher org.entityc.springboot.controller.create ]
+    // [Template] ${__template.name}:${__outlet.name} < ${__author.template.name}
+    @RequestMapping(
+        method = RequestMethod.POST,
+        consumes = "application/x-protobuf-lite",
+        produces = "application/x-protobuf-lite"
+    )
+    @ResponseStatus(HttpStatus.ACCEPTED)
+$[ outlet annotation
+   D "Resides just above the method declaration in the annocation area."
+]
+$[/ outlet ]
+    public ${fullProtobufClassName} create${modelName}(@RequestBody ${fullProtobufClassName} requestDto) throws ServiceException {
+        ${modelName} requestObject = ${pbMapper}.toModelFromProtobuf(requestDto);
+        ${modelName} resultObject = ${service}.create${modelName}(requestObject);
+        return ${pbMapper}.toProtobufFromModel(resultObject);
+    }
+        $[/ publisher ]
+    $[/ author ]
+$[/ author ]

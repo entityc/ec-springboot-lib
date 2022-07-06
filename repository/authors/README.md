@@ -5,6 +5,8 @@ The generation of the repository class is accomplished with a single publisher (
 
 [//]: # ( =====preserve===== end-Introduction ===== )
 
+> This document was created by template: `local:/../ec-std-lib/templates/document/TemplateMarkdown`
+
 <a name="template-summary"></a>
 ## Template Summary
 
@@ -14,7 +16,6 @@ The generation of the repository class is accomplished with a single publisher (
 | [`RepositoryCacheAuthor`](#repository-cache-author) | Generates code inside the methods of the Repository class to implement in-memory caching. |
 | [`RepositoryDeleteAuthor`](#repository-delete-author) | This template contains the authors that are responsible for generating the delete object repository methods. |
 | [`RepositoryGetAuthor`](#repository-get-author) | This template contains the authors that are responsible for generating the get object repository methods. |
-| [`RepositoryReleaseAuthor`](#repository-release-author) | (NEEDS WORK) This template contains the authors that are responsible for generating repository methods associated with release and version management. |
 | [`RepositorySaveAuthor`](#repository-save-author) | This template contains the author that is responsible for generating the save object repository method. |
 
 Each of the template files will be covered in more detail below.
@@ -37,7 +38,7 @@ This template contains the authors that are responsible for generating repositor
 
 This author publishes to the following outlets:
 
-| Outlet | Description | Phase | Scope
+| Outlet | Description | Phase | Scope |
 |---|---|---|---|
 | `methods` | Adds methods for adding and removing a single association, checking a specific association and getting all associations.|Connect|Author|
 
@@ -60,7 +61,7 @@ Generates code inside the methods of the Repository class to implement in-memory
 
 This author publishes to the following outlets:
 
-| Outlet | Description | Phase | Scope
+| Outlet | Description | Phase | Scope |
 |---|---|---|---|
 | `members` | This declares the member variables for the cache objects themselves - one for each relationship involved.|Initial|Author|
 | `postSave` | After an object is saved, this will place the newly updated object back in the cache.|Connect|Author|
@@ -85,7 +86,7 @@ This template contains the authors that are responsible for generating the delet
 
 This author publishes to the following outlets:
 
-| Outlet | Description | Phase | Scope
+| Outlet | Description | Phase | Scope |
 |---|---|---|---|
 | `methods` | Adds delete by parent relationship method.|Connect|Author|
 
@@ -97,7 +98,7 @@ This template contains the authors that are responsible for generating the get o
 
 | |References|
 |---|---|
-| **Tags** |`release:lock` `sort:desc` `sort:asc` |
+| **Tags** |`sort:desc` `sort:asc` |
 | **Domains** |`Model` `Database` |
 
 ### Publishers
@@ -112,6 +113,7 @@ The following outlets are offered by this publisher:
 |---|---|
 | `preGet` | This is right **before** the object is fetched from the repository by its ID (in variable `id`).|
 | `postGet` | This is right **after** the object was fetched from the repository by its ID (object in variable `object`).|
+| `methods` | A good place to add additional repository get methods.|
 
 
 ### Authors
@@ -122,32 +124,9 @@ The following outlets are offered by this publisher:
 
 This author publishes to the following outlets:
 
-| Outlet | Description | Phase | Scope
+| Outlet | Description | Phase | Scope |
 |---|---|---|---|
 | `methods` | Adds many get methods from get by ID to getting lists by parent relationships.|Connect|Author|
-
-
-<a name="repository-release-author"></a>
-## Repository Release Author
-
-(NEEDS WORK) This template contains the authors that are responsible for generating repository methods associated with release and version management.
-
-| |References|
-|---|---|
-| **Tags** |`release:lock` `release:version` `release:binder` `release:retired` `release:top` |
-| **Domains** |`Database` `Model` |
-
-### Authors
-
-#### To Publisher: `org.entityc.springboot.repository`
-
-
-
-This author publishes to the following outlets:
-
-| Outlet | Description | Phase | Scope
-|---|---|---|---|
-| `methods` | Adds method associated with release management that use native database queries to speed up the endpoints that support release management.|Connect|Author|
 
 
 <a name="repository-save-author"></a>
@@ -177,7 +156,7 @@ The following outlets are offered by this publisher:
 
 This author publishes to the following outlets:
 
-| Outlet | Description | Phase | Scope
+| Outlet | Description | Phase | Scope |
 |---|---|---|---|
 | `methods` | Simply adds a method to override an inherited save method so that outlets can be added.|Connect|Author|
 

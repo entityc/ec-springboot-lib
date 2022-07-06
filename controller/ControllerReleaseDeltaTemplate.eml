@@ -1,40 +1,33 @@
-$[language java]
-$[domain Controller]
-$[D summary "This template creates a Controller class that is specifically for a release delta endpoint."]
-$[D "This template creates a Controller class that is specifically for a release delta endpoint."]
-$[D "A release delta is basically the difference between two releases but constructed in such a"]
-$[D "way that the receiver of the data return can construct a new release from an old release"]
-$[D "without all of the new release being provided."]
+$[ language java ]
+$[ domain Controller ]
+$[ D summary "This template creates a Controller class that is specifically for a release delta endpoint." ]
+$[ D "This template creates a Controller class that is specifically for a release delta endpoint." ]
+$[ D "A release delta is basically the difference between two releases but constructed in such a" ]
+$[ D "way that the receiver of the data return can construct a new release from an old release" ]
+$[ D "without all of the new release being provided." ]
 
-$[function makeReleaseDeltaController
-  (entity D "The entity that is tagged as the release delta entity.",
-   domain D "The controller domain.",
-   space D "The space of the application.",
-   role D "The role required to create release deltas."
-  )]
-    $[let exceptionNamespace = (space.domain("Exception")).namespace]
-    $[let utilsNamespace = (space.domain("Utils")).namespace]
-    $[let domainModule = entity.module|domain:Controller];
-    $[let className = entity|domain:Controller|name]
-    $[let modelName = entity|domain:Model|name]
-    $[let serviceClassName = entity|domain:Service|name]
-    $[let protobufClassName = entity|domain:ProtobufDTO|name]
-    $[capture fullProtobufClassName]${entity.module|domain:ProtobufDTO|name}.${protobufClassName}$[/capture]
-    $[let protobufNamespace = (space.domain("ProtobufDTO")).namespace]
-    $[file domain.namespace|path entity|domain:Controller|name "java"]
-//
-// This Controller class is responsible for implementing the API endpoint for entity:
-//
-//   Name:        ${entity.name}
-        $[if entity.hasDescription]
-//   Description: ${entity.description|wrap}
-        $[/if]
-        $[if entity.hasTags]
-//   Tags:        [${entity.tagsSeparatedBy("][")}]
-        $[/if]
-//
-// THIS FILE IS GENERATED. DO NOT EDIT!!
-//
+$[ function makeReleaseDeltaController
+   (entity
+    D "The entity that is tagged as the release delta entity." ,
+    domain
+    D "The controller domain." ,
+    space
+    D "The space of the application." ,
+    role
+    D "The role required to create release deltas." 
+   ) ]
+    $[ import "doc/SourceHeaders" ]
+    $[ let exceptionNamespace = (space.domain("Exception")).namespace ]
+    $[ let utilsNamespace = (space.domain("Utils")).namespace ]
+    $[ let domainModule = entity.module|domain:Controller ];
+    $[ let className = entity|domain:Controller|name ]
+    $[ let modelName = entity|domain:Model|name ]
+    $[ let serviceClassName = entity|domain:Service|name ]
+    $[ let protobufClassName = entity|domain:ProtobufDTO|name ]
+    $[ capture fullProtobufClassName ]${entity.module|domain:ProtobufDTO|name}.${protobufClassName}$[/ capture ]
+    $[ let protobufNamespace = (space.domain("ProtobufDTO")).namespace ]
+    $[ file domain.namespace|path entity|domain:Controller|name "java" ]
+        $[ call entityHeader(title:"This Controller class is responsible for implementing the API endpoints related to the following release delta entity.") ]
 package ${domain.namespace};
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -71,7 +64,7 @@ import ${protobufNamespace}.${entity.module.name|capitalize};
 @RequestMapping(value = "/${entity|domain:APIPath|name}")
 public class ${className} {
 
-        $[let service = entity|domain:Service|name|uncapitalize]
+        $[ let service = entity|domain:Service|name|uncapitalize ]
     private final ${serviceClassName} ${service};
 
     @Autowired
@@ -101,14 +94,14 @@ public class ${className} {
         return ${service}.getReleaseDeltaProtobuf(UUID.fromString(fromReleaseId), UUID.fromString(toReleaseId));
     }
 }
-    $[/file]
-$[/function]
-$[foreach space.modules]
-    $[if module.isIncluded]$[continue]$[/if]
-    $[foreach module.entities]
-        $[if entity.module.isIncluded]$[continue]$[/if]
-        $[let isReleaseDelta = entity.isTransient && entity.hasTag("release:delta")]
-        $[if !isReleaseDelta]$[continue]$[/if]
-        $[call makeReleaseDeltaController(role: role, domain: domain, entity: entity, space: space)]
-    $[/foreach]$[* entity *]
-$[/foreach]$[* module *]
+    $[/ file ]
+$[/ function ]
+$[ foreach space.modules ]
+    $[ if module.isIncluded ]$[ continue ]$[/ if ]
+    $[ foreach module.entities ]
+        $[ if entity.module.isIncluded ]$[ continue ]$[/ if ]
+        $[ let isReleaseDelta = entity.isTransient && entity.hasTag("release:delta") ]
+        $[ if !isReleaseDelta ]$[ continue ]$[/ if ]
+        $[ call makeReleaseDeltaController(role: role, domain: domain, entity: entity, space: space) ]
+    $[/ foreach ]$[* entity *]
+$[/ foreach ]$[* module *]

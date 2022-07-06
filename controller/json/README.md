@@ -5,6 +5,8 @@ This directory contains authors for generating JSON based endpoints.
 
 [//]: # ( =====preserve===== end-Introduction ===== )
 
+> This document was created by template: `local:/../ec-std-lib/templates/document/TemplateMarkdown`
+
 <a name="template-summary"></a>
 ## Template Summary
 
@@ -51,7 +53,7 @@ The following outlets are offered by this publisher:
 
 This author publishes to the following outlets:
 
-| Outlet | Description | Phase | Scope
+| Outlet | Description | Phase | Scope |
 |---|---|---|---|
 | `methods` | Adds asset upload endpoints to controller.|Connect|Author|
 
@@ -116,7 +118,7 @@ The following outlets are offered by this publisher:
 
 This author publishes to the following outlets:
 
-| Outlet | Description | Phase | Scope
+| Outlet | Description | Phase | Scope |
 |---|---|---|---|
 | `methods` | Adds an "associatedTo..." endpoint to the controller.|Connect|Author|
 
@@ -169,7 +171,7 @@ The following outlets are offered by this publisher:
 
 This author publishes to the following outlets:
 
-| Outlet | Description | Phase | Scope
+| Outlet | Description | Phase | Scope |
 |---|---|---|---|
 | `methods` | Adds create endpoints to the controller class for its entity.|Connect|Author|
 
@@ -221,7 +223,7 @@ The following outlets are offered by this publisher:
 
 This author publishes to the following outlets:
 
-| Outlet | Description | Phase | Scope
+| Outlet | Description | Phase | Scope |
 |---|---|---|---|
 | `methods` | Adds delete endpoints to the controller class for its entity.|Connect|Author|
 
@@ -233,7 +235,6 @@ This contains an author that generates various get endpoint methods for a contro
 
 | |References|
 |---|---|
-| **Tags** |`release:lock` |
 | **Domains** |`Model` `JSONDTO` `Security` `APIPath` |
 
 ### Imported Templates
@@ -244,6 +245,17 @@ This contains an author that generates various get endpoint methods for a contro
 
 ### Publishers
 
+#### `org.entityc.springboot.controller.getListByRelationship`
+
+Get List by Relationship Endpoint
+
+The following outlets are offered by this publisher:
+
+| Outlet | Description |
+|---|---|
+| `annotation` | Resides just above the method declaration in the annocation area.|
+
+
 #### `org.entityc.springboot.controller.getList`
 
 Get List endpoint
@@ -253,22 +265,15 @@ The following outlets are offered by this publisher:
 | Outlet | Description |
 |---|---|
 | `annotation` | Resides just above the method declaration in the annocation area.|
+| `parameters` | This is where you want to include request parameters on the get<Model>List endpoint.|
+| `declarations` | This is where you want to include variable declarations.|
+| `parentGet` | *no description*|
+| `noParentGet` | *no description*|
 
 
 #### `org.entityc.springboot.controller.getById`
 
 Get by ID endpoint
-
-The following outlets are offered by this publisher:
-
-| Outlet | Description |
-|---|---|
-| `annotation` | Resides just above the method declaration in the annocation area.|
-
-
-#### `org.entityc.springboot.controller.getByRelationship`
-
-Get List by Relationship Endpoint
 
 The following outlets are offered by this publisher:
 
@@ -285,7 +290,7 @@ The following outlets are offered by this publisher:
 
 This author publishes to the following outlets:
 
-| Outlet | Description | Phase | Scope
+| Outlet | Description | Phase | Scope |
 |---|---|---|---|
 | `methods` | Adds get endpoints to the controller class for its entity.|Connect|Author|
 
@@ -328,7 +333,7 @@ The following outlets are offered by this publisher:
 
 This author publishes to the following outlets:
 
-| Outlet | Description | Phase | Scope
+| Outlet | Description | Phase | Scope |
 |---|---|---|---|
 | `methods` | Adds update endpoints to the controller class for its entity.|Connect|Author|
 

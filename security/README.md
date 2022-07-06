@@ -5,6 +5,8 @@ This directory contains templates and Java source code associated with security.
 
 [//]: # ( =====preserve===== end-Introduction ===== )
 
+> This document was created by template: `local:/../ec-std-lib/templates/document/TemplateMarkdown`
+
 <a name="template-summary"></a>
 ## Template Summary
 
@@ -309,7 +311,7 @@ This template builds code associated with user authentication. It uses tags plac
 
 This author publishes to the following outlets:
 
-| Outlet | Description | Phase | Scope
+| Outlet | Description | Phase | Scope |
 |---|---|---|---|
 | `insideTop` | Add code at top of update method to basically null out incoming attribute values if the logged in user's role does not let them update those attributes.|Connect|Author|
 | `annotation` | Make sure the user has write permission for these methods.|Connect|Author|
@@ -322,7 +324,7 @@ This author publishes to the following outlets:
 
 This author publishes to the following outlets:
 
-| Outlet | Description | Phase | Scope
+| Outlet | Description | Phase | Scope |
 |---|---|---|---|
 | `methods` | Add the adjustUpdateForRoles() method to the DTO class.|Connect|Author|
 

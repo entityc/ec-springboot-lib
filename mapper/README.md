@@ -5,6 +5,8 @@ The mapper classes are responsible for mapping data from one representation to a
 
 [//]: # ( =====preserve===== end-Introduction ===== )
 
+> This document was created by template: `local:/../ec-std-lib/templates/document/TemplateMarkdown`
+
 <a name="template-summary"></a>
 ## Template Summary
 
@@ -21,24 +23,26 @@ Generates code associated with mapping data from a JSON DTO to a Model and vice 
 
 | |References|
 |---|---|
-| **Tags** |`login:password` |
-| **Domains** |`Model` `JSONDTO` `Security` `DTOMapper` |
+| **Domains** |`Model` `JSONDTO` `ProtobufDTO` `DTOMapper` |
 
-### Functions
+### Imported Templates
 
-#### Make Mapper
-
-```
-makeMapper(space, domain, entity)
-```
-
-##### Inputs
-
-|Name|Description|
+| Name | Description |
 |---|---|
-|`space`|The application space.|
-|`domain`|The mapper domain|
-|`entity`|The entity to which to create mepping methods.|
+| `MapperProtoTemplate` |  |
+| [`SourceHeaders`](../doc) |  |
 
+### Publishers
+
+#### `org.entityc.springboot.mapper`
+
+
+
+The following outlets are offered by this publisher:
+
+| Outlet | Description |
+|---|---|
+| `readmeMappingBullets` | *no description*|
+| `methods` | This is where you can insert new mapping methods.|
 
 

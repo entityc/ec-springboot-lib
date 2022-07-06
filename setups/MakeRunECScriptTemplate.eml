@@ -1,0 +1,4 @@
+$[D summary, main "This setup template creates a script that you run after setup completes that will run the"]
+$[D summary, main "entity compiler for this project."]
+
+$[install "basicWebApp/runec.sh" ""]

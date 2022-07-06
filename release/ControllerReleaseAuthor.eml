@@ -1,0 +1,75 @@
+$[ language java ]
+$[ domain Controller ]
+
+$[ author to org.entityc.springboot.controller ]
+$[*--------------------------------------------------------------------------------------------*]
+$[* Clear Release - endpoint to clear (gut contents but leave release object). *]
+$[*--------------------------------------------------------------------------------------------*]
+    $[ author to outlet methods ]
+        $[ if entity.hasTag("release:top") && entity.hasRelationshipToEntityTagged("release:binder") ]
+    @RequestMapping(
+        path = "/{id}/release/clear",
+        method = RequestMethod.PUT,
+        consumes = "application/json"
+    )
+    @ResponseStatus(HttpStatus.ACCEPTED)
+            $[ call preAuthorizeEntity(accessType: "write", entity: entity) ]
+            $[ let pkidtype = entity.pkType|language ]
+    public void clearRelease${modelName}(@PathVariable("id") ${pkidtype} id) throws ServiceException {
+        ${service}.clearRelease(id);
+    }
+
+        $[/ if ]
+    $[/ author ]
+$[*--------------------------------------------------------------------------------------------*]
+$[* Get Release List - This will take several authors to construct. Basically adding "locked"
+$[* flavors of get list methods when the user passes a "lockedOnly" option to the endpoint.
+$[* The "locked" flavor of the get only gets....
+$[*--------------------------------------------------------------------------------------------*]
+$[* The first author simply sets the hasLockAttribute for all the other authors to use. *]
+    $[ author to outlet methods phase = initial
+       D "Determine if it has a lock attribute before places that add lock related code is run (thus"
+       D "phase=initial)."
+    ]
+        $[ let hasLockAttribute = entity.hasAttributeTagged("release:lock") ]
+        $[ let dtoNameInMethod = entity|domain:JSONDTO|name|capitalize ];
+    $[/ author ]
+$[* Here we add the "lockedOnly" parameter to the endpoint. *]
+    $[ author to getList outlet parameters ]
+        $[ if hasLockAttribute ]
+        @RequestParam("lockedOnly") Boolean lockedOnly,
+        $[/ if ]
+    $[/ author ]
+$[* We need to default it to a value of true if not used. *]
+    $[ author to getList outlet declarations ]
+        $[ if hasLockAttribute ]
+        final boolean queryLockedOnly = ResourceUtils.defaultTo(lockedOnly, true);
+        $[/ if ]
+    $[/ author ]
+$[* Now we used the "lockedOnly" option to call the appropriate service method for when a parent object is specified. *]
+    $[ author to getList outlet parentGet ]
+        $[ if hasLockAttribute ]
+            if (lockedOnly) {
+                results = ${service}.getLocked${dtoNameInMethod}ListBy${parentName}(${parentIdArg}, queryStart, queryLimit, false);
+            } else {
+                results = ${service}.get${dtoNameInMethod}ListBy${parentName}(${parentIdArg}, queryStart, queryLimit, false);
+            }
+        $[ else ]
+            results = ${service}.get${dtoNameInMethod}ListBy${parentName}(${parentIdArg}, queryStart, queryLimit, false);
+        $[/ if ]
+    $[/ author ]
+$[* Now we used the "lockedOnly" option to call the appropriate service method for when a parent object is NOT specified. *]
+    $[ author to getList outlet noParentGet ]
+        $[ if hasLockAttribute ]
+            if (lockedOnly) {
+                results = ${service}.getLocked${dtoNameInMethod}List(queryStart, queryLimit, false);
+            } else {
+                results = ${service}.get${dtoNameInMethod}List(queryStart, queryLimit, false);
+            }
+        $[ else ]
+            results = ${service}.get${dtoNameInMethod}List(queryStart, queryLimit, false);
+        $[/ if ]
+    $[/ author ]
+
+$[/ author ]
+

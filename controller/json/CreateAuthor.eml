@@ -25,6 +25,7 @@ $[/send]
             $[/if]
         $[/if]
         $[publisher org.entityc.springboot.controller.create]
+    // [Template] ${__template.name}:${__outlet.name} < ${__author.template.name}
     @RequestMapping(
         method = RequestMethod.POST,
         consumes = "application/json",
@@ -56,6 +57,7 @@ $[/outlet]
 $[* We are looking only for relationships that are: required parent one *]
             $[if !relationship.to.isOne || !relationship.isParent || relationship.isOptional]$[continue]$[/if]
             $[publisher org.entityc.springboot.controller.createWithParent]
+    // [Template] ${__template.name}:${__outlet.name} < ${__author.template.name}
     @RequestMapping(
         path = "/${relationship|domain:APIPath|name}/{id}",
         method = RequestMethod.POST,

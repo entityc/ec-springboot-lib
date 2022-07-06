@@ -1,0 +1,241 @@
+$[ language java ]
+$[ domain Repository ]
+
+$[* We will run this author in the PUBLISHER SCOPE *]
+$[ author to org.entityc.springboot.repository.get ]
+    $[ author to outlet methods scope = publisher
+       D "Adds many get methods from get by ID to getting lists by parent relationships."
+    ]
+        $[ if entity.hasAttributeTagged("release:lock") ]
+            $[ let lockedAttribute = entity.attributeTagged("release:lock") ]
+    /**
+     * Gets the full list of locked ${responseModelName} objects with paging.
+     * @param start The starting index.
+     * @param limit The maximum number or results to return.
+     * @return List of ${responseModelName} objects fetched.
+     */
+    @Query(value =
+            "SELECT * " +
+            " FROM ${responseDatabaseName} " +
+            "WHERE ${lockedAttribute|domain:Database|name} = true " +
+            $[ if sortByAttribute != null ]
+            "ORDER BY ${sortByAttribute|domain:Database|name} ${ascending ? "ASC":"DESC"} " +
+            $[/ if ]
+            "LIMIT ?2 OFFSET ?1", nativeQuery = true)
+    List<${responseModelName}> getLocked${responseModelName}List(long start, int limit);
+
+            $[ foreach entity.attributes ]
+                $[ if attribute.isParent ]
+    /**
+     * Gets the list of ${responseModelName} objects that all share the same value for attribute ${attribute.name}.
+     * @param ${attribute|domain|name} The value for ${attribute.name}.
+     * @param start The starting index.
+     * @param limit The maximum number or results to return.
+     * @return List of ${responseModelName} objects fetched.
+     */
+    @Query(value =
+            "SELECT * " +
+            " FROM ${responseDatabaseName} " +
+            "WHERE ${lockedAttribute|domain:Database|name} = true " +
+            "  AND ${attribute|domain:Database|name} = ?1 " +
+                    $[ if sortByAttribute != null ]
+            "ORDER BY ${sortByAttribute|domain:Database|name} ${ascending ? "ASC":"DESC"} " +
+                    $[/ if ]
+            "LIMIT ?3 OFFSET ?2", nativeQuery = true)
+    List<${responseModelName}> getLocked${responseModelName}ListBy${attribute.name|capitalize}(${attribute.type|language} ${attribute|domain|name}, long start, int limit);
+
+                $[/ if ]
+            $[/ foreach ]
+            $[ foreach entity.relationships ]
+    /**
+     * Gets the list of ${responseModelName} objects that all share the same reference to an object of ${relationship.to.entity.name}.
+     * @param ${relationship|domain|name}Id The ID of the ${relationship.to.entity.name} object to which all results will share.
+     * @param start The starting index.
+     * @param limit The maximum number or results to return.
+     * @return List of ${responseModelName} objects fetched.
+     */
+    @Query(value =
+            "SELECT * " +
+            " FROM ${responseDatabaseName} " +
+            "WHERE ${lockedAttribute|domain:Database|name} = true " +
+            "  AND ${relationship|domain:Database|name}_id = ?1 " +
+                    $[ if sortByAttribute != null ]
+            "ORDER BY ${sortByAttribute|domain:Database|name} ${ascending ? "ASC":"DESC"} " +
+                    $[/ if ]
+            "LIMIT ?3 OFFSET ?2", nativeQuery = true)
+    List<${responseModelName}> getLocked${responseModelName}ListBy${relationship.name|capitalize}(${relationship.to.entity.primaryKey.type|language} ${relationship|domain|name}Id, long start, int limit);
+
+    /**
+     * Gets the count of ${responseModelName} objects that all share the same reference to an object of ${relationship.to.entity.name}.
+     * @param ${relationship|domain|name}Id The ID of the ${relationship.to.entity.name} object to which all results will share.
+     * @return Count of ${responseModelName} objects that exist.
+     */
+    @Query(value =
+            "SELECT COUNT(*) " +
+            " FROM ${responseDatabaseName} " +
+            "WHERE ${lockedAttribute|domain:Database|name} = true " +
+            "  AND ${relationship|domain:Database|name}_id = ?1 "
+            , nativeQuery = true)
+    Long countLocked${responseModelName}By${relationship.name|capitalize}Id(${relationship.to.entity.primaryKey.type|language} ${relationship|domain|name}Id);
+
+            $[/ foreach ]
+        $[/ if ]
+    $[/ author ]
+$[/ author ]
+
+$[ author to org.entityc.springboot.repository ]
+    $[ author to outlet methods
+       D "Adds method associated with release management that use native database queries to speed up"
+       D "the endpoints that support release management."
+    ]
+        $[ if entity.hasTag("release:version") ]
+            $[ let objEntity = entity.primaryParentRelationship.to.entity ]
+            $[ if objEntity == null ]$[ log error ]Version entity ${entity.name} says its a version but its parent is not an object!$[/ log ]$[/ if ]
+            $[ let objTableName = objEntity|domain:Database|name ]
+            $[ let verTableName = entity|domain:Database|name ]
+            $[ let objParentEntity = objEntity.primaryParentRelationship.to.entity ]
+            $[ let hasParentEntity = objParentEntity != null ]
+            $[ if hasParentEntity ]
+                $[ let hasParentEntity = objParentEntity.hasRelationshipToEntityTagged("release:top") ]
+            $[/ if ]
+            $[ if hasParentEntity ]
+                $[ let objParentTableName = objParentEntity|domain:Database|name ]
+            $[/ if ]
+            $[ let retiredAttr = null ]
+            $[ foreach attr in entity.attributes ]
+                $[ if attr.isCreation ]
+                    $[ let creationDateAttrName = attr|domain:Database|name ]
+                    $[ break ]
+                $[/ if ]
+            $[/ foreach ]
+            $[ foreach attr in objEntity.attributes ]
+                $[ if attr.hasTag("release:retired") ]
+                    $[ let retiredAttr = attr ]
+                $[/ if ]
+            $[/ foreach ]
+            $[ capture queryEnding ], nativeQuery = true)$[/ capture ]
+
+    @Query(value = "SELECT v.* FROM ${verTableName} v " +
+                   "INNER JOIN (SELECT ${objTableName}_id, MAX(${creationDateAttrName}) max_${creationDateAttrName} " +
+                                 "FROM ${verTableName} " +
+                             "GROUP BY ${objTableName}_id) o " +
+                           "ON o.${objTableName}_id = v.${objTableName}_id " +
+                          "AND v.${creationDateAttrName} = o.max_${creationDateAttrName} $[ if hasParentEntity || retiredAttr != null ]" +
+                   "INNER JOIN ${objTableName} o2 ON o2.${objTableName}_id = v.${objTableName}_id " +
+            $[ else ]"${queryEnding}
+            $[/ if ]
+            $[ if hasParentEntity ]
+                $[ if retiredAttr != null ]
+                   " WHERE o2.${objParentTableName}_id = ?1 AND NOT o2.${retiredAttr|domain:Database|name}"${queryEnding}
+                $[ else ]
+                   " WHERE o2.${objParentTableName}_id = ?1"${queryEnding}
+                $[/ if ]
+            $[ elseif retiredAttr != null ]
+                   " WHERE NOT o2.${retiredAttr|domain:Database|name}"${queryEnding}
+            $[/ if ]
+            $[ if hasParentEntity ]
+    public List<${modelName}> getLatestVersionsFor${objParentEntity.name}(${objParentEntity.pkType|language} ${objParentEntity.name|uncapitalize}Id);
+            $[ else ]
+    public List<${modelName}> getLatestVersions();
+            $[/ if ]
+
+        $[/ if ]
+$[*****************]
+$[*   Is Locked   *]
+$[*****************]
+        $[ if entity.hasTag("release:version") ]
+            $[ let binderRelationship = entity.relationshipToEntityTagged("release:binder") ]
+            $[ if binderRelationship != null && binderRelationship.to.isMany ]
+                $[ let binderEntity = binderRelationship.to.entity ]
+                $[ let topReleaseRelationship = binderEntity.relationshipToEntityTagged("release:top") ]
+                $[ if topReleaseRelationship != null ]
+                    $[ let topReleaseEntity = topReleaseRelationship.to.entity ]
+                    $[ if topReleaseEntity.hasAttributeTagged("release:lock") ]
+                        $[ let joinColumnName = topReleaseEntity.primaryKeyAttribute|domain:Database|name ]
+    @Query(value = "SELECT j.${topReleaseEntity.attributeTagged("release:lock")|domain:Database|name} " +
+                     "FROM ${binderEntity|domain:Database|name} t " +
+               "INNER JOIN ${topReleaseEntity|domain:Database|name} j " +
+                       "ON j.${joinColumnName} = t.${joinColumnName} " +
+                    "WHERE t.${entity.primaryKeyAttribute|domain:Database|name} = ?1", nativeQuery = true)
+    public Boolean is${entity|domain:Model|name}Locked(${entity.pkType|language} id);
+                    $[/ if ]
+                $[/ if ]
+            $[/ if ]
+        $[/ if ]
+$[**************************************]
+$[*   Get List of Release Object IDs
+$[if entity.hasTag("release:binder")]
+$[call getReleaseBinderRelationships(versionReleaseEntity:entity) -> (results:results)]
+$[if results != null && results.count > 1]
+$[let topRelationship = results.get(0)]
+$[let objectRelationship = results.get(1)]
+$[let objectEntity = objectRelationship.to.entity]
+$[let topEntity = topRelationship.to.entity]
+    @Query(value =
+            "SELECT ${objectRelationship|domain:Database|name}_id " +
+                    "FROM ${entity|domain:Database|name} " +
+                    "WHERE ${topRelationship|domain:Database|name}_id = ?1 ", nativeQuery = true)
+    List<${objectEntity.pkType|language}> get${objectEntity|domain:Model|name}IdListBy${topEntity|domain:Model|name}(UUID gameMapReleaseId);
+
+$[/if]
+$[/if] *]
+$[**************************************]
+$[*   Get additional Objects From   *]
+        $[ if entity.hasTag("release:binder") ]
+            $[ call getReleaseBinderRelationships(versionReleaseEntity: entity)->(results: results) ]
+            $[ if results != null && results.count > 2 ]
+                $[ let topRelationship = results.get(0) ]
+                $[ let objectRelationship = results.get(1) ]
+                $[ let objectEntity = objectRelationship.to.entity ]
+                $[ let topEntity = topRelationship.to.entity ]
+                $[ let tableName = entity|domain:Database|name ]
+                $[ let pkColumnName = topRelationship|domain:Database|name ]
+                $[ let pkModelName = topRelationship|domain:Model|name ]
+                $[ capture methodDescription ]
+Gets the ${modelName} objects that are in the "from" ${topEntity|title} and not in the "to" ${topEntity|title}.
+This can be used to find both things that have been added from one release to another and also what
+has been removed.
+                $[/ capture ]
+    /**
+     * ${methodDescription|join|wrap:("     * ")}
+     *
+     * @param from${pkModelName|capitalize}Id The "from" ${topEntity|title}.
+     * @param to${pkModelName|capitalize}Id The "to" ${topEntity|title}.
+     * @return The list of ${modelName} objects that in the "from" and not in the "to".
+     */
+    @Query(value =
+            "SELECT * " +
+              "FROM ${tableName} " +
+             "WHERE ${pkColumnName}_id = ?2 " +
+               "AND ${objectRelationship|domain:Database|name}_id NOT IN ( " +
+                "SELECT ${objectRelationship|domain:Database|name}_id " +
+                  "FROM ${tableName} " +
+                 "WHERE ${pkColumnName}_id = ?1)", nativeQuery = true)
+    List<${modelName}> getExcess${entity|domain:Model|name}ListBy${topEntity|domain:Model|name}(UUID from${pkModelName|capitalize}Id, UUID to${pkModelName|capitalize}Id);
+
+                $[ let versionRelationship = results.get(2) ]
+                $[ let versionEntity = versionRelationship.to.entity ]
+                $[ capture methodDescription ]
+Gets the ${modelName} objects that have a different version object in the "from" ${topEntity|title} as compared to the "to" ${topEntity|title}.
+                $[/ capture ]
+    /**
+     * ${methodDescription|join|wrap:("     * ")}
+     *
+     * @param from${pkModelName|capitalize}Id The "from" ${topEntity|title}.
+     * @param to${pkModelName|capitalize}Id The "to" ${topEntity|title}.
+     * @return The ${modelName} objects with different version objects between the two specified releases.
+     */
+    @Query(value =
+            "SELECT r2.* " +
+              "FROM ${tableName} r1 " +
+        "INNER JOIN ${tableName} r2 " +
+                "ON r1.${objectRelationship|domain:Database|name}_id = r2.${objectRelationship|domain:Database|name}_id " +
+             "WHERE r1.${pkColumnName}_id = ?1 " +
+               "AND r2.${pkColumnName}_id = ?2 " +
+               "AND r1.${versionRelationship|domain:Database|name}_id != r2.${versionRelationship|domain:Database|name}_id", nativeQuery = true)
+    List<${modelName}> getChanged${entity|domain:Model|name}ListBy${topEntity|domain:Model|name}(UUID from${pkModelName|capitalize}Id, UUID to${pkModelName|capitalize}Id);
+
+            $[/ if ]
+        $[/ if ]
+    $[/ author ]
+$[/ author ]

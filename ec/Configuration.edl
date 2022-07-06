@@ -5,7 +5,7 @@ space SpringBootLib {
         organization "entityc"
         name "ec-std-lib"
         path "languages"
-        tag "v1.0"
+        tag "v0.9.3"
     }
     import Markdown from ecStdLibLanguages
 }

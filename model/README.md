@@ -5,54 +5,16 @@ A model class is one which models objects internally on the server. These templa
 
 [//]: # ( =====preserve===== end-Introduction ===== )
 
+> This document was created by template: `local:/../ec-std-lib/templates/document/TemplateMarkdown`
+
 <a name="template-summary"></a>
 ## Template Summary
 
 |Template|Description|
 |---|---|
-| [`ModelProtoTemplate`](#model-proto-template) | This template builds what are called Model classes. |
 | [`ModelTemplate`](#model-template) | This template builds what are called Model classes. |
 
 Each of the template files will be covered in more detail below.
-
-<a name="model-proto-template"></a>
-## Model Proto Template
-
-This template builds what are called Model classes. A Model class is used to represent objects of an entity that are used internally on the server. They typically match pretty closely to how they are modeled in the database.
-
- In addition to creating model class files for the entities it also creates source files for the enums.
-
- The template also generates markdown documentation about the model classes in a README.md file written at the same level as the model class files. This basically creates documentation when viewed with GitHub.
-
-| |References|
-|---|---|
-| **Tags** |`template` `release` |
-| **Domains** |`Model` `Database` `ProtobufDTO` |
-
-### Functions
-
-#### Build Overrides
-
-```
-buildOverrides(modelNamePrefix, databaseNamePrefix, attribute) -> (overrides)
-```
-
-In a Springboot Model class, annotations are used to map attribute variables to database columns. These can be a bit complicated when secondary entities are involved as the hierarchy in the model class can be different than at the database level. This function helps in the synthesis of these model variable to column name mappings.
-
-##### Inputs
-
-|Name|Description|
-|---|---|
-|`modelNamePrefix`||
-|`databaseNamePrefix`||
-|`attribute`||
-
-##### Outputs
-
-|Name|Description|
-|---|---|
-|`overrides`||
-
 
 <a name="model-template"></a>
 ## Model Template
@@ -67,6 +29,12 @@ This template builds what are called Model classes. A Model class is used to rep
 |---|---|
 | **Tags** |`template` `release` `title` |
 | **Domains** |`Model` `Database` |
+
+### Imported Templates
+
+| Name | Description |
+|---|---|
+| [`SourceHeaders`](../doc) |  |
 
 ### Publishers
 

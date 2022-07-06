@@ -14,6 +14,9 @@ public class ResourceUtils {
     public static int defaultTo(Integer value, int defaultValue) {
         return value == null ? defaultValue : value;
     }
+    public static boolean defaultTo(Boolean value, boolean defaultValue) {
+        return value == null ? defaultValue : value;
+    }
 
     public static Date ParseDateString(String dateString) throws ParseException {
         Date date = null;

@@ -5,6 +5,8 @@ The repository classes are used to transfer data contained in the model classes 
 
 [//]: # ( =====preserve===== end-Introduction ===== )
 
+> This document was created by template: `local:/../ec-std-lib/templates/document/TemplateMarkdown`
+
 <a name="template-summary"></a>
 ## Template Summary
 
@@ -32,7 +34,6 @@ Generates code that interfaces model classes with the database.
 | [`RepositoryCacheAuthor`](authors) | Generates code inside the methods of the Repository class to implement in-memory caching. |
 | [`RepositoryDeleteAuthor`](authors) | This template contains the authors that are responsible for generating the delete object repository methods. |
 | [`RepositoryGetAuthor`](authors) | This template contains the authors that are responsible for generating the get object repository methods. |
-| [`RepositoryReleaseAuthor`](authors) | (NEEDS WORK) This template contains the authors that are responsible for generating repository methods associated with release and version management. |
 | [`RepositorySaveAuthor`](authors) | This template contains the author that is responsible for generating the save object repository method. |
 | [`SecurityFunctions`](../security) | Contains functions for finding the logged in user entity, roles, and other useful functions. |
 

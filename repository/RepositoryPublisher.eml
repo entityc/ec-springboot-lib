@@ -9,7 +9,6 @@ $[publisher org.entityc.springboot.repository]
     $[import "repository/authors/RepositoryDeleteAuthor"]
     $[import "repository/authors/RepositoryAssociationAuthor"]
     $[import "repository/authors/RepositoryCacheAuthor"]
-    $[import "repository/authors/RepositoryReleaseAuthor"]
 $[outlet veryTop
   D "This is above all the loops so you can loop through all the entities here if you want."
 ]

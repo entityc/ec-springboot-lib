@@ -174,7 +174,11 @@ $[* ATTRIBUTES *]
 			<th th:text="#{${entity|domain:StaticLocalization|name}.${domainAttribute|domain:StaticLocalization|name}}" scope="col" width="250">${domainAttribute|title}</th>
             <td style="width:auto">
                 <div class="mb-3">
-                  <img th:src="@{${$}{(${attributeName} == null || ${urlAttributeName} == null) ? '/images/DefaultConceptImage.png' : ${urlAttributeName}}}" width="128" height="128"/>
+                $[ if domainAttribute.hasTag("image")]
+                  <img th:src="@{${$}{(${attributeName} == null || ${urlAttributeName} == null) ? '/images/default.png' : ${urlAttributeName}}}" width="128" height="128"/>
+                  $[ else ]
+                  <span th:text="@{${$}{(${attributeName} == null || ${urlAttributeName} == null) ? 'no file' : ${urlAttributeName}}}">
+                  $[/if]
                 </div>
             </td>
             <td style="width:1%">
@@ -924,10 +928,8 @@ $[/ send ]
                                 @RequestPart(value = "file") MultipartFile file
                                 ) throws ServiceException {
         String fieldName = request.getParameter("upload-field-ident");
-        String fileExtension = request.getParameter("file-extension");
-        if (fileExtension == null) {
-            fileExtension = "png";
-        }
+        String fullFilename = file.getOriginalFilename();
+        String extension = fullFilename.substring(fullFilename.lastIndexOf(".")+1);
             $[ let modelName = entity|domain:Model|name ]
             $[ let modelVariableName = modelName|uncapitalize ]
         ${modelName} ${modelVariableName};
@@ -959,7 +961,7 @@ $[/ send ]
                 $[ if hasCollection ]
                     $[ capture methodName ]${collectionName|capitalize}${methodName}$[/ capture ]
                 $[/ if ]
-            ${serviceName|uncapitalize}.upload${methodName}(${modelVariableName}, file.getContentType(), byteArray, fileExtension);
+            ${serviceName|uncapitalize}.upload${methodName}(${modelVariableName}, file.getContentType(), byteArray, extension);
                 $[ let ifClause = "else if" ]
         }
             $[/ foreach ]

@@ -6,7 +6,7 @@ service classes.
 
 [//]: # ( =====preserve===== end-Introduction ===== )
 
-> This document was created by template: `[ecStdLibTemplatesLocal]local:../ec-std-lib/templates/TemplateMarkdown`
+> This document was created by template: `local:/../ec-std-lib/templates/document/TemplateMarkdown`
 
 <a name="template-summary"></a>
 ## Template Summary

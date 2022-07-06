@@ -198,7 +198,7 @@ $[****************************]
                 $[ if isModelVariant || isDtoVariant ]
                     $[ capture fullResponseName ]List<${responseClassName}>$[/ capture ]
                 $[ else ]
-                    $[ capture fullResponseName ]${fullProtobufClassName}List$[/ capture ]
+                    $[ capture fullResponseName ]${responseClassName}List$[/ capture ]
                 $[/ if ]
     public ${fullResponseName} get${responseInMethodName}ListBy${attribute.name|capitalize}(
         ${attribute.type|language} ${attribute.name},

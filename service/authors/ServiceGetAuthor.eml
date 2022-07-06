@@ -211,7 +211,7 @@ $[****************************]
                     $[ let listName = "list" ]
                     $[ if isDtoVariant ]
                         $[ let listName = "dtoList" ]
-            List<${responseDtoName}> dtoList = new ArrayList<>();
+            List<${responseClassName}> dtoList = new ArrayList<>();
                     $[/ if ]
                 $[/ if ]
             List<${responseModelName}> list = ${repositoryVariableName}.get${responseModelName}ListBy${attribute.name|capitalize}(${attribute.name}, start, limit);

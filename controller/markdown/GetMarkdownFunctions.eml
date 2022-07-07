@@ -61,7 +61,9 @@ $[/ function ]
 $[ function getListByParentMarkdown
    D "Generates markdown documentation for the get list by parent endpoint." 
    (entity
-    D "The entity corresponding to the get endpoint documentation to generate." 
+    D "The entity corresponding to the get endpoint documentation to generate.",
+    apiUrlPrefix
+    D "The start of all admin URLs."
    )
 ]
     $[ capture fullTitle ]Get ${entity|title} List$[/ capture ]

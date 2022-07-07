@@ -70,13 +70,11 @@ $[ import "web/thymeleaf-bootstrap/WebPageFunctions" ]
 $[ import "web/thymeleaf-bootstrap/modal/ModalFunctions" ]
 $[ import "security/SecurityFunctions" ]
 
-$[ let projectBaseApiPath = space.getMetadataValue("appBaseUrlPath") ]
-
 $[ publisher org.entityc.springboot.web.admin.detail ]
     $[ foreach entity in space.entities ]
         $[ if entity.isImplicit || entity.isExtern || entity.isIncluded || entity.isTransient || entity.isSecondary ]$[ continue ]$[/ if ]
         $[ let domainEntity = entity|domain ]
-        $[ let filename = "admin_" + domainEntity.name + "_detail" ]
+        $[ let filename = "admin/" + domainEntity.name + "_detail" ]
         $[ let pageTitle = (domainEntity|title) + " Detail" ]
         $[ let entityDtoClassName = entity|domain:JSONDTO|name|uncapitalize ]
         $[ file "resources/templates" filename "html" ]
@@ -112,14 +110,14 @@ $[ publisher org.entityc.springboot.web.admin.detail ]
 <div class="container">
   <nav aria-label="breadcrumb">
     <ol class="breadcrumb">
-      <li class="breadcrumb-item"> <a th:href="@{/${adminUrlPrefix}}">Admin Home</a> </li>
+      <li class="breadcrumb-item"> <a th:href="@{${adminUrlPrefix}}">Admin Home</a> </li>
             $[ if domainEntity.hasTag("home") ]
-      <li class="breadcrumb-item"> <a th:href="@{/${adminUrlPrefix}/${entity|domain:APIPath|name}}">${entity|title|plural}</a> </li>
+      <li class="breadcrumb-item"> <a th:href="@{${adminUrlPrefix}/${entity|domain:APIPath|name}}">${entity|title|plural}</a> </li>
             $[/ if ]
             $[ let parentNumber = 1 ]
             $[ foreach parentEntity in entity.primaryParentAncestory ]
                 $[ call breadcrumbExpression(entity: parentEntity, dtoEntity: parentEntity|domain:JSONDTO)->(thExpression: breadcrumbExpression) ]
-      <li class="breadcrumb-item"> <a th:href="@{/${adminUrlPrefix}/${parentEntity|domain:APIPath|name}/{id}/detail(id=${$}{${parentEntity|domain:JSONDTO|name|uncapitalize}.id})}" th:text="${breadcrumbExpression}">link</a> </li>
+      <li class="breadcrumb-item"> <a th:href="@{${adminUrlPrefix}/${parentEntity|domain:APIPath|name}/{id}/detail(id=${$}{${parentEntity|domain:JSONDTO|name|uncapitalize}.id})}" th:text="${breadcrumbExpression}">link</a> </li>
                 $[ let parentNumber = parentNumber + 1 ]
             $[/ foreach ]
       <li class="breadcrumb-item active" aria-current="page">${entity|title}</li>
@@ -385,7 +383,7 @@ $[* Treat to-one relationships like attributes assigned to an object of the rela
      	            <h3>${relationship|title}</h3>
                 </div>
                 <div class="col-md-auto ms-auto">
-                    <form th:if="${$}{canAdd${toEntity|name}}" th:action="@{/${adminUrlPrefix}/${actionUrl}}" method="post">
+                    <form th:if="${$}{canAdd${toEntity|name}}" th:action="@{${adminUrlPrefix}/${actionUrl}}" method="post">
                         <input type="submit" name="${toEntity.name}add" id="${toEntity.name}-add"
                                class="btn btn-primary" value="+" />
                     </form>
@@ -431,7 +429,7 @@ $[* Treat to-one relationships like attributes assigned to an object of the rela
 			<td th:text="${$}{${relItemExpr}}"></td>
                         $[/ if ]
                     $[/ foreach ]
-            <td style="width:1%"><a class="btn btn-secondary active" role="button" aria-pressed="true" th:href="@{'/${adminUrlPrefix}/${toEntity|domain:APIPath|name}/' + ${$}{item.id} + '/detail'}">Open</a></td>
+            <td style="width:1%"><a class="btn btn-secondary active" role="button" aria-pressed="true" th:href="@{'${adminUrlPrefix}/${toEntity|domain:APIPath|name}/' + ${$}{item.id} + '/detail'}">Open</a></td>
 		</tr>
 		</tbody>
 		</table>
@@ -450,7 +448,7 @@ $[* Treat to-one relationships like attributes assigned to an object of the rela
 </div>
 <div class="modal fade" id="confirm-delete" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
     <div class="modal-dialog">
-        <form th:action="@{/admin/${entity|domain:APIPath|name}/{id}/delete(id=${$}{${entity|domain:JSONDTO|name|uncapitalize}.id})}" method="POST">
+        <form th:action="@{${adminUrlPrefix}/${entity|domain:APIPath|name}/{id}/delete(id=${$}{${entity|domain:JSONDTO|name|uncapitalize}.id})}" method="POST">
         <div class="modal-content">
             <div class="modal-header">
                 Delete ${entity|title}
@@ -520,6 +518,7 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.ModelAndView;
 import javax.servlet.http.HttpServletRequest;
 import org.springframework.web.servlet.View;
@@ -534,6 +533,7 @@ import java.util.UUID;
 import java.util.Vector;
 
 @Controller
+@RequestMapping(value = "${adminUrlPrefix}")
 public class ${className} {
 
     @Autowired
@@ -557,7 +557,7 @@ $[/ send ]
         $[ let pkTypeName = entity.pkType|language ]
         $[ let pkIsUUID = entity.pkType.isUUIDType ]
         $[ let domainEntity = entity|domain ]
-        $[ let htmlFilename = "admin_" + domainEntity.name + "_detail" ]
+        $[ let htmlFilename = "admin/" + domainEntity.name + "_detail" ]
         $[ let entityDtoClassName = entity|domain:JSONDTO|name ]
 $[ send imports ]
 import ${entity|domain:JSONDTO|fullname};
@@ -570,10 +570,10 @@ $[ send autowired ]
 $[/ send ]
 
     /**
-     * /${adminUrlPrefix}/${entity|domain:APIPath|name}/{id}/detail
+     * ${adminUrlPrefix}/${entity|domain:APIPath|name}/{id}/detail
      * Directs the endpoint to use the detail page ${htmlFilename} for ${entity.name}
      */
-    @GetMapping(value = {"/${adminUrlPrefix}/${entity|domain:APIPath|name}/{id}/detail"})
+    @GetMapping(value = {"/${entity|domain:APIPath|name}/{id}/detail"})
         $[ let objectLevelAccess = (entity|domain:Security).hasTag("access:object:level") ]
         $[ if !objectLevelAccess ]
             $[ call preAuthorizeEntity(accessType: "read", entity: entity) ]
@@ -686,12 +686,12 @@ $[/ send ]
 
         $[ if domainEntity.hasDeclaredDomainAttributes ]
     /**
-     * /${adminUrlPrefix}/${entity|domain:APIPath|name}/{id}/update
+     * ${adminUrlPrefix}/${entity|domain:APIPath|name}/{id}/update
      * The detail page allows the user to edit certain fields. When the user hits a field Edit button, it will go
      * to this endpoint, where the field to update is contained in the 'field-ident' parameter and the value is in
      * the 'field-value' parameter.
      */
-    @PostMapping(value = {"/${adminUrlPrefix}/${entity|domain:APIPath|name}/{id}/update"})
+    @PostMapping(value = {"/${entity|domain:APIPath|name}/{id}/update"})
             $[ let isUserEntity = (entity|domain:Security).hasTag("user") ]
             $[ let objectLevelAccess = (entity|domain:Security).hasTag("access:object:level") ]
             $[ if !isUserEntity && !objectLevelAccess ]
@@ -864,12 +864,12 @@ $[*-----------------------------------------------------------------------------
         ${serviceName|uncapitalize}.update${entity|domain:Model|name}(object);
         request.setAttribute(
           View.RESPONSE_STATUS_ATTRIBUTE, HttpStatus.FOUND);
-        return new ModelAndView("redirect:/${adminUrlPrefix}/${entity|domain:APIPath|name}/" + id$[ if pkIsUUID ].toString()$[/ if ] + "/detail");
+        return new ModelAndView("redirect:${adminUrlPrefix}/${entity|domain:APIPath|name}/" + id$[ if pkIsUUID ].toString()$[/ if ] + "/detail");
     }
         $[/ if ]
 
     /**
-     * DELETE /${adminUrlPrefix}/${entity|domain:APIPath|name}/{id}
+     * DELETE ${adminUrlPrefix}/${entity|domain:APIPath|name}/{id}
      * The detail page allows the user to edit certain fields. When the user hits a field Edit button, it will go
      * to this endpoint, where the field to update is contained in the 'field-ident' parameter and the value is in
      * the 'field-value' parameter.
@@ -877,7 +877,7 @@ $[*-----------------------------------------------------------------------------
 $[ send imports ]
 import ${entity|domain:Model|fullname};
 $[/ send ]
-    @PostMapping(value = {"/${adminUrlPrefix}/${entity|domain:APIPath|name}/{id}/delete"})
+    @PostMapping(value = {"/${entity|domain:APIPath|name}/{id}/delete"})
         $[ call preAuthorizeEntity(accessType: "write", entity: entity) ]
     public ModelAndView delete${domainEntity.name}(HttpServletRequest request, @PathVariable("id") ${pkTypeName} id) throws ServiceException {
         // check to make sure it exists
@@ -889,9 +889,9 @@ $[/ send ]
         ${entity|domain:Model|name} object = ${serviceName|uncapitalize}.get${entity|domain:Model|name}ById(id);
         ${serviceName|uncapitalize}.delete${entity|domain:Model|name}ById(id);
         $[ if entity.hasPrimaryParentRelationship ]
-        return new ModelAndView("redirect:/${adminUrlPrefix}/${parentEntity|domain:APIPath|name}/" + ${entity|name|uncapitalize}ParentId + "/detail");
+        return new ModelAndView("redirect:${adminUrlPrefix}/${parentEntity|domain:APIPath|name}/" + ${entity|name|uncapitalize}ParentId + "/detail");
         $[ else ]
-        return new ModelAndView("redirect:/${adminUrlPrefix}/${entity|domain:APIPath|name}");
+        return new ModelAndView("redirect:${adminUrlPrefix}/${entity|domain:APIPath|name}");
         $[/ if ]
     }
 
@@ -919,7 +919,7 @@ import ${(space.domain("Exception")).namespace}.EntityNotFoundException;
 import ${(space.domain("Exception")).namespace}.ValidationException;
 import ${entity|domain:Model|fullname};
 $[/ send ]
-    @PostMapping(value = {"/${adminUrlPrefix}/${entity|domain:APIPath|name}/{id}/upload-file"})
+    @PostMapping(value = {"/${entity|domain:APIPath|name}/{id}/upload-file"})
             $[ let isUserEntity = (entity|domain:Security).hasTag("user") ]
             $[ if !isUserEntity ]
                 $[ call preAuthorizeEntity(accessType: "write", entity: entity) ]
@@ -968,7 +968,7 @@ $[/ send ]
         else {
             throw new ValidationException("Could not uploaded file non-asset attribute: " + fieldName);
         }
-        return new ModelAndView("redirect:/${adminUrlPrefix}/${entity|domain:APIPath|name}/" + id$[ if pkIsUUID ].toString()$[/ if ] + "/detail");
+        return new ModelAndView("redirect:${adminUrlPrefix}/${entity|domain:APIPath|name}/" + id$[ if pkIsUUID ].toString()$[/ if ] + "/detail");
     }
         $[/ if ]
     $[/ foreach ]

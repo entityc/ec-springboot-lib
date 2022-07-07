@@ -22,11 +22,11 @@ $[import "security/SecurityFunctions"]
 
 $[let projectBaseApiPath = space.getMetadataValue("appBaseUrlPath")]
 $[if adminUrlPrefix == null || adminUrlPrefix == ""]
-    $[let adminUrlPrefix = "admin"]
+    $[let adminUrlPrefix = "/admin"]
 $[/if]
 
 $[publisher org.entityc.springboot.web.admin.home]
-$[file "resources/templates" "admin_home" "html"]
+$[file "resources/templates/admin" "home" "html"]
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
@@ -52,7 +52,7 @@ $[file "resources/templates" "admin_home" "html"]
 			<div class="row gy-10 border bg-light">
 				<div class="col col-3">
 					<div class="py-3">
-						<a class="btn btn-primary" style="width: 100%" role="button" th:href="@{/${adminUrlPrefix}/${topEntity|domain:APIPath|name}}">${topEntity.name|title|plural}</a>
+						<a class="btn btn-primary" style="width: 100%" role="button" th:href="@{${adminUrlPrefix}/${topEntity|domain:APIPath|name}}">${topEntity.name|title|plural}</a>
 					</div>
 				</div>
 				<div class="col">
@@ -73,8 +73,8 @@ $[file "resources/templates" "admin_home" "html"]
 $[/file]
     $[foreach topEntity in (space.domain("AdminUI")).declaredDomainEntities]
         $[if !topEntity.hasTag("home")]$[continue]$[/if]
-    $[let filename = "admin_" + topEntity.name + "_home"]
-$[file "resources/templates" filename "html"]
+    $[let filename = topEntity.name + "_home"]
+$[file "resources/templates/admin" filename "html"]
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
@@ -88,7 +88,7 @@ $[file "resources/templates" filename "html"]
 <div class="container">
   <nav aria-label="breadcrumb">
     <ol class="breadcrumb">
-      <li class="breadcrumb-item"> <a th:href="@{/${adminUrlPrefix}}">Admin Home</a> </li>
+      <li class="breadcrumb-item"> <a th:href="@{${adminUrlPrefix}}">Admin Home</a> </li>
     </ol>
   </nav>
         $[let topEntityListName = (topEntity|name|uncapitalize) + "List"]
@@ -99,7 +99,7 @@ $[file "resources/templates" filename "html"]
 	    ${topEntity.tagValue("home:description")}
     </p>
         $[if topEntity.hasTag("edit")]
-    <form th:if="${$}{canAdd${topEntity|name}}" th:action="@{/${adminUrlPrefix}/${topEntity|domain:APIPath|name}/add}" method="post">
+    <form th:if="${$}{canAdd${topEntity|name}}" th:action="@{${adminUrlPrefix}/${topEntity|domain:APIPath|name}/add}" method="post">
         <input type="submit" name="${topEntity.name}add" id="${topEntity.name}-add"
                class="btn btn-primary" value="New ${topEntity|title}" />
     </form>
@@ -113,34 +113,34 @@ $[file "resources/templates" filename "html"]
           <span class="page-link">Previous</span>
         </li>
         <li th:if="${$}{page>0}" class="page-item">
-          <a class="page-link" th:href="@{'/${adminUrlPrefix}/${topEntity|domain:APIPath|name}?page=' + ${$}{page-1}}">Previous</a>
+          <a class="page-link" th:href="@{'${adminUrlPrefix}/${topEntity|domain:APIPath|name}?page=' + ${$}{page-1}}">Previous</a>
         </li>
         <li th:if="${$}{page>2}" class="page-item">
-            <a class="page-link" th:href="@{'/${adminUrlPrefix}/${topEntity|domain:APIPath|name}?page=' + ${$}{page-3}}" th:text="${$}{page-2}">prev</a>
+            <a class="page-link" th:href="@{'${adminUrlPrefix}/${topEntity|domain:APIPath|name}?page=' + ${$}{page-3}}" th:text="${$}{page-2}">prev</a>
         </li>
         <li th:if="${$}{page>1}" class="page-item">
-            <a class="page-link" th:href="@{'/${adminUrlPrefix}/${topEntity|domain:APIPath|name}?page=' + ${$}{page-2}}" th:text="${$}{page-1}">prev</a>
+            <a class="page-link" th:href="@{'${adminUrlPrefix}/${topEntity|domain:APIPath|name}?page=' + ${$}{page-2}}" th:text="${$}{page-1}">prev</a>
         </li>
         <li th:if="${$}{page>0}" class="page-item">
-            <a class="page-link" th:href="@{'/${adminUrlPrefix}/${topEntity|domain:APIPath|name}?page=' + ${$}{page-1}}" th:text="${$}{page}">prev</a>
+            <a class="page-link" th:href="@{'${adminUrlPrefix}/${topEntity|domain:APIPath|name}?page=' + ${$}{page-1}}" th:text="${$}{page}">prev</a>
         </li>
         <li class="page-item active" aria-current="page">
           <span class="page-link" th:text="${$}{page+1}">page</span>
         </li>
         <li th:if="${$}{page<lastPage}" class="page-item">
-            <a class="page-link" th:href="@{'/${adminUrlPrefix}/${topEntity|domain:APIPath|name}?page=' + ${$}{page+1}}" th:text="${$}{page+2}">next</a>
+            <a class="page-link" th:href="@{'${adminUrlPrefix}/${topEntity|domain:APIPath|name}?page=' + ${$}{page+1}}" th:text="${$}{page+2}">next</a>
         </li>
         <li th:if="${$}{page<(lastPage-1)}" class="page-item">
-            <a class="page-link" th:href="@{'/${adminUrlPrefix}/${topEntity|domain:APIPath|name}?page=' + ${$}{page+2}}" th:text="${$}{page+3}">next</a>
+            <a class="page-link" th:href="@{'${adminUrlPrefix}/${topEntity|domain:APIPath|name}?page=' + ${$}{page+2}}" th:text="${$}{page+3}">next</a>
         </li>
         <li th:if="${$}{page<(lastPage-2)}" class="page-item">
-            <a class="page-link" th:href="@{'/${adminUrlPrefix}/${topEntity|domain:APIPath|name}?page=' + ${$}{page+3}}" th:text="${$}{page+4}">next</a>
+            <a class="page-link" th:href="@{'${adminUrlPrefix}/${topEntity|domain:APIPath|name}?page=' + ${$}{page+3}}" th:text="${$}{page+4}">next</a>
         </li>
         <li th:unless="${$}{page<lastPage}" class="page-item disabled">
           <span class="page-link">Next</span>
         </li>
         <li th:if="${$}{page<lastPage}" class="page-item">
-          <a class="page-link" th:href="@{'/${adminUrlPrefix}/${topEntity|domain:APIPath|name}?page=' + ${$}{page+1}}">Next</a>
+          <a class="page-link" th:href="@{'${adminUrlPrefix}/${topEntity|domain:APIPath|name}?page=' + ${$}{page+1}}">Next</a>
         </li>
       </ul>
     </nav>
@@ -191,7 +191,7 @@ $[file "resources/templates" filename "html"]
 				<td th:text="${$}{item.${relationship.name}.${(relationship|domain:AdminUI).tagValue("display:attribute")}}"></td>
             $[/if]
         $[/foreach]
-                <td><a class="btn btn-secondary active" role="button" data-width="100" data-width-unit="px" aria-pressed="true" th:href="@{'/${adminUrlPrefix}/${topEntity|domain:APIPath|name}/' + ${$}{item.id} + '/detail'}">Open</a></td>
+                <td><a class="btn btn-secondary active" role="button" data-width="100" data-width-unit="px" aria-pressed="true" th:href="@{'${adminUrlPrefix}/${topEntity|domain:APIPath|name}/' + ${$}{item.id} + '/detail'}">Open</a></td>
 			</tr>
 			</tbody>
 		</table>
@@ -221,8 +221,10 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.RequestMapping;
 
 @Controller
+@RequestMapping(value = "${adminUrlPrefix}")
 public class AdminHomeWebPageController {
 
     @Autowired
@@ -233,17 +235,17 @@ public class AdminHomeWebPageController {
 
 $[receive distinct serviceDeclarations]
 
-    @GetMapping(value = {"/${adminUrlPrefix}"})
+    @GetMapping(value = {""})
     public String home(Model model) throws ServiceException {
         ${userEntity|domain:Model|name} user = userDetailsService.findBy${usernameAttribute|domain:Model|name|capitalize}(securityService.findLoggedInUsername());
         model.addAttribute("loggedInUser", user);
-        return "admin_home";
+        return "admin/home";
     }
 
     $[call findRoleEnum()->(roleEnum: roleEnum, defaultEnumItem: defaultEnumItem)]
     $[foreach topEntity in (space|domain).entitiesTagged("home")]
         $[let hasPaging = topEntity.hasTag("paging:size")]
-    @GetMapping(value = {"/${adminUrlPrefix}/${topEntity|domain:APIPath|name}"})
+    @GetMapping(value = {"/${topEntity|domain:APIPath|name}"})
     public String ${topEntity.name|uncapitalize}Home(Model model$[if hasPaging], @Param("page") Long page$[/if]) throws ServiceException {
         ${userEntity|domain:Model|name} user = userDetailsService.findBy${usernameAttribute|domain:Model|name|capitalize}(securityService.findLoggedInUsername());
 $[receive distinct varDeclaration]
@@ -299,7 +301,7 @@ $[/send]
                     $[if hasPaging]
         model.addAttribute("page", page);
                     $[/if]
-        return "admin_${topEntity.name}_home";
+        return "admin/${topEntity.name}_home";
     }
     $[/foreach]
 }

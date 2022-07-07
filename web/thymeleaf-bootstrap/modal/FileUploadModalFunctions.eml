@@ -15,7 +15,7 @@ $[ function insertFileUploadModalHTML
 ]
         <div class="modal fade" id="assetUploadModal" tabindex="-1" role="dialog" aria-labelledby="assetUploadModalLabel" aria-hidden="true">
           <div class="modal-dialog modal-xl" role="document">
-            <form th:action="@{/${adminUrlPrefix}/${entity|domain:APIPath|name}/{id}/upload-file(id=${$}{${entityDtoClassName}.id})}" method="post" enctype="multipart/form-data">
+            <form th:action="@{${adminUrlPrefix}/${entity|domain:APIPath|name}/{id}/upload-file(id=${$}{${entityDtoClassName}.id})}" method="post" enctype="multipart/form-data">
 				<input id="asset-upload-field-ident" name="upload-field-ident" type="hidden"/>
                 <div class="modal-content">
                   <div class="modal-header">

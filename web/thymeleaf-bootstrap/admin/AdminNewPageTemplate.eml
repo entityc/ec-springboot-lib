@@ -8,16 +8,16 @@ $[import "security/SecurityFunctions"]
 
 $[let projectBaseApiPath = space.getMetadataValue("appBaseUrlPath")]
 $[if adminUrlPrefix == null || adminUrlPrefix == ""]
-    $[let adminUrlPrefix = "admin"]
+    $[let adminUrlPrefix = "/admin"]
 $[/if]
 
 $[foreach entity in space.entities]
     $[if entity.isImplicit || entity.isExtern || entity.isIncluded || entity.isTransient || entity.isSecondary]$[continue]$[/if]
     $[let domainEntity = entity|domain]
-    $[let filename = "admin_" + domainEntity.name + "_new"]
+    $[let filename = domainEntity.name + "_new"]
     $[let pageTitle = "New " + (domainEntity|title)]
     $[let entityDtoClassName = entity|domain:JSONDTO|name]
-    $[file "resources/templates" filename "html"]
+    $[file "resources/templates/admin" filename "html"]
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
@@ -34,7 +34,7 @@ $[foreach entity in space.entities]
 	<div class="container">
         $[let actionUrl = (entity|domain:APIPath|name) + "/create"]
         $[if entity.hasPrimaryParentRelationship]$[let actionUrl = actionUrl + "/{id}(id=${parentId})"]$[/if]
-        <form th:action="@{/${adminUrlPrefix}/${actionUrl}}" method="post">
+        <form th:action="@{${adminUrlPrefix}/${actionUrl}}" method="post">
             <table class="table">
             <tbody>
         $[call requiredEditableFields()->(relationships: editableRelationships, attributes: editableAttributes)]
@@ -172,7 +172,7 @@ $[/send]
             $[capture parentPathArg], @PathVariable("parent_id") ${parentTypeName} parentId$[/capture]
         $[/if]
 
-    @PostMapping(value = {"/${adminUrlPrefix}/${entity|domain:APIPath|name}/add${parentPath}"})
+    @PostMapping(value = {"${adminUrlPrefix}/${entity|domain:APIPath|name}/add${parentPath}"})
         $[call preAuthorizeEntity(accessType: "write", entity: entity)]
     public String add${domainEntity.name}(Model model${parentPathArg}) throws ServiceException {
         $[if hasParent]
@@ -198,14 +198,14 @@ $[/send]
          }
         $[/foreach]
 
-         return "admin_${entity|name}_new";
+         return "admin/${entity|name}_new";
     }
         $[if !space.hasDomain("Localization") || ((entity|domain:Localization).hasTag("content") || (entity|domain:Localization).hasTag("content:localized"))]
 $[send imports]
 import java.text.ParseException;
 import ${(space.domain("Utils")).namespace}.ResourceUtils;
 $[/send]
-    @PostMapping(value = {"/${adminUrlPrefix}/${entity|domain:APIPath|name}/create$[if hasParent]/{parentId}$[/if]"})
+    @PostMapping(value = {"${adminUrlPrefix}/${entity|domain:APIPath|name}/create$[if hasParent]/{parentId}$[/if]"})
             $[call preAuthorizeEntity(accessType: "write", entity: entity)]
     public ModelAndView create${domainEntity.name}(HttpServletRequest request$[if hasParent], @PathVariable("parentId") ${parentTypeName} parentId$[/if]) throws ServiceException, ParseException {
         ${entity|domain:Model|name} object = new ${entity|domain:Model|name}();
@@ -314,7 +314,7 @@ $[/send]
             $[let hasUUIDPk = entity.pkType.isUUIDType]
         request.setAttribute(
           View.RESPONSE_STATUS_ATTRIBUTE, HttpStatus.FOUND);
-        return new ModelAndView("redirect:/${adminUrlPrefix}/${entity|domain:APIPath|name}/" + object.getId()$[if hasUUIDPk].toString()$[/if] + "/detail");
+        return new ModelAndView("redirect:${adminUrlPrefix}/${entity|domain:APIPath|name}/" + object.getId()$[if hasUUIDPk].toString()$[/if] + "/detail");
     }
         $[/if]
     $[/foreach]

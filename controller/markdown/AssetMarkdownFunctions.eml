@@ -21,7 +21,7 @@ Note: This endpoint involves the the multipart file upload using a form - as is 
 
 |Method|Path|
 |:---:|:---|
-|POST|`/${(entity|domain:APIPath).domain.namespace|path}/${entity|domain:APIPath|name}/{id}/form/${assetPath}/{ext}`|
+|POST|`/${(entity|domain:APIPath).domain.tagValue("url:prefix:api")}/${entity|domain:APIPath|name}/{id}/form/${assetPath}/{ext}`|
 
 Where:
 
@@ -44,7 +44,7 @@ Note: This endpoint involves uploading the file as its raw binary self.
 
 |Method|Path|
 |:---:|:---|
-|POST|`/${(entity|domain:APIPath).domain.namespace|path}/${entity|domain:APIPath|name}/{id}/file/${assetPath}/{ext}`|
+|POST|`/${(entity|domain:APIPath).domain.tagValue("url:prefix:api")}/${entity|domain:APIPath|name}/{id}/file/${assetPath}/{ext}`|
 
 Where:
 

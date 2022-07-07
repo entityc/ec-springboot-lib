@@ -1,7 +1,7 @@
 $[language md]
 $[D summary "Generates documentation for the REST APIs of this microservice."]
 $[D main "This template generates documentation for the REST APIs of this microservice."]
-$[let apiUrlPrefix = (entity|domain:APIPath).domain.tagValue("url:prefix:api")]
+$[let apiUrlPrefix = (space|domain:APIPath).domain.tagValue("url:prefix:api")]
 $[import "controller/markdown/AssetMarkdownFunctions"]
 $[import "controller/markdown/CreateMarkdownFunctions"]
 $[import "controller/markdown/GetMarkdownFunctions"]

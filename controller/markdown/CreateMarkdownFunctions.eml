@@ -1,13 +1,15 @@
-$[language java]
-$[D summary "Functions that generate create (POST) endpoints."]
-$[D "This contains functions that generate create endpoint methods for a controller class."]
-$[import "release/ReleaseFunctions"]
+$[ language java ]
+$[ D summary "Functions that generate create (POST) endpoints." ]
+$[ D "This contains functions that generate create endpoint methods for a controller class." ]
+$[ import "release/ReleaseFunctions" ]
 
-$[function createMarkdown
-  D "Generates markdown documentation for the basic create endpoint." 
-  (entity
-   D "The entity corresponding to the create endpoint documentation to generate." 
-  )
+$[ function createMarkdown
+   D "Generates markdown documentation for the basic create endpoint." 
+   (entity
+    D "The entity corresponding to the create endpoint documentation to generate." ,
+    apiUrlPrefix
+    D "The start of all admin URLs." 
+   )
 ]
 ## Create ${entity|title}
 
@@ -15,24 +17,24 @@ $[function createMarkdown
 |:---:|:---|
 |POST|`${apiUrlPrefix}/${entity|domain:APIPath|name}`|
 
-    $[let createViewOrEntity = entity|domain:JSONDTO]
-    $[let attributeList = createViewOrEntity.attributes|sort]
-    $[let relationshipList = createViewOrEntity.relationships|sort]
-    $[if attributeList#count + relationshipList#count > 0]
+    $[ let createViewOrEntity = entity|domain:JSONDTO ]
+    $[ let attributeList = createViewOrEntity.attributes|sort ]
+    $[ let relationshipList = createViewOrEntity.relationships|sort ]
+    $[ if attributeList#count + relationshipList#count > 0 ]
 The body of the POST is JSON containing only the following fields:
 
 |Field|Description|
 |:---|:---|
-        $[foreach domainAttribute in attributeList]
-            $[if domainAttribute.attribute.isCreation || domainAttribute.attribute.isModification]$[continue]$[/if]
+        $[ foreach domainAttribute in attributeList ]
+            $[ if domainAttribute.attribute.isCreation || domainAttribute.attribute.isModification ]$[ continue ]$[/ if ]
 |`${domainAttribute.name}`|${domainAttribute.description}|
-        $[/foreach]
-        $[if relationshipList#count > 0]
-            $[foreach relationship in relationshipList]
-                $[if relationship.to.isOne && relationship.to.entity.hasPrimaryKey]
+        $[/ foreach ]
+        $[ if relationshipList#count > 0 ]
+            $[ foreach relationship in relationshipList ]
+                $[ if relationship.to.isOne && relationship.to.entity.hasPrimaryKey ]
 |`${relationship.name}.${relationship.to.entity.primaryKeyAttribute.name}`|Primary key of contextual `${relationship.to.entity.entity.name}` object.|
-                $[/if]
-            $[/foreach]
-        $[/if]
-    $[/if]
-$[/function]
+                $[/ if ]
+            $[/ foreach ]
+        $[/ if ]
+    $[/ if ]
+$[/ function ]

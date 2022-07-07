@@ -1,4 +1,5 @@
 $[import "web/thymeleaf-bootstrap/WebPageFunctions"]
+$[ let authUrlPrefix = ((space|domain:APIPath).domain.tagValue("url:prefix:auth")) ]
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
@@ -18,7 +19,7 @@ $[call commonBodyNavbar(backURL:null, title:"Sign Up", excludeLogout:true)]
             </div>
 
             <h1>Sign Up</h1>
-            <form th:action="@{/signup}" th:object="${$}{user}" method="post">
+            <form th:action="@{${authUrlPrefix}/signup}" th:object="${$}{user}" method="post">
 
                 <p class="error-message" th:if="${$}{#fields.hasGlobalErrors()}"
                    th:each="error : ${$}{#fields.errors('global')}" th:text="${$}{error}">Validation
@@ -99,7 +100,7 @@ $[/if]
                 </div>
                 <div class="form-group">
                     <button type="submit" class="btn btn-success">Sign Up</button>
-                    <span>Already signed up? <a th:href="@{/login}">Login here</a></span>
+                    <span>Already signed up? <a th:href="@{${authUrlPrefix}/login}">Login here</a></span>
                 </div>
             </form>
         </div>

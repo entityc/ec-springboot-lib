@@ -17,7 +17,7 @@ $[function insertEnumEditModalHTML
     $[let entityPrefix = entity|domain:APIPath|name|uncapitalize]
         <div class="modal fade" id="${attribute.type.name}_EditModal" tabindex="-1" role="dialog" aria-labelledby="${attribute.type.name}_EditModalLabel" aria-hidden="true">
           <div class="modal-dialog modal-sm" role="document">
-            <form th:action="@{/${adminUrlPrefix}/${entityPrefix}/{id}/update(id=${$}{${entityDtoClassName}.id})}" method="post">
+            <form th:action="@{${adminUrlPrefix}/${entityPrefix}/{id}/update(id=${$}{${entityDtoClassName}.id})}" method="post">
 				<input id="${attribute.name|dashes}-edit-field-ident" name="edit-field-ident" type="hidden"/>
                 <div class="modal-content">
                   <div class="modal-header">
@@ -95,7 +95,7 @@ $[function insertManyEnumEditModalHTML
     $[let entityPrefix = entity|domain:APIPath|name|uncapitalize]
         <div class="modal fade" id="${attribute.type.name}_Multi_EditModal" tabindex="-1" role="dialog" aria-labelledby="${attribute.type.name}_Multi_EditModalLabel" aria-hidden="true">
           <div class="modal-dialog modal-sm" role="document">
-            <form th:action="@{/${adminUrlPrefix}/${entity|domain:APIPath|name}/{id}/update(id=${$}{${entityDtoClassName}.id})}" method="post">
+            <form th:action="@{${adminUrlPrefix}/${entity|domain:APIPath|name}/{id}/update(id=${$}{${entityDtoClassName}.id})}" method="post">
 				<input id="${attribute.name|dashes}-edit-field-ident" name="edit-field-ident" type="hidden"/>
                 <div class="modal-content">
                   <div class="modal-header">

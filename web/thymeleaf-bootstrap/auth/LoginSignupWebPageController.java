@@ -1,8 +1,9 @@
 $[D summary, main "This Java source file with template code implements the controller class for login and signup."]
 $[D "Its endpoints will be used by login and signup HTML."]
-$[if adminUrlPrefix == null || adminUrlPrefix == ""]
-$[let adminUrlPrefix = "admin"]
-$[/if]
+
+$[ let adminUrlPrefix = ((space|domain:APIPath).domain.tagValue("url:prefix:admin")) ]
+$[ let authUrlPrefix = ((space|domain:APIPath).domain.tagValue("url:prefix:auth")) ]
+$[ let userUrlPrefix = ((space|domain:APIPath).domain.tagValue("url:prefix:user")) ]
 
 $[let useInviteFeature = false]
 $[import "web/thymeleaf-bootstrap/WebPageFunctions"]
@@ -92,7 +93,7 @@ $[/if]
 
     protected final Log logger = LogFactory.getLog(this.getClass());
 
-    @GetMapping(value = "/login")
+    @GetMapping(value = "${authUrlPrefix}/login")
     public String login(Model model, String error, String logout, HttpServletResponse res) {
         model.addAttribute("userNameFieldName", "${usernameFieldName|capitalize}");
         if (error != null)
@@ -108,11 +109,11 @@ $[/if]
         return "login";
     }
 
-    @PostMapping("/login")
+    @PostMapping("${authUrlPrefix}/login")
     public String login(@RequestParam String username, @RequestParam String password, HttpServletResponse res) {
 
         if (!userService.canLogin(username)) {
-            return "redirect:/login";
+            return "redirect:${authUrlPrefix}/login";
         }
         Authentication authentication = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(username, password));
@@ -132,7 +133,7 @@ $[/if]
     $[call canAccessAdminExpr(rolesArrayName:"roles") -> (rolesExpr:rolesExpr)]
         boolean canGoToAdminSide = ${rolesExpr};
 
-        return canGoToAdminSide ? "redirect:/${adminUrlPrefix}" : "redirect:/";
+        return canGoToAdminSide ? "redirect:${adminUrlPrefix}" : "redirect:${userUrlPrefix}";
     }
 
 $[if useInviteFeature]
@@ -141,12 +142,12 @@ $[if useInviteFeature]
         return new UserInviteAcceptDto();
     }
 
-    @GetMapping(value = "/invite_accept")
+    @GetMapping(value = "${authUrlPrefix}/invite_accept")
     public String inviteAccentEntry(Model model) {
         return "invite_accept";
     }
 
-    @PostMapping(value = "/invite_accept")
+    @PostMapping(value = "${authUrlPrefix}/invite_accept")
     public String acceptInvite(@ModelAttribute("user") @Valid UserInviteAcceptDto acceptDto,
                                       BindingResult result, HttpServletResponse res) throws ServiceException {
 
@@ -178,12 +179,12 @@ $[else]
         return new UserSignupDto();
     }
 
-    @GetMapping(value = "/signup")
+    @GetMapping(value = "${authUrlPrefix}/signup")
     public String signup(Model model) {
         return "signup";
     }
 
-    @PostMapping(value = "/signup")
+    @PostMapping(value = "${authUrlPrefix}/signup")
     public String registerUserAccount(@ModelAttribute("user") @Valid UserSignupDto userDto,
                                       BindingResult result, HttpServletResponse res) throws ServiceException {
 

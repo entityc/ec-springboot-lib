@@ -1,8 +1,4 @@
-$[let projectBaseApiPath = space.getMetadataValue("appBaseUrlPath")]
-$[let apiPathPrefix = ""]
-$[if projectBaseApiPath != null && projectBaseApiPath != ""]
-$[let apiPathPrefix = apiPathPrefix + "/" + projectBaseApiPath]
-$[/if]
+$[ let authUrlPrefix = ((space|domain:APIPath).domain.tagValue("url:prefix:auth")) ]
 package ${domain.namespace}.jwt;
 
 import java.io.IOException;
@@ -27,7 +23,7 @@ public class AuthEntryPointJwt implements AuthenticationEntryPoint {
                          AuthenticationException authException) throws IOException, ServletException {
         logger.error("Unauthorized error: {}", authException.getMessage());
 
-        response.sendRedirect("${apiPathPrefix}/login");
+        response.sendRedirect("${authUrlPrefix}/login");
     }
 
 }

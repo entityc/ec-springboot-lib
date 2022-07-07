@@ -96,7 +96,7 @@ $[*
 
 |Method|Path|
 |:---:|:---|
-|POST|`/${(entity|domain:APIPath).domain.namespace|path}/${entity|domain:APIPath|name}/{id}/form/${attribute|domain:APIPath|name}/{ext}`|
+|POST|`/${(entity|domain:APIPath).domain.tagValue("url:prefix:api")}/${entity|domain:APIPath|name}/{id}/form/${attribute|domain:APIPath|name}/{ext}`|
 
 Where:
 
@@ -115,7 +115,7 @@ $[*
 
 |Method|Path|
 |:---:|:---|
-|DELETE|`/${(entity|domain:APIPath).domain.namespace|path}/${entity|domain:APIPath|name}/{id}`|
+|DELETE|`/${(entity|domain:APIPath).domain.tagValue("url:prefix:api")}/${entity|domain:APIPath|name}/{id}`|
 
 Where:
 

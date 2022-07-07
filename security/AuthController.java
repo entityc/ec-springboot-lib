@@ -32,7 +32,8 @@ public class AuthController {
     @Autowired
     JwtUtils jwtUtils;
 
-    @PostMapping("/api/auth/login")
+$[ let apiUrlPrefix = ((space|domain:APIPath).domain.tagValue("url:prefix:api")) ]
+    @PostMapping("${apiUrlPrefix}/login")
     public ResponseEntity<?> authenticateUser(@Valid @RequestBody UserLoginDto loginRequest) {
 
         Authentication authentication = authenticationManager.authenticate(

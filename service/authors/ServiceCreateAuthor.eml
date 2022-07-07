@@ -74,7 +74,7 @@ $[/outlet]
                     $[foreach mmRel in manyToManyEntity.implicitRelationships]
                         $[if mmRel.to.entity.name != entity.name]
                             $[let destMMEntity = mmRel.to.entity]
-                            $[break];
+                            $[break]
                         $[/if]
                     $[/foreach]
                     $[let destModelName = destMMEntity|domain:Model|name]

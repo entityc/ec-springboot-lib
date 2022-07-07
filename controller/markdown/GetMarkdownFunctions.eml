@@ -11,7 +11,7 @@ $[function getByIdMarkdown
 
 |Method|Path|
 |:---:|:---|
-|GET|`/${(entity|domain:APIPath).domain.tagValue("url:prefix:api")}/${entity|domain:APIPath|name}/{id}`|
+|GET|`${apiUrlPrefix}/${entity|domain:APIPath|name}/{id}`|
 
 Where:
 
@@ -71,7 +71,7 @@ $[function getListByParentMarkdown
 
 |Method|Path|
 |:---:|:---|
-|GET|`/${(entity|domain:APIPath).domain.tagValue("url:prefix:api")}/${entity|domain:APIPath|name}?start={start}&limit={limit}`|
+|GET|`${apiUrlPrefix}/${entity|domain:APIPath|name}?start={start}&limit={limit}`|
 
 Where:
 

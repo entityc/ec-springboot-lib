@@ -71,7 +71,11 @@ $[else]
                         "${authUrlPrefix}/signup**",
 $[/if]
                         "${authUrlPrefix}/login**",
+$[if space.domain("Security").hasTag("api:auth:disable")]
+                        "${apiUrlPrefix}/**",
+$[else]
                         "${apiUrlPrefix}/login**",
+$[/if]
                         "${staticUrlPrefix}/js/**",
                         "${staticUrlPrefix}/css/**",
                         "${staticUrlPrefix}/img/**",

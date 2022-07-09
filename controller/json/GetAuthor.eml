@@ -116,7 +116,8 @@ $[/ outlet ]
     public ResponseEntity<List<${dtoClassName}>> get${modelName}ListBy${relationship.name|capitalize}(
         @PathVariable("id") ${relationship.to.entity.primaryKey.type|language} ${relationship.name}Id,
         @RequestParam(value = "start", required = false) Integer start,
-        @RequestParam(value = "limit", required = false) Integer limit) throws ServiceException {
+        @RequestParam(value = "limit", required = false) Integer limit)
+        throws ServiceException {
         final int queryStart = ResourceUtils.defaultTo(start, 0);
         final int queryLimit = ResourceUtils.defaultTo(limit, 10);
         List<${dtoClassName}> results = ${service}.get${entity|domain:JSONDTO|name|capitalize}ListBy${relationship.name|capitalize}(${relationship.name}Id, queryStart, queryLimit, true);

@@ -233,7 +233,7 @@ $[ function breadcrumbExpression
         $[ let expr = expr + " ${" + (dtoEntity|name|uncapitalize) + "." + (numberAttribute|name) + "}" ]
     $[/ if ]
     $[ if titleAttribute != null ]
-        $[ let expr = expr + (includeColon ? ": ":"") + "${" + (dtoEntity|name|uncapitalize) + "." + (titleAttribute|name) + titleAttributeField ]
+        $[ let expr = expr + (includeColon ? ": ":"") + "${" + (dtoEntity|name|uncapitalize) + "." + (titleAttribute|name) + titleAttributeField + "}" ]
     $[/ if ]
     $[ if expr == "" ]
         $[ let expr = entity|domain:AdminUI|title ]

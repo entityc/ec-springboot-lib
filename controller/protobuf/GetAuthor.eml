@@ -7,7 +7,7 @@ $[ author to org.entityc.springboot.controller.protobuf ]
     $[ author to outlet methods
        D "Adds get endpoints to the controller class for its entity."
     ]
-        $[ let protobufNamespace = (space.domain("ProtobufDTO")).namespace ]
+        $[ let protobufNamespace = (space|domain:ProtobufDTO).domain.namespace ]
         $[ capture fullProtobufClassName ]${module.name|capitalize}.${entity|domain:ProtobufDTO|name}$[/ capture ]
 $[ send imports ]
 import org.springframework.http.HttpHeaders;

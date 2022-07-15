@@ -11,7 +11,7 @@ $[ import "controller/protobuf/CreateAuthor" ]
 $[ import "controller/protobuf/UpdateAuthor" ]
 $[ import "controller/protobuf/GetAuthor" ]
 $[* import "controller/protobuf/AssetAuthor" *]
-$[* import "controller/protobuf/AssociationAuthor" *]
+$[ import "controller/protobuf/AssociationAuthor"]
 $[ import "util/AutoWired" ]
 $[ import "doc/SourceHeaders" ]
 

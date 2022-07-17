@@ -41,3 +41,14 @@ domain APIPath (${appName}) {
     T "url:prefix:admin" = "/${urlPrefix}/admin"
     T "url:prefix:user" = "/${urlPrefix}/user"
 }
+
+domain DTOMapper (${appName})
+{
+    entity User {
+        attributes {
+            encodedPassword {
+                T "exclude"
+            }
+        }
+    }
+}

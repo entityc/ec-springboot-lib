@@ -35,9 +35,9 @@ domain Repository (${appName})
 }
 
 domain APIPath (${appName}) {
-    T "url:prefix:static" = "/${apiPrefixNamespace}/static"
-    T "url:prefix:api" = "/${apiPrefixNamespace}/api"
-    T "url:prefix:auth" = "/${apiPrefixNamespace}/auth"
-    T "url:prefix:admin" = "/${apiPrefixNamespace}/admin"
-    T "url:prefix:user" = "/${apiPrefixNamespace}/user"
+    T "url:prefix:static" = "/${urlPrefix}/static"
+    T "url:prefix:api" = "/${urlPrefix}/api"
+    T "url:prefix:auth" = "/${urlPrefix}/auth"
+    T "url:prefix:admin" = "/${urlPrefix}/admin"
+    T "url:prefix:user" = "/${urlPrefix}/user"
 }

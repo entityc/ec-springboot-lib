@@ -35,6 +35,20 @@ domain Repository (${appName})
 }
 
 domain APIPath (${appName}) {
+    T "url:prefix:static" = "/${urlPrefix}/static"
+    T "url:prefix:api" = "/${urlPrefix}/api"
+    T "url:prefix:auth" = "/${urlPrefix}/auth"
+    T "url:prefix:admin" = "/${urlPrefix}/admin"
+    T "url:prefix:user" = "/${urlPrefix}/user"
+}
 
-    namespace ${apiPrefixNamespace}
+domain DTOMapper (${appName})
+{
+    entity User {
+        attributes {
+            encodedPassword {
+                T "exclude"
+            }
+        }
+    }
 }

@@ -1,1 +1,1 @@
-ec build src/ec/Space.edl src/ec/Configuration.edl
+ec build CodeGen src/ec/Space.edl src/ec/Configuration.edl

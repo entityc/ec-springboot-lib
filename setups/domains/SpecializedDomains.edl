@@ -35,6 +35,9 @@ domain Repository (${appName})
 }
 
 domain APIPath (${appName}) {
-
-    namespace ${apiPrefixNamespace}
+    T "url:prefix:static" = "/${apiPrefixNamespace}/static"
+    T "url:prefix:api" = "/${apiPrefixNamespace}/api"
+    T "url:prefix:auth" = "/${apiPrefixNamespace}/auth"
+    T "url:prefix:admin" = "/${apiPrefixNamespace}/admin"
+    T "url:prefix:user" = "/${apiPrefixNamespace}/user"
 }

@@ -24,9 +24,9 @@ $[/ if ]
 
 $[* API PREFIX NAMESPACE *]
 $[ let apiPrefixNamespace = #apiPrefixNamespace ]
-$[ prompt apiPrefixNamespace: string ]Enter optional API prefix as a namespace (e.g., my.app will add my/app to base API URL path): $[/ prompt ]
-$[ if !(apiPrefixNamespace|is:namespace) ]
-    $[ log fatal ]The API prefix must be a valid namespace (identifiers separated by periods).$[/ log ]
+$[ prompt apiPrefixNamespace: string ]Enter optional URL prefix for the application (e.g., my/app): $[/ prompt ]
+$[ if !(apiPrefixNamespace|is:path) ]
+    $[ log fatal ]The URL prefix must be a valid URL path (letters, numbers, '-' and '/').$[/ log ]
 $[/ if ]
 
 $[* APP BASE JAVA PACKAGE *]

@@ -4,9 +4,9 @@ $[ D "" ]
 $[ D "After this template runs, you will have a directory containing the necessary entity" ]
 $[ D "compiler input files to generate the application." ]
 
-$[ let repoTag = "v0.9.10" ]
+$[ let repoTag = "production" ]
 $[ let stdLibRepoName = "ec-std-lib" ]
-$[ let stdLibRepoTag = "v0.9.5" ]
+$[ let stdLibRepoTag = "v0.9.9" ]
 
 $[* -------------- PROMPTS -------------- *]
 $[ log ]$[/ log ]

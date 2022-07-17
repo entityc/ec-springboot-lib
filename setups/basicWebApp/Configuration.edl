@@ -71,8 +71,7 @@ $[let setupRepo = space.getRepository("SetupRepo")]
             output primary SourceMain
             config {
                 "appTitle" : "${appName|title}",
-                "appHomeMessage": "This is the admin portal for the ${appName|title} application.",
-                "adminUrlPrefix" : "admin"
+                "appHomeMessage": "This is the admin portal for the ${appName|title} application."
             }
         }
         template AuthPageTemplate in "web/thymeleaf-bootstrap/auth" {

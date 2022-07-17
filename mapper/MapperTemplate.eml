@@ -29,7 +29,7 @@ $[/ outlet ]
             $[ let dtoDomainEntity = entity|domain:JSONDTO ]
             $[ let modelDomainEntity = entity|domain:Model ]
             $[ let modelNamespace = (space.domain("Model")).namespace ]
-            $[ let mapperClassName = entity|domain:DTOMapper|name ];
+            $[ let mapperClassName = entity|domain:DTOMapper|name ]
             $[ file domain.namespace|path mapperClassName "java" ]
                 $[ call entityHeader(title: "This Mapper class is responsible for mapping between various representations of the following entity.") ]
 package ${domain.namespace};

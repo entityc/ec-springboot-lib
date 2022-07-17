@@ -40,7 +40,7 @@ Contains a set of functions that produce web page code that is in common with th
 | |References|
 |---|---|
 | **Tags** |`role` `user:principle` `headline:number` `user:created` `required` `content` `headline:title` `breadcrumb:title` `user:modified` `canAccess` `breadcrumb:number` `headline:prefix` `breadcrumb:prefix` |
-| **Domains** |`AdminUI` `Localization` `Security` |
+| **Domains** |`AdminUI` `APIPath` `Localization` `Security` |
 
 ### Functions
 
@@ -111,7 +111,7 @@ For a specified entity this function finds all editable attributes and one-to-ma
 #### Common Body Navbar
 
 ```
-commonBodyNavbar(backURL, title, excludeLogout, projectBaseApiPath)
+commonBodyNavbar(backURL, title, excludeLogout, space)
 ```
 
 Supplies code for the top navigation bar.
@@ -123,8 +123,29 @@ Supplies code for the top navigation bar.
 |`backURL`|The URL for the back button.|
 |`title`|The title to put on the navigation bar.|
 |`excludeLogout`|For screens where the user is logged out, setting this will exclude the entire user menu.|
-|`projectBaseApiPath`||
+|`space`||
 
+
+
+#### Attribute Text Expression
+
+```
+attributeTextExpression(type, variableName, fieldName) -> (textExpr)
+```
+
+##### Inputs
+
+|Name|Description|
+|---|---|
+|`type`||
+|`variableName`||
+|`fieldName`||
+
+##### Outputs
+
+|Name|Description|
+|---|---|
+|`textExpr`||
 
 
 #### Check If Attribute Is Editable
@@ -216,7 +237,7 @@ This generates a Thymeleaf expression used for constructing a breadcrumb item st
 #### Common Head
 
 ```
-commonHead(title)
+commonHead(title, space)
 ```
 
 Supplies code for the <head> section of the web page for meta and stylesheets.
@@ -226,6 +247,7 @@ Supplies code for the <head> section of the web page for meta and stylesheets.
 |Name|Description|
 |---|---|
 |`title`|The web page title.|
+|`space`|The space.|
 
 
 

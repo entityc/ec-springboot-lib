@@ -1,58 +1,58 @@
-$[domain AdminUI]
-$[D summary "This template generates the websites Admin Home page."]
-$[D "This template generates the websites Admin Home page. This page contains the entities that"]
-$[D "are at the top of the entity hierarchy. So for instance, for a Tutorial website it would be a"]
-$[D "list of tutorials (from some entity like Tutorial). Each object in the list would be a link to a"]
-$[D "web page that is specific for administering that object. The very top of this page contains a"]
-$[D "navigation bar that includes a pulldown menu that allows the user to logout."]
-$[D detail "Options for how it generates the admin home page are specified in the `AdminUI` domain with"]
-$[D detail "specific tags."]
-$[D detail "The following features are customizable:
+$[ domain AdminUI ]
+$[ D summary "This template generates the websites Admin Home page." ]
+$[ D "This template generates the websites Admin Home page. This page contains the entities that" ]
+$[ D "are at the top of the entity hierarchy. So for instance, for a Tutorial website it would be a" ]
+$[ D "list of tutorials (from some entity like Tutorial). Each object in the list would be a link to a" ]
+$[ D "web page that is specific for administering that object. The very top of this page contains a" ]
+$[ D "navigation bar that includes a pulldown menu that allows the user to logout." ]
+$[ D detail "Options for how it generates the admin home page are specified in the `AdminUI` domain with" ]
+$[ D detail "specific tags." ]
+$[ D detail "The following features are customizable:
 
 ### Define Top Level Entities
 
-In the `AdminUI` domain, just tag the entities you want to be included as top level entities with the tag `home`."]
-$[D detail "If you want the user to be able to add new objects of an entity, also tag the entity with the tag"]
-$[D detail "`edit`. This will include an \"Add\" button and associated functionilty for creating the"]
-$[D detail "object. When objects of the top level entities are displayed you can control which fields of"]
-$[D detail "the entity are included by tagging the fields with the tag `summary`."]
+In the `AdminUI` domain, just tag the entities you want to be included as top level entities with the tag `home`." ]
+$[ D detail "If you want the user to be able to add new objects of an entity, also tag the entity with the tag" ]
+$[ D detail "`edit`. This will include an \"Add\" button and associated functionilty for creating the" ]
+$[ D detail "object. When objects of the top level entities are displayed you can control which fields of" ]
+$[ D detail "the entity are included by tagging the fields with the tag `summary`." ]
 
-$[import "web/thymeleaf-bootstrap/WebPageFunctions"]
-$[import "security/SecurityFunctions"]
+$[ import "web/thymeleaf-bootstrap/WebPageFunctions" ]
+$[ import "security/SecurityFunctions" ]
 
-$[let projectBaseApiPath = space.getMetadataValue("appBaseUrlPath")]
-$[if adminUrlPrefix == null || adminUrlPrefix == ""]
-    $[let adminUrlPrefix = "admin"]
-$[/if]
+$[ let projectBaseApiPath = space.getMetadataValue("appBaseUrlPath") ]
+$[ if adminUrlPrefix == null || adminUrlPrefix == "" ]
+    $[ let adminUrlPrefix = "/admin" ]
+$[/ if ]
 
-$[publisher org.entityc.springboot.web.admin.home]
-$[file "resources/templates" "admin_home" "html"]
+$[ publisher org.entityc.springboot.web.admin.home ]
+    $[ file "resources/templates/admin" "home" "html" ]
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
-    $[call commonHead(title: appTitle)]
+        $[ call commonHead(title: appTitle) ]
     <script src="https://cdn.jsdelivr.net/npm/marked@4.0.0/marked.min.js"></script>
 </head>
 <body>
-    $[call commonBodyNavbar(backURL: null, title: appTitle)]
+        $[ call commonBodyNavbar(backURL: null, title: appTitle) ]
 <br>
 <br>
 <div class="container">
-        $[outlet homeMenuButtonArea]
+$[ outlet homeMenuButtonArea ]
 	<h2>${appTitle}</h2>
-        $[/outlet]
+$[/ outlet ]
 	<p>
 		${appHomeMessage}
 	</p>
 	<br/>
     <div class="container">
-    $[foreach topEntity in (space.domain("AdminUI")).declaredDomainEntities]
-        $[if !topEntity.hasTag("home")]$[continue]$[/if]
+        $[ foreach topEntity in (space.domain("AdminUI")).declaredDomainEntities ]
+            $[ if !topEntity.hasTag("home") ]$[ continue ]$[/ if ]
 		<div class="container py-2">
 			<div class="row gy-10 border bg-light">
 				<div class="col col-3">
 					<div class="py-3">
-						<a class="btn btn-primary" style="width: 100%" role="button" th:href="@{/${adminUrlPrefix}/${topEntity|domain:APIPath|name}}">${topEntity.name|title|plural}</a>
+						<a class="btn btn-primary" style="width: 100%" role="button" th:href="@{${adminUrlPrefix}/${topEntity|domain:APIPath|name}}">${topEntity.name|title|plural}</a>
 					</div>
 				</div>
 				<div class="col">
@@ -62,110 +62,110 @@ $[file "resources/templates" "admin_home" "html"]
 				</div>
 			</div>
 		</div>
-        $[/foreach]
+        $[/ foreach ]
     </div>
 </div>
 
-    $[call commonBodyScripts()]
+        $[ call commonBodyScripts() ]
 
 </body>
 </html>
-$[/file]
-    $[foreach topEntity in (space.domain("AdminUI")).declaredDomainEntities]
-        $[if !topEntity.hasTag("home")]$[continue]$[/if]
-    $[let filename = "admin_" + topEntity.name + "_home"]
-$[file "resources/templates" filename "html"]
+    $[/ file ]
+    $[ foreach topEntity in (space.domain("AdminUI")).declaredDomainEntities ]
+        $[ if !topEntity.hasTag("home") ]$[ continue ]$[/ if ]
+        $[ let filename = topEntity.name + "_home" ]
+        $[ file "resources/templates/admin" filename "html" ]
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
-    $[call commonHead(title: appTitle)]
+            $[ call commonHead(title: appTitle) ]
     <script src="https://cdn.jsdelivr.net/npm/marked@4.0.0/marked.min.js"></script>
 </head>
 <body>
-    $[call commonBodyNavbar(backURL: null, title: appTitle)]
+            $[ call commonBodyNavbar(backURL: null, title: appTitle) ]
 <br>
 <br>
 <div class="container">
   <nav aria-label="breadcrumb">
     <ol class="breadcrumb">
-      <li class="breadcrumb-item"> <a th:href="@{/${adminUrlPrefix}}">Admin Home</a> </li>
+      <li class="breadcrumb-item"> <a th:href="@{${adminUrlPrefix}}">Admin Home</a> </li>
     </ol>
   </nav>
-        $[let topEntityListName = (topEntity|name|uncapitalize) + "List"]
-        $[outlet entityHomeButtonArea]
+            $[ let topEntityListName = (topEntity|name|uncapitalize) + "List" ]
+$[ outlet entityHomeButtonArea ]
     <h3>${topEntity|title|plural}</h3>
-        $[/outlet]
+$[/ outlet ]
     <p>
 	    ${topEntity.tagValue("home:description")}
     </p>
-        $[if topEntity.hasTag("edit")]
-    <form th:if="${$}{canAdd${topEntity|name}}" th:action="@{/${adminUrlPrefix}/${topEntity|domain:APIPath|name}/add}" method="post">
+            $[ if topEntity.hasTag("edit") ]
+    <form th:if="${$}{canAdd${topEntity|name}}" th:action="@{${adminUrlPrefix}/${topEntity|domain:APIPath|name}/add}" method="post">
         <input type="submit" name="${topEntity.name}add" id="${topEntity.name}-add"
                class="btn btn-primary" value="New ${topEntity|title}" />
     </form>
-        $[/if]
+            $[/ if ]
 	<div class="container" th:unless="${$}{#lists.isEmpty(${topEntityListName})}">
-        $[if topEntity.hasTag("paging:size")]
-        $[let pageSize = topEntity.tagValue("paging:size")]
+            $[ if topEntity.hasTag("paging:size") ]
+                $[ let pageSize = topEntity.tagValue("paging:size") ]
     <nav aria-label="...">
       <ul th:unless="${$}{lastPage==0}" class="pagination justify-content-end">
         <li th:unless="${$}{page>0}" class="page-item disabled">
           <span class="page-link">Previous</span>
         </li>
         <li th:if="${$}{page>0}" class="page-item">
-          <a class="page-link" th:href="@{'/${adminUrlPrefix}/${topEntity|domain:APIPath|name}?page=' + ${$}{page-1}}">Previous</a>
+          <a class="page-link" th:href="@{'${adminUrlPrefix}/${topEntity|domain:APIPath|name}?page=' + ${$}{page-1}}">Previous</a>
         </li>
         <li th:if="${$}{page>2}" class="page-item">
-            <a class="page-link" th:href="@{'/${adminUrlPrefix}/${topEntity|domain:APIPath|name}?page=' + ${$}{page-3}}" th:text="${$}{page-2}">prev</a>
+            <a class="page-link" th:href="@{'${adminUrlPrefix}/${topEntity|domain:APIPath|name}?page=' + ${$}{page-3}}" th:text="${$}{page-2}">prev</a>
         </li>
         <li th:if="${$}{page>1}" class="page-item">
-            <a class="page-link" th:href="@{'/${adminUrlPrefix}/${topEntity|domain:APIPath|name}?page=' + ${$}{page-2}}" th:text="${$}{page-1}">prev</a>
+            <a class="page-link" th:href="@{'${adminUrlPrefix}/${topEntity|domain:APIPath|name}?page=' + ${$}{page-2}}" th:text="${$}{page-1}">prev</a>
         </li>
         <li th:if="${$}{page>0}" class="page-item">
-            <a class="page-link" th:href="@{'/${adminUrlPrefix}/${topEntity|domain:APIPath|name}?page=' + ${$}{page-1}}" th:text="${$}{page}">prev</a>
+            <a class="page-link" th:href="@{'${adminUrlPrefix}/${topEntity|domain:APIPath|name}?page=' + ${$}{page-1}}" th:text="${$}{page}">prev</a>
         </li>
         <li class="page-item active" aria-current="page">
           <span class="page-link" th:text="${$}{page+1}">page</span>
         </li>
         <li th:if="${$}{page<lastPage}" class="page-item">
-            <a class="page-link" th:href="@{'/${adminUrlPrefix}/${topEntity|domain:APIPath|name}?page=' + ${$}{page+1}}" th:text="${$}{page+2}">next</a>
+            <a class="page-link" th:href="@{'${adminUrlPrefix}/${topEntity|domain:APIPath|name}?page=' + ${$}{page+1}}" th:text="${$}{page+2}">next</a>
         </li>
         <li th:if="${$}{page<(lastPage-1)}" class="page-item">
-            <a class="page-link" th:href="@{'/${adminUrlPrefix}/${topEntity|domain:APIPath|name}?page=' + ${$}{page+2}}" th:text="${$}{page+3}">next</a>
+            <a class="page-link" th:href="@{'${adminUrlPrefix}/${topEntity|domain:APIPath|name}?page=' + ${$}{page+2}}" th:text="${$}{page+3}">next</a>
         </li>
         <li th:if="${$}{page<(lastPage-2)}" class="page-item">
-            <a class="page-link" th:href="@{'/${adminUrlPrefix}/${topEntity|domain:APIPath|name}?page=' + ${$}{page+3}}" th:text="${$}{page+4}">next</a>
+            <a class="page-link" th:href="@{'${adminUrlPrefix}/${topEntity|domain:APIPath|name}?page=' + ${$}{page+3}}" th:text="${$}{page+4}">next</a>
         </li>
         <li th:unless="${$}{page<lastPage}" class="page-item disabled">
           <span class="page-link">Next</span>
         </li>
         <li th:if="${$}{page<lastPage}" class="page-item">
-          <a class="page-link" th:href="@{'/${adminUrlPrefix}/${topEntity|domain:APIPath|name}?page=' + ${$}{page+1}}">Next</a>
+          <a class="page-link" th:href="@{'${adminUrlPrefix}/${topEntity|domain:APIPath|name}?page=' + ${$}{page+1}}">Next</a>
         </li>
       </ul>
     </nav>
-        $[/if]
+            $[/ if ]
 		<table class="table table-striped">
 		<thead>
 		<tr>
-        $[foreach attribute in topEntity.declaredDomainAttributes]
-            $[if attribute.hasTag("summary")]
+            $[ foreach attribute in topEntity.declaredDomainAttributes ]
+                $[ if attribute.hasTag("summary") ]
 			<th th:text="#{${topEntity|domain:StaticLocalization|name}.${attribute|domain:StaticLocalization|name}}" scope="col" style="width:auto">${attribute|title}</th>
-            $[/if]
-        $[/foreach]
-        $[foreach relationship in topEntity.declaredDomainRelationships]
-            $[if relationship.hasTag("summary")]
+                $[/ if ]
+            $[/ foreach ]
+            $[ foreach relationship in topEntity.declaredDomainRelationships ]
+                $[ if relationship.hasTag("summary") ]
 			<th th:text="#{${topEntity|domain:StaticLocalization|name}.${relationship|domain:StaticLocalization|name}}" scope="col" style="width:auto">${relationship|title}</th>
-            $[/if]
-        $[/foreach]
+                $[/ if ]
+            $[/ foreach ]
             <th th:text="Action" scope="col" style="width:1%">Action</th>
 		</tr>
 		</thead>
 			<tbody>
 			<tr th:each="item : ${$}{${topEntityListName}}">
-        $[foreach attribute in topEntity.declaredDomainAttributes]
-            $[if attribute.hasTag("summary")]
-                $[if attribute.hasTag("markdown")]
+            $[ foreach domainAttribute in topEntity.declaredDomainAttributes ]
+                $[ if domainAttribute.hasTag("summary") ]
+                    $[ if domainAttribute.hasTag("markdown") ]
 				<td>
 					<input type="hidden" th:id="${$}{item.id + '-hidden'}" th:value="${$}{item.${attribute.name}}"/>
 					<div th:id="${$}{item.id + '-value'}" class="markdown-body"/>
@@ -176,42 +176,42 @@ $[file "resources/templates" filename "html"]
        /*]]>*/
               </script>
 				</td>
-                $[else]
-                $[switch attribute.type]
-                $[case date]
-				<td th:text="${$}{#dates.format(item.${attribute.name}, 'dd-MMM-yyyy')}"$[if attribute#first] scope="row"$[/if]></td>
-                $[default]
-				<td th:text="${$}{item.${attribute.name}}"$[if attribute#first] scope="row"$[/if]></td>
-				$[/switch]
-                $[/if]
-            $[/if]
-        $[/foreach]
-        $[foreach relationship in topEntity.declaredDomainRelationships]
-            $[if relationship.hasTag("summary")]
+                    $[ else ]
+                        $[ switch domainAttribute.type ]
+                            $[ case date ]
+				<td th:text="${$}{#dates.format(item.${domainAttribute.name}, 'dd-MMM-yyyy')}"$[ if domainAttribute#first ] scope="row"$[/ if ]></td>
+                            $[ default ]
+				<td th:text="${$}{item.${domainAttribute.name}}"$[ if domainAttribute#first ] scope="row"$[/ if ]></td>
+                        $[/ switch ]
+                    $[/ if ]
+                $[/ if ]
+            $[/ foreach ]
+            $[ foreach relationship in topEntity.declaredDomainRelationships ]
+                $[ if relationship.hasTag("summary") ]
 				<td th:text="${$}{item.${relationship.name}.${(relationship|domain:AdminUI).tagValue("display:attribute")}}"></td>
-            $[/if]
-        $[/foreach]
-                <td><a class="btn btn-secondary active" role="button" data-width="100" data-width-unit="px" aria-pressed="true" th:href="@{'/${adminUrlPrefix}/${topEntity|domain:APIPath|name}/' + ${$}{item.id} + '/detail'}">Open</a></td>
+                $[/ if ]
+            $[/ foreach ]
+                <td><a class="btn btn-secondary active" role="button" data-width="100" data-width-unit="px" aria-pressed="true" th:href="@{'${adminUrlPrefix}/${topEntity|domain:APIPath|name}/' + ${$}{item.id} + '/detail'}">Open</a></td>
 			</tr>
 			</tbody>
 		</table>
 </div>
 
-    $[call commonBodyScripts()]
+            $[ call commonBodyScripts() ]
 
 </body>
 </html>
-$[/file]
-$[/foreach]
-$[/publisher]
-$[capture filedir]java/${domain.namespace|path}$[/capture]
-$[call findUserEntity()->(userEntity: userEntity, usernameAttribute: usernameAttribute)]
-$[file filedir "AdminHomeWebPageController" "java"]
+        $[/ file ]
+    $[/ foreach ]
+$[/ publisher ]
+$[ capture filedir ]java/${domain.namespace|path}$[/ capture ]
+$[ call findUserEntity()->(userEntity: userEntity, usernameAttribute: usernameAttribute) ]
+$[ file filedir "AdminHomeWebPageController" "java" ]
 package ${domain.namespace};
 
-$[receive distinct imports]
-    $[let securityNamespace = (space.domain("Security")).namespace]
-    $[let exceptionNamespace = (space.domain("Exception")).namespace]
+$[ receive distinct imports ]
+    $[ let securityNamespace = (space.domain("Security")).namespace ]
+    $[ let exceptionNamespace = (space.domain("Exception")).namespace ]
 import ${exceptionNamespace}.ServiceException;
 import ${userEntity|domain:Model|fullname};
 import ${securityNamespace}.PersistentUserDetailsService;
@@ -221,8 +221,10 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.RequestMapping;
 
 @Controller
+@RequestMapping(value = "${adminUrlPrefix}")
 public class AdminHomeWebPageController {
 
     @Autowired
@@ -231,76 +233,76 @@ public class AdminHomeWebPageController {
     @Autowired
     private PersistentUserDetailsService userDetailsService;
 
-$[receive distinct serviceDeclarations]
+$[ receive distinct serviceDeclarations ]
 
-    @GetMapping(value = {"/${adminUrlPrefix}"})
+    @GetMapping(value = {""})
     public String home(Model model) throws ServiceException {
         ${userEntity|domain:Model|name} user = userDetailsService.findBy${usernameAttribute|domain:Model|name|capitalize}(securityService.findLoggedInUsername());
         model.addAttribute("loggedInUser", user);
-        return "admin_home";
+        return "admin/home";
     }
 
-    $[call findRoleEnum()->(roleEnum: roleEnum, defaultEnumItem: defaultEnumItem)]
-    $[foreach topEntity in (space|domain).entitiesTagged("home")]
-        $[let hasPaging = topEntity.hasTag("paging:size")]
-    @GetMapping(value = {"/${adminUrlPrefix}/${topEntity|domain:APIPath|name}"})
-    public String ${topEntity.name|uncapitalize}Home(Model model$[if hasPaging], @Param("page") Long page$[/if]) throws ServiceException {
+    $[ call findRoleEnum()->(roleEnum: roleEnum, defaultEnumItem: defaultEnumItem) ]
+    $[ foreach topEntity in (space|domain).entitiesTagged("home") ]
+        $[ let hasPaging = topEntity.hasTag("paging:size") ]
+    @GetMapping(value = {"/${topEntity|domain:APIPath|name}"})
+    public String ${topEntity.name|uncapitalize}Home(Model model$[ if hasPaging ], @Param("page") Long page$[/ if ]) throws ServiceException {
         ${userEntity|domain:Model|name} user = userDetailsService.findBy${usernameAttribute|domain:Model|name|capitalize}(securityService.findLoggedInUsername());
-$[receive distinct varDeclaration]
-        $[let topEntityListName = (topEntity|name|uncapitalize) + "List"]
-        $[let serviceClassName = topEntity|domain:Service|name]
-$[send imports]
+$[ receive distinct varDeclaration ]
+        $[ let topEntityListName = (topEntity|name|uncapitalize) + "List" ]
+        $[ let serviceClassName = topEntity|domain:Service|name ]
+$[ send imports ]
 import ${topEntity|domain:Service|fullname};
 import org.springframework.data.repository.query.Param;
-$[/send]
-$[send serviceDeclarations]
+$[/ send ]
+$[ send serviceDeclarations ]
     @Autowired private ${serviceClassName} ${serviceClassName|uncapitalize};
-$[/send]
-        $[let pageArgs = "0, 10000"]
-        $[ if hasPaging ]$[let pageSize = topEntity.tagValue("paging:size")]$[capture pageArgs]page * ${pageSize}, ${pageSize}$[/capture]$[/if]
-        $[if hasPaging]
+$[/ send ]
+        $[ let pageArgs = "0, 10000" ]
+        $[ if hasPaging ]$[ let pageSize = topEntity.tagValue("paging:size") ]$[ capture pageArgs ]page * ${pageSize}, ${pageSize}$[/ capture ]$[/ if ]
+        $[ if hasPaging ]
         if (page == null) {
             page = 0L;
         }
-        $[/if]
+        $[/ if ]
         long totalItemCount = ${serviceClassName|uncapitalize}.get${topEntity|domain:Model|name}Count();
-        $[let objectLevelAccess = (topEntity|domain:Security).hasTag("access:object:level")]
-        $[if objectLevelAccess]
+        $[ let objectLevelAccess = (topEntity|domain:Security).hasTag("access:object:level") ]
+        $[ if objectLevelAccess ]
         model.addAttribute("${topEntityListName}", ${serviceClassName|uncapitalize}.get${topEntity|domain:JSONDTO|name}ListFor${userEntity|domain:Model|name}(${pageArgs}, true));
-            $[if hasPaging]
+            $[ if hasPaging ]
         model.addAttribute("${topEntity|name|uncapitalize}Count", ${serviceClassName|uncapitalize}.get${topEntity|domain:Model|name}Count());
         model.addAttribute("lastPage", (totalItemCount-1) / ${pageSize});
-            $[/if]
-        $[else]
-            $[let userEntity = (space|domain:Security).entityTagged("user")]
-            $[if userEntity != null]
-                $[let rolesAttribute = userEntity.attributeOfTypeTagged("role")]
-$[send varDeclaration]
+            $[/ if ]
+        $[ else ]
+            $[ let userEntity = (space|domain:Security).entityTagged("user") ]
+            $[ if userEntity != null ]
+                $[ let rolesAttribute = userEntity.attributeOfTypeTagged("role") ]
+$[ send varDeclaration ]
         Set<${roleEnum|domain:Model|name}> roles = user.get${rolesAttribute|domain:Model|name|capitalize}();
-$[/send]
-$[send imports]
+$[/ send ]
+$[ send imports ]
 import java.util.Set;
 import ${roleEnum|domain:Model|fullname};
-$[/send]
-                $[call rolesContains(accessType: "read", rolesArrayName: "roles", entity: topEntity)->(hasRoles: hasRoles, rolesExpr: rolesExpr)]
-                $[if hasRoles]
+$[/ send ]
+                $[ call rolesContains(accessType: "read", rolesArrayName: "roles", entity: topEntity)->(hasRoles: hasRoles, rolesExpr: rolesExpr) ]
+                $[ if hasRoles ]
         if (${rolesExpr}) {
             model.addAttribute("${topEntityListName}", ${serviceClassName|uncapitalize}.get${topEntity|domain:JSONDTO|name}List(${pageArgs}, true));
-                    $[if hasPaging]
+                    $[ if hasPaging ]
             model.addAttribute("${topEntity|name|uncapitalize}Count", totalItemCount);
             model.addAttribute("lastPage", (totalItemCount-1) / ${pageSize});
-                    $[/if]
+                    $[/ if ]
         }
-                $[/if]
-            $[/if]
-        $[/if]
+                $[/ if ]
+            $[/ if ]
+        $[/ if ]
         model.addAttribute("canAdd${topEntity|name}", ${serviceClassName|uncapitalize}.canCreate());
         model.addAttribute("loggedInUser", user);
-                    $[if hasPaging]
+        $[ if hasPaging ]
         model.addAttribute("page", page);
-                    $[/if]
-        return "admin_${topEntity.name}_home";
+        $[/ if ]
+        return "admin/${topEntity.name}_home";
     }
-    $[/foreach]
+    $[/ foreach ]
 }
-$[/file]
+$[/ file ]

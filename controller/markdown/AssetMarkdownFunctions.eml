@@ -1,19 +1,25 @@
-$[D "Functions that generate markdown documentation about endpoints used for uploading"]
-$[D "digital assets."]
+$[ D "Functions that generate markdown documentation about endpoints used for uploading" ]
+$[ D "digital assets." ]
 
-$[function uploadMarkdown
-  (entity D "Generates markdown documentation for this entity.",
-   collectionAttribute D "The assetup upload collection attribute if it is for a collection..",
-   attribute D "The attribute associated with the asset.",
-   role D "The role that is required for uploading."
-  )]
-    $[if collectionAttribute == null]
-        $[capture assetPath]${attribute|domain:APIPath|name}$[/capture]
+$[ function uploadMarkdown
+   (entity
+    D "Generates markdown documentation for this entity." ,
+    collectionAttribute
+    D "The assetup upload collection attribute if it is for a collection.." ,
+    attribute
+    D "The attribute associated with the asset." ,
+    role
+    D "The role that is required for uploading." ,
+    apiUrlPrefix
+    D "The start of all admin URLs." 
+   ) ]
+    $[ if collectionAttribute == null ]
+        $[ capture assetPath ]${attribute|domain:APIPath|name}$[/ capture ]
 ## Upload ${entity|title} - ${attribute|title} - Multipart Form
-    $[else]
-        $[capture assetPath]${collectionAttribute|domain:APIPath|name}/${attribute|domain:APIPath|name}$[/capture]
+    $[ else ]
+        $[ capture assetPath ]${collectionAttribute|domain:APIPath|name}/${attribute|domain:APIPath|name}$[/ capture ]
 ## Upload ${entity|title} - ${collectionAttribute|title} - ${attribute|title} - Multipart Form
-    $[/if]
+    $[/ if ]
 
 ${attribute.description}
 
@@ -21,7 +27,7 @@ Note: This endpoint involves the the multipart file upload using a form - as is 
 
 |Method|Path|
 |:---:|:---|
-|POST|`/${(entity|domain:APIPath).domain.namespace|path}/${entity|domain:APIPath|name}/{id}/form/${assetPath}/{ext}`|
+|POST|`${apiUrlPrefix}/${entity|domain:APIPath|name}/{id}/form/${assetPath}/{ext}`|
 
 Where:
 
@@ -32,11 +38,11 @@ Where:
 
 The contents of the POST is the multipart form.
 
-    $[if collectionAttribute == null]
+    $[ if collectionAttribute == null ]
 ## Upload ${entity|title} - ${attribute|title} - Raw file bytes
-    $[else]
+    $[ else ]
 ## Upload ${entity|title} - ${collectionAttribute|title} - ${attribute|title} - Raw file bytes
-    $[/if]
+    $[/ if ]
 
 ${attribute.description}
 
@@ -44,7 +50,7 @@ Note: This endpoint involves uploading the file as its raw binary self.
 
 |Method|Path|
 |:---:|:---|
-|POST|`/${(entity|domain:APIPath).domain.namespace|path}/${entity|domain:APIPath|name}/{id}/file/${assetPath}/{ext}`|
+|POST|`${apiUrlPrefix}/${entity|domain:APIPath|name}/{id}/file/${assetPath}/{ext}`|
 
 Where:
 
@@ -55,4 +61,4 @@ Where:
 
 The contents of the POST is the file itself.
 
-$[/function]
+$[/ function ]

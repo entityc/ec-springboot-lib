@@ -3,21 +3,24 @@ $[ D summary, main "types of pages." ]
 $[ function commonHead
    D "Supplies code for the <head> section of the web page for meta and stylesheets." 
    (title
-    D "The web page title." 
+    D "The web page title." ,
+    space
+    D "The space." 
    )
 ]
+    $[ let staticUrlPrefix = (space|domain:APIPath).domain.tagValue("url:prefix:static") ]
     <meta charset="utf-8" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
 
     <link rel="stylesheet" type="text/css"
-          th:href="@{/webjars/bootstrap/5.0.1/css/bootstrap.min.css}" />
+          th:href="@{${staticUrlPrefix}/webjars/bootstrap/5.0.1/css/bootstrap.min.css}" />
     <script type="text/javascript"
-            th:src="@{/webjars/jquery/3.6.0/jquery.min.js/}"></script>
+            th:src="@{${staticUrlPrefix}/webjars/jquery/3.6.0/jquery.min.js/}"></script>
     <script type="text/javascript"
-            th:src="@{/webjars/bootstrap/5.0.1/js/bootstrap.min.js}"></script>
+            th:src="@{${staticUrlPrefix}/webjars/bootstrap/5.0.1/js/bootstrap.min.js}"></script>
     <script type="text/javascript"
-            th:src="@{/js/restore-scroll-point.js}"></script>
+            th:src="@{${staticUrlPrefix}/js/restore-scroll-point.js}"></script>
 
     <title>${title}</title>
 $[/ function ]
@@ -35,9 +38,10 @@ $[ function commonBodyNavbar
     D "The title to put on the navigation bar." ,
     excludeLogout
     D "For screens where the user is logged out, setting this will exclude the entire user menu." ,
-    projectBaseApiPath
+    space
    )
 ]
+    $[ let userUrlPrefix = (space|domain:APIPath).domain.tagValue("url:prefix:user") ]
 <!-- Navigation Bar -->
 <nav class="navbar navbar-expand-md navbar-dark bg-dark">
 	<div class="container-fluid">
@@ -51,7 +55,7 @@ $[ function commonBodyNavbar
 			</ul>
 		</div>
 		<div class="mx-auto order-0">
-			<a class="navbar-brand mx-auto" th:href="@{/}">${title}</a>
+			<a class="navbar-brand mx-auto" th:href="@{${userUrlPrefix}}">${title}</a>
 			<button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".dual-collapse2">
 				<span class="navbar-toggler-icon"></span>
 			</button>
@@ -66,7 +70,7 @@ $[ function commonBodyNavbar
 						<li>
 							<hr class="dropdown-divider">
 						</li>
-						<li><a class="dropdown-item" th:href="@{/logout}">Logout</a></li>
+						<li><a class="dropdown-item" th:href="@{${authUrlPrefix}/logout}">Logout</a></li>
 					</ul>
 				</li>
 			</ul>
@@ -144,11 +148,11 @@ $[ function requiredEditableFields
         $[/ if ]
     $[/ foreach ]
     $[ foreach relationship in entity.relationships ]
-        $[ if (!relationship.isOptional || (relationship|domain:AdminUI).hasTag("required")) && relationship.to.isOne &&
-            !(relationship|domain:Security).hasTag("user:principle") &&
-            !(relationship|domain:Security).hasTag("user:created") &&
-            !(relationship|domain:Security).hasTag("user:modified") &&
-            !relationship.isPrimaryParent ]
+        $[ if (!relationship.isOptional || (relationship|domain:AdminUI).hasTag("required")) && relationship.to.isOne && 
+!(relationship|domain:Security).hasTag("user:principle") && 
+!(relationship|domain:Security).hasTag("user:created") && 
+!(relationship|domain:Security).hasTag("user:modified") && 
+!relationship.isPrimaryParent ]
 $[* skip ones that are for localization *]
             $[ let forDynamicLocalization = entity.space.hasDomain("Localization") && (entity|domain:Localization).hasAttributeTagged("content") ]
             $[ if !forDynamicLocalization ]
@@ -221,7 +225,20 @@ $[ function breadcrumbExpression
     $[ let titleAttributeField = "" ]
     $[ if titleAttribute.type.isEnumType ]$[ let titleAttributeField = ".title" ]$[/ if ]
     $[ let includeColon = entityAsHeader || numberAttribute != null ]
-    $[ capture thExpression ]|$[ if entityAsHeader ]${entity|domain:AdminUI|title}$[/ if ]$[ if numberAttribute != null ] ${$}{${dtoEntity|name|uncapitalize}.${numberAttribute|name}}$[/ if ]$[ if titleAttribute != null ]${includeColon ? ": ":""}${$}{${dtoEntity|name|uncapitalize}.${titleAttribute|name}${titleAttributeField}}$[/ if ]|$[/ capture ]
+    $[ let expr = "" ]
+    $[ if entityAsHeader ]
+        $[ let expr = expr + (entity|domain:AdminUI|title) ]
+    $[/ if ]
+    $[ if numberAttribute != null ]
+        $[ let expr = expr + " ${" + (dtoEntity|name|uncapitalize) + "." + (numberAttribute|name) + "}" ]
+    $[/ if ]
+    $[ if titleAttribute != null ]
+        $[ let expr = expr + (includeColon ? ": ":"") + "${" + (dtoEntity|name|uncapitalize) + "." + (titleAttribute|name) + titleAttributeField + "}" ]
+    $[/ if ]
+    $[ if expr == "" ]
+        $[ let expr = entity|domain:AdminUI|title ]
+    $[/ if ]
+    $[ capture thExpression ]|${expr}|$[/ capture ]
 $[/ function ]
 $[ function canAccessAdminExpr
    (rolesArrayName,

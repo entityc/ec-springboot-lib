@@ -32,7 +32,7 @@ $[* The first author simply sets the hasLockAttribute for all the other authors 
        D "phase=initial)."
     ]
         $[ let hasLockAttribute = entity.hasAttributeTagged("release:lock") ]
-        $[ let dtoNameInMethod = entity|domain:JSONDTO|name|capitalize ];
+        $[ let dtoNameInMethod = entity|domain:JSONDTO|name|capitalize ]
     $[/ author ]
 $[* Here we add the "lockedOnly" parameter to the endpoint. *]
     $[ author to getList outlet parameters ]

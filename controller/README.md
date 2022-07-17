@@ -32,6 +32,7 @@ This template is responsible for generating the protobuf-based Controller classe
 
 | Name | Description |
 |---|---|
+| [`AssociationAuthor`](json) | Contains an author used to generate code related to creating associations between objects. |
 | [`AutoWired`](../util) | Helps to generate constructor based @Autowired code. |
 | [`CreateAuthor`](json) | This contains an author that generates create endpoint methods for a controller class based on protobuf requests and responses. |
 | [`GetAuthor`](json) | This contains an author that generates various get endpoint methods for a controller class based on protobuf requests and responses. |

@@ -40,7 +40,7 @@ This contains functions that generate create endpoint methods for a controller c
 #### Create Markdown
 
 ```
-createMarkdown(entity)
+createMarkdown(entity, apiUrlPrefix)
 ```
 
 Generates markdown documentation for the basic create endpoint.
@@ -50,6 +50,7 @@ Generates markdown documentation for the basic create endpoint.
 |Name|Description|
 |---|---|
 |`entity`|The entity corresponding to the create endpoint documentation to generate.|
+|`apiUrlPrefix`|The start of all admin URLs.|
 
 
 
@@ -67,7 +68,7 @@ Functions that generate markdown documentation about GET endpoints.
 #### Get List by Parent Markdown
 
 ```
-getListByParentMarkdown(entity)
+getListByParentMarkdown(entity, apiUrlPrefix)
 ```
 
 Generates markdown documentation for the get list by parent endpoint.
@@ -77,13 +78,14 @@ Generates markdown documentation for the get list by parent endpoint.
 |Name|Description|
 |---|---|
 |`entity`|The entity corresponding to the get endpoint documentation to generate.|
+|`apiUrlPrefix`|The start of all admin URLs.|
 
 
 
 #### Get by Id Markdown
 
 ```
-getByIdMarkdown(entity)
+getByIdMarkdown(entity, apiUrlPrefix)
 ```
 
 Generates markdown documentation for the get by ID endpoint.
@@ -93,6 +95,7 @@ Generates markdown documentation for the get by ID endpoint.
 |Name|Description|
 |---|---|
 |`entity`|The entity corresponding to the get endpoint documentation to generate.|
+|`apiUrlPrefix`|The start of all admin URLs.|
 
 
 
@@ -110,7 +113,7 @@ Contains functions that generate update endpoint methods for a controller class.
 #### Update Markdown
 
 ```
-updateMarkdown(entity)
+updateMarkdown(entity, apiUrlPrefix)
 ```
 
 Generates markdown documentation for the basic update endpoint.
@@ -120,6 +123,7 @@ Generates markdown documentation for the basic update endpoint.
 |Name|Description|
 |---|---|
 |`entity`|The entity corresponding to the update endpoint documentation to generate.|
+|`apiUrlPrefix`|The start of all admin URLs.|
 
 
 

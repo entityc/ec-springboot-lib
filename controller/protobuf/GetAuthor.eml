@@ -7,7 +7,7 @@ $[ author to org.entityc.springboot.controller.protobuf ]
     $[ author to outlet methods
        D "Adds get endpoints to the controller class for its entity."
     ]
-        $[ let protobufNamespace = (space.domain("ProtobufDTO")).namespace ]
+        $[ let protobufNamespace = (space|domain:ProtobufDTO).domain.namespace ]
         $[ capture fullProtobufClassName ]${module.name|capitalize}.${entity|domain:ProtobufDTO|name}$[/ capture ]
 $[ send imports ]
 import org.springframework.http.HttpHeaders;
@@ -65,14 +65,14 @@ $[/ outlet ]
                     $[ default ]$[ capture parentIdArg ]${parentId}$[/ capture ]$[ let parentIdType = parentEntity.primaryKey.type|language ]
                 $[/ switch ]
                 $[ capture parentName ]${relationship.name|capitalize}$[/ capture ]
-        @RequestParam("${parentId}") ${parentIdType} ${parentId},
+        @RequestParam(value = "${parentId}", required = false) ${parentIdType} ${parentId},
             $[/ if ]
 $[ outlet parameters
    D "This is where you want to include request parameters on the get<Model>List endpoint."
 ]
 $[/ outlet ]
-        @RequestParam("start") Integer start,
-        @RequestParam("limit") Integer limit)
+        @RequestParam(value = "start", required = false) Integer start,
+        @RequestParam(value = "limit", required = false) Integer limit)
         throws ServiceException {
 $[ outlet declarations
    D "This is where you want to include variable declarations."
@@ -115,8 +115,9 @@ $[ outlet annotation
 $[/ outlet ]
     public ResponseEntity<${fullProtobufClassName}List> get${entity|domain:Model|name}PBListBy${relationship.name|capitalize}(
         @PathVariable("id") ${relationship.to.entity.primaryKey.type|language} ${relationship.name}Id,
-        @RequestParam("start") Integer start,
-        @RequestParam("limit") Integer limit) throws ServiceException {
+        @RequestParam(value = "start", required = false) Integer start,
+        @RequestParam(value = "limit", required = false) Integer limit)
+        throws ServiceException {
         final int queryStart = ResourceUtils.defaultTo(start, 0);
         final int queryLimit = ResourceUtils.defaultTo(limit, 10);
         ${fullProtobufClassName}List results = ${service}.get${entity|domain:Model|name|capitalize}PBListBy${relationship.name|capitalize}(${relationship.name}Id, queryStart, queryLimit, true);

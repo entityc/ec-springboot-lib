@@ -54,6 +54,10 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
         this.persistentUserDetailsPasswordService = persistentUserDetailsPasswordService;
     }
 
+$[ let authUrlPrefix = ((space|domain:APIPath).domain.tagValue("url:prefix:auth")) ]
+$[ let staticUrlPrefix = ((space|domain:APIPath).domain.tagValue("url:prefix:static")) ]
+$[ let apiUrlPrefix = ((space|domain:APIPath).domain.tagValue("url:prefix:api")) ]
+
     @Override
     protected void configure(HttpSecurity httpSecurity) throws Exception {
 //        httpSecurity.csrf().disable().authorizeRequests().anyRequest().permitAll();
@@ -62,21 +66,24 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                 .authorizeRequests()
                 .antMatchers(
 $[if space.domain("Security").hasTag("feature:invite")]
-                        "/invite_accept**",
+                        "${authUrlPrefix}/invite_accept**",
 $[else]
-                        "/signup**",
+                        "${authUrlPrefix}/signup**",
 $[/if]
-                        "/login**",
-                        "/api/auth/**",
-                        "/js/**",
-                        "/css/**",
-                        "/api/**",
-                        "/img/**",
-                        "/webjars/**",
-                        "/swagger-ui.html",
-                        "/swagger-ui/**",
-                        "/public/**",
-                        "/actuator/**").permitAll()
+                        "${authUrlPrefix}/login**",
+$[if space.domain("Security").hasTag("api:auth:disable")]
+                        "${apiUrlPrefix}/**",
+$[else]
+                        "${apiUrlPrefix}/login**",
+$[/if]
+                        "${staticUrlPrefix}/js/**",
+                        "${staticUrlPrefix}/css/**",
+                        "${staticUrlPrefix}/img/**",
+                        "${staticUrlPrefix}/webjars/**",
+                        "${staticUrlPrefix}/swagger-ui.html",
+                        "${staticUrlPrefix}/swagger-ui/**",
+                        "${staticUrlPrefix}/public/**",
+                        "${staticUrlPrefix}/actuator/**").permitAll()
                 .anyRequest().authenticated()
                 .and()
 //                .formLogin()
@@ -87,8 +94,8 @@ $[/if]
                 .invalidateHttpSession(true)
                 .clearAuthentication(true)
                 .deleteCookies("token")
-                .logoutRequestMatcher(new AntPathRequestMatcher("/logout"))
-                .logoutSuccessUrl("/login?logout")
+                .logoutRequestMatcher(new AntPathRequestMatcher("${authUrlPrefix}/logout"))
+                .logoutSuccessUrl("${authUrlPrefix}/login?logout")
                 .permitAll()
                 .and()
                 .exceptionHandling().authenticationEntryPoint(unauthorizedHandler)

@@ -1,6 +1,8 @@
 $[D summary "This is the top level template that generates the Admin Console."]
 $[D "This is the top level template that generates the Admin Console."]
 
+$[ let adminUrlPrefix = ((space|domain:APIPath).domain.tagValue("url:prefix:admin")) ]
+
 $[import "web/thymeleaf-bootstrap/admin/AdminHomePageTemplate"]
 $[import "web/thymeleaf-bootstrap/admin/AdminDetailPageTemplate"]
 $[import "web/thymeleaf-bootstrap/admin/AdminNewPageTemplate"]

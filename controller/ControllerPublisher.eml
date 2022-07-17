@@ -16,7 +16,7 @@ $[ import "util/AutoWired" ]
 $[ import "doc/SourceHeaders" ]
 
 $[ publisher org.entityc.springboot.controller ]
-    $[ let apiPathPrefix = "/" + ((space|domain:APIPath).domain.namespace|path) ]
+    $[ let apiPathPrefix = ((space|domain:APIPath).domain.tagValue("url:prefix:api")) ]
     $[ let exceptionNamespace = (space.domain("Exception")).namespace ]
     $[ let utilsNamespace = (space.domain("Utils")).namespace ]
     $[ let securityNamespace = (space.domain("Security")).namespace ]

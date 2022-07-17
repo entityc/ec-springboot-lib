@@ -19,7 +19,7 @@ $[ function makeReleaseDeltaController
     $[ import "doc/SourceHeaders" ]
     $[ let exceptionNamespace = (space.domain("Exception")).namespace ]
     $[ let utilsNamespace = (space.domain("Utils")).namespace ]
-    $[ let domainModule = entity.module|domain:Controller ];
+    $[ let domainModule = entity.module|domain:Controller ]
     $[ let className = entity|domain:Controller|name ]
     $[ let modelName = entity|domain:Model|name ]
     $[ let serviceClassName = entity|domain:Service|name ]

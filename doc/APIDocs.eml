@@ -1,11 +1,11 @@
 $[language md]
 $[D summary "Generates documentation for the REST APIs of this microservice."]
 $[D main "This template generates documentation for the REST APIs of this microservice."]
+$[let apiUrlPrefix = (space|domain:APIPath).domain.tagValue("url:prefix:api")]
 $[import "controller/markdown/AssetMarkdownFunctions"]
 $[import "controller/markdown/CreateMarkdownFunctions"]
 $[import "controller/markdown/GetMarkdownFunctions"]
 $[import "controller/markdown/UpdateMarkdownFunctions"]
-
 $[* Generate by Module *]
 $[foreach module in space.modules]
     $[if module.isIncluded]$[continue]$[/if]
@@ -96,7 +96,7 @@ $[*
 
 |Method|Path|
 |:---:|:---|
-|POST|`/${(entity|domain:APIPath).domain.namespace|path}/${entity|domain:APIPath|name}/{id}/form/${attribute|domain:APIPath|name}/{ext}`|
+|POST|`${apiUrlPrefix}/${entity|domain:APIPath|name}/{id}/form/${attribute|domain:APIPath|name}/{ext}`|
 
 Where:
 
@@ -115,7 +115,7 @@ $[*
 
 |Method|Path|
 |:---:|:---|
-|DELETE|`/${(entity|domain:APIPath).domain.namespace|path}/${entity|domain:APIPath|name}/{id}`|
+|DELETE|`${apiUrlPrefix}/${entity|domain:APIPath|name}/{id}`|
 
 Where:
 

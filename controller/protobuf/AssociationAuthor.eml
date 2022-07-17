@@ -2,9 +2,9 @@ $[ D summary, main "Contains an author used to generate code related to creating
 $[ import "security/SecurityFunctions" ]
 $[ import "util/AutoWired" ]
 
-$[ author to org.entityc.springboot.controller ]
+$[ author to org.entityc.springboot.controller.protobuf ]
     $[ author to outlet methods
-       D "Adds an associatedTo... endpoint to the controller."
+       D "Adds an associatedTo... endpoint to the controller for protobuf objects."
     ]
         $[ foreach relationship in entity.implicitRelationships ]
             $[ if relationship.to.entity.hasTag("internal:many-to-many") ]
@@ -16,16 +16,13 @@ $[ author to org.entityc.springboot.controller ]
                         $[ break ]
                     $[/ if ]
                 $[/ foreach ]
+                $[ capture fullProtobufClassName ]${module.name|capitalize}.${destMMEntity|domain:ProtobufDTO|name}$[/ capture ]
                 $[ let destModelName = destMMEntity|domain:Model|name ]
-                $[ let destDtoName = destMMEntity|domain:JSONDTO|name ]
+                $[ let destPbMapper = destMMEntity|domain:DTOMapper|name|uncapitalize ]
                 $[ call addAutoWired(domainEntity: destMMEntity|domain:DTOMapper) ]
-                $[ let sourcePKType = entity.pkType|language ]
-                $[ let sourcePKVarName = entity.primaryKeyAttribute|domain|name ]
-                $[ let destPKType = destMMEntity.pkType|language ]
                 $[ let destPKMethName = destMMEntity.primaryKeyAttribute|domain:Model|name|capitalize ]
 $[ send imports ]
 import ${destMMEntity|domain:Model|fullname};
-import ${destMMEntity|domain:JSONDTO|fullname};
 $[/ send ]
                 $[ publisher org.entityc.springboot.controller.associate
                    D "Associate endpoint"
@@ -34,15 +31,15 @@ $[/ send ]
     @RequestMapping(
             path = "{id}/${destMMEntity|domain:APIPath|name}",
             method = RequestMethod.POST,
-            consumes = "application/json"
+        consumes = "application/x-protobuf-lite"
     )
     @ResponseStatus(HttpStatus.ACCEPTED)
 $[ outlet annotation
    D "Resides just above the method declaration in the annocation area."
 ]
 $[/ outlet ]
-    public void associateTo${destModelName}(@PathVariable("id") UUID id, @RequestBody ${destDtoName} requestDto) throws ServiceException {
-        ${destModelName} requestObject = mapper.map(requestDto, ${destModelName}.class);
+    public void associateTo${destModelName}(@PathVariable("id") UUID id, @RequestBody ${fullProtobufClassName} requestDto) throws ServiceException {
+        ${destModelName} requestObject = ${destPbMapper}.toModelFromProtobuf(requestDto);
         ${service}.associateTo${destModelName}(id, requestObject.get${destPKMethName}());
     }
 

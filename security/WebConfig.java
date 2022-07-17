@@ -1,3 +1,4 @@
+$[ let staticUrlPrefix = ((space|domain:APIPath).domain.tagValue("url:prefix:static")) ]
 package ${domain.namespace};
 
 import org.springframework.web.servlet.config.annotation.CorsRegistry;
@@ -27,7 +28,9 @@ public class WebConfig implements WebMvcConfigurer {
 
     @Override
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
-        registry.addResourceHandler("/images/**").addResourceLocations("classpath:/static/images/");
+        registry.addResourceHandler("${staticUrlPrefix}/images/**").addResourceLocations("classpath:/static/images/");
+        registry.addResourceHandler("${staticUrlPrefix}/webjars/**").addResourceLocations("/webjars/");
+        registry.addResourceHandler("${staticUrlPrefix}/js/**").addResourceLocations("/js/");
     }
 
     @Bean

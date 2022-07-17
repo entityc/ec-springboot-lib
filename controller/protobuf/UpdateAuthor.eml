@@ -3,7 +3,7 @@ $[ D summary, main "This contains an author that generates update endpoint metho
 $[ D summary, main "on protobuf requests and responses." ]
 $[ author to org.entityc.springboot.controller.protobuf ]
     $[ author to outlet methods ]
-        $[ let protobufNamespace = (space.domain("ProtobufDTO")).namespace ]
+        $[ let protobufNamespace = (space|domain:ProtobufDTO).domain.namespace ]
         $[ capture fullProtobufClassName ]${module.name|capitalize}.${entity|domain:ProtobufDTO|name}$[/ capture ]
 $[ send imports ]
 import org.springframework.http.HttpStatus;

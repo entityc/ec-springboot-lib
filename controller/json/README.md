@@ -88,7 +88,7 @@ Contains an author used to generate code related to creating associations betwee
 | |References|
 |---|---|
 | **Tags** |`internal:many-to-many` |
-| **Domains** |`Model` `Security` `APIPath` `DTOMapper` |
+| **Domains** |`Model` `JSONDTO` `Security` `APIPath` `DTOMapper` |
 
 ### Imported Templates
 
@@ -120,7 +120,7 @@ This author publishes to the following outlets:
 
 | Outlet | Description | Phase | Scope |
 |---|---|---|---|
-| `methods` | Adds an "associatedTo..." endpoint to the controller.|Connect|Author|
+| `methods` | Adds an associatedTo... endpoint to the controller.|Connect|Author|
 
 
 <a name="create-author"></a>

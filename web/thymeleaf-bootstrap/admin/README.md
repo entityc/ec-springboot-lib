@@ -25,7 +25,7 @@ This is the top level template that generates the Admin Console.
 
 | |References|
 |---|---|
-| **Domains** |`AdminUI` `Model` `StaticLocalization` `Service` `JSONDTO` `model` `Localization` `Security` `APIPath` |
+| **Domains** |`AdminUI` `Model` `StaticLocalization` `Service` `JSONDTO` `model` `APIPath` `Localization` `Security` |
 
 ### Imported Templates
 
@@ -43,7 +43,7 @@ This template generates an admin detail page for an entity. It allows an admin t
 | |References|
 |---|---|
 | **Tags** |`summary` `image` `display:attribute` `content:text` `asset:file` `selectable` `access:object:level` `content:localized` `url` `home` `flatten` `markdown` `detail` `user` |
-| **Domains** |`AdminUI` `Model` `StaticLocalization` `Service` `JSONDTO` `Localization` `Security` `APIPath` |
+| **Domains** |`AdminUI` `Model` `StaticLocalization` `Service` `JSONDTO` `APIPath` `Localization` `Security` |
 
 At the very top of the page is the same navigation bar from the home screen. The screen has other features that you can customize.
 
@@ -167,7 +167,7 @@ This template generates the websites Admin Home page. This page contains the ent
 | |References|
 |---|---|
 | **Tags** |`summary` `paging:size` `role` `edit` `markdown` `access:object:level` `user` `home` |
-| **Domains** |`AdminUI` `Model` `StaticLocalization` `Service` `JSONDTO` `Localization` `Security` `APIPath` |
+| **Domains** |`AdminUI` `Model` `StaticLocalization` `Service` `JSONDTO` `APIPath` `Localization` `Security` |
 
 Options for how it generates the admin home page are specified in the `AdminUI` domain with specific tags.The following features are customizable:
 

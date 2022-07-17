@@ -12,11 +12,55 @@ The templates in this directory are authors for the `ControllerProtobufPublisher
 
 |Template|Description|
 |---|---|
+| [`AssociationAuthor`](#association-author) | Contains an author used to generate code related to creating associations between objects. |
 | [`CreateAuthor`](#create-author) | This contains an author that generates create endpoint methods for a controller class based on protobuf requests and responses. |
 | [`GetAuthor`](#get-author) | This contains an author that generates various get endpoint methods for a controller class based on protobuf requests and responses. |
 | [`UpdateAuthor`](#update-author) | This contains an author that generates update endpoint methods for a controller class based on protobuf requests and responses. |
 
 Each of the template files will be covered in more detail below.
+
+<a name="association-author"></a>
+## Association Author
+
+Contains an author used to generate code related to creating associations between objects.
+
+| |References|
+|---|---|
+| **Tags** |`internal:many-to-many` |
+| **Domains** |`Model` `ProtobufDTO` `Security` `APIPath` `DTOMapper` |
+
+### Imported Templates
+
+| Name | Description |
+|---|---|
+| [`AutoWired`](../../util) | Helps to generate constructor based @Autowired code. |
+| [`SecurityFunctions`](../../security) | Contains functions for finding the logged in user entity, roles, and other useful functions. |
+
+### Publishers
+
+#### `org.entityc.springboot.controller.associate`
+
+Associate endpoint
+
+The following outlets are offered by this publisher:
+
+| Outlet | Description |
+|---|---|
+| `annotation` | Resides just above the method declaration in the annocation area.|
+
+
+### Authors
+
+#### To Publisher: `org.entityc.springboot.controller.protobuf`
+
+
+
+This author publishes to the following outlets:
+
+| Outlet | Description | Phase | Scope |
+|---|---|---|---|
+| `methods` | Adds an associatedTo... endpoint to the controller for protobuf objects.|Connect|Author|
+
 
 <a name="create-author"></a>
 ## Create Author

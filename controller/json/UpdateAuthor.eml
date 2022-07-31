@@ -1,15 +1,15 @@
-$[D summary, main "Contains an author that generates update endpoint methods for a controller class."]
-$[import "security/SecurityFunctions"]
-$[author to org.entityc.springboot.controller]
-    $[author to outlet methods
-    D "Adds update endpoints to the controller class for its entity."]
-$[send imports]
+$[ D summary, main "Contains an author that generates update endpoint methods for a controller class." ]
+$[ author to org.entityc.springboot.controller ]
+    $[ author to outlet methods
+       D "Adds update endpoints to the controller class for its entity."
+    ]
+$[ send imports ]
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
-$[/send]
-        $[if entity.hasPrimaryKey]
-            $[publisher org.entityc.springboot.controller.update]
+$[/ send ]
+        $[ publisher org.entityc.springboot.controller.update ]
+            $[ if entity.hasPrimaryKey ]
     // [Template] ${__template.name}:${__outlet.name} < ${__author.template.name}
     @RequestMapping(
         path = "/{id}",
@@ -18,26 +18,24 @@ $[/send]
         produces = "application/json"
     )
     @ResponseStatus(HttpStatus.ACCEPTED)
-$[outlet annotation
-  D "Resides just above the method declaration in the annocation area."
+$[ outlet annotation
+   D "Resides just above the method declaration in the annocation area."
 ]
-$[/outlet]
-                $[let pkidtype = entity.pkType|language]
-                $[let pkidname = entity.primaryKeyAttribute|domain:Model|name|capitalize]
+$[/ outlet ]
+                $[ let pkidtype = entity.pkType|language ]
+                $[ let pkidname = entity.primaryKeyAttribute|domain:Model|name|capitalize ]
     public ${dtoClassName} update${modelName}(@PathVariable("id") ${pkidtype} id, @RequestBody ${dtoClassName} requestDto, @AuthenticationPrincipal UserDetails userDetails) throws ServiceException {
-$[outlet insideTop
-  D "This outlet is just inside the update endpoint method, the first code to execute. The request"
-  D "DTO object is called `requestDto`."
+$[ outlet insideTop
+   D "This outlet is just inside the update endpoint method, the first code to execute. The request"
+   D "DTO object is called `requestDto`."
 ]
-$[/outlet]
+$[/ outlet ]
         ${modelName} requestObject = mapper.map(requestDto, ${modelName}.class);
         requestObject.set${pkidname}(id);
         ${modelName} resultObject = ${service}.update${modelName}(requestObject);
         return mapper.map(resultObject, ${dtoClassName}.class);
     }
-            $[/publisher]
-
-            $[if entity.hasAttributeTagged("release:lock")]
+                $[ if entity.hasAttributeTagged("release:lock") ]
     // [Template] ${__template.name}:${__outlet.name} < ${__author.template.name}
     @RequestMapping(
         path = "/{id}/lock",
@@ -46,16 +44,20 @@ $[/outlet]
         produces = "application/json"
     )
     @ResponseStatus(HttpStatus.ACCEPTED)
-                $[call preAuthorizeEntity(accessType:"write",entity:entity)]
-                $[let pkidtype = entity.pkType|language]
-                $[let pkidname = entity.primaryKeyAttribute|domain:Model|name|capitalize]
+$[ outlet annotation
+   D "Resides just above the method declaration in the annocation area."
+]
+$[/ outlet ]
+                    $[ let pkidtype = entity.pkType|language ]
+                    $[ let pkidname = entity.primaryKeyAttribute|domain:Model|name|capitalize ]
     public ${dtoClassName} update${modelName}(@PathVariable("id") ${pkidtype} id) throws ServiceException {
         ${modelName} object = ${service}.get${modelName}ById(id);
         object.set${entity.attributeTagged("release:lock")|domain:Model|name|capitalize}(true);
         ${modelName} resultObject = ${service}.update${modelName}(object);
         return mapper.map(resultObject, ${dtoClassName}.class);
     }
-            $[/if]
-        $[/if]
-    $[/author]
-$[/author]
+                $[/ if ]
+            $[/ if ]
+        $[/ publisher ]
+    $[/ author ]
+$[/ author ]

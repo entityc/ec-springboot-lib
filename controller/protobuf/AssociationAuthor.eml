@@ -1,5 +1,4 @@
 $[ D summary, main "Contains an author used to generate code related to creating associations between objects." ]
-$[ import "security/SecurityFunctions" ]
 $[ import "util/AutoWired" ]
 
 $[ author to org.entityc.springboot.controller.protobuf ]

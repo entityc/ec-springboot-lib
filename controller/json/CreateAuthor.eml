@@ -1,7 +1,6 @@
 $[language java]
 $[D summary, main "This contains an author that generates create endpoint methods for a controller class."]
 $[import "release/ReleaseFunctions"]
-$[import "security/SecurityFunctions"]
 
 $[author to org.entityc.springboot.controller]
     $[author to outlet methods

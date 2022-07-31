@@ -1,7 +1,12 @@
 [//]: # ( =====preserve===== start-Introduction ===== )
 # Security
 
-This directory contains templates and Java source code associated with security.
+There are currently the following types of security implementations you can choose from:
+
+| Implementation | Description |
+|----------------|----------|
+| `standalone`     | This will build a security framework such that this microservice can stand by itself, where it maintains its own database of users.|
+| `keycloak`       | This will build a security framework based on delegating authorization and authentication from an external Keycloak server. This implies that all user information is also externally maintained. |
 
 [//]: # ( =====preserve===== end-Introduction ===== )
 
@@ -9,10 +14,6 @@ This directory contains templates and Java source code associated with security.
 
 <a name="template-summary"></a>
 ## Template Summary
-
-|Template|Description|
-|---|---|
-| [`SecurityTemplate`](#security-template) | This template builds code associated with user authentication. |
 
 The following templates only contain functions.
 
@@ -284,48 +285,5 @@ Finds and returns the enum that is tagged with `role` in the Security domain. It
 |---|---|
 |`roleEnum`|The returned enum presenting the security roles of the application.|
 |`defaultEnumItem`|The default role to be assigned to a new user.|
-
-
-<a name="security-template"></a>
-## Security Template
-
-This template builds code associated with user authentication. It uses tags placed on domain entities and attributes to enable and guide code generation.
-
-| |References|
-|---|---|
-| **Tags** |`feature:invite` `role` `access:object:level` `invite` `access:write:user` `user` `login:password` |
-| **Domains** |`Repository` `Model` `Database` `JSONDTO` `Security` |
-
-### Imported Templates
-
-| Name | Description |
-|---|---|
-| `AuthorizationAuthor` |  |
-| `SecurityFunctions` | Contains functions for finding the logged in user entity, roles, and other useful functions. |
-
-### Authors
-
-#### To Publisher: `org.entityc.springboot.controller`
-
-
-
-This author publishes to the following outlets:
-
-| Outlet | Description | Phase | Scope |
-|---|---|---|---|
-| `insideTop` | Add code at top of update method to basically null out incoming attribute values if the logged in user's role does not let them update those attributes.|Connect|Author|
-| `annotation` | Make sure the user has write permission for these methods.|Connect|Author|
-| `annotation` | Make sure the user has read permission for these methods.|Connect|Author|
-
-
-#### To Publisher: `org.entityc.springboot.dto`
-
-
-
-This author publishes to the following outlets:
-
-| Outlet | Description | Phase | Scope |
-|---|---|---|---|
-| `methods` | Add the adjustUpdateForRoles() method to the DTO class.|Connect|Author|
 
 

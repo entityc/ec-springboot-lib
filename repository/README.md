@@ -23,7 +23,7 @@ Generates code that interfaces model classes with the database.
 
 | |References|
 |---|---|
-| **Domains** |`Repository` `InMemoryCache` `Model` `Database` `Security` |
+| **Domains** |`Repository` `InMemoryCache` `Model` `Database` |
 
 ### Imported Templates
 
@@ -35,7 +35,6 @@ Generates code that interfaces model classes with the database.
 | [`RepositoryDeleteAuthor`](authors) | This template contains the authors that are responsible for generating the delete object repository methods. |
 | [`RepositoryGetAuthor`](authors) | This template contains the authors that are responsible for generating the get object repository methods. |
 | [`RepositorySaveAuthor`](authors) | This template contains the author that is responsible for generating the save object repository method. |
-| [`SecurityFunctions`](../security) | Contains functions for finding the logged in user entity, roles, and other useful functions. |
 
 ### Publishers
 

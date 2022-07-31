@@ -26,12 +26,6 @@ This template generates the DTO classes for all entites in your space as well as
 | **Tags** |`user` `login:password` |
 | **Domains** |`Model` `JSONDTO` `Security` |
 
-### Imported Templates
-
-| Name | Description |
-|---|---|
-| [`SecurityFunctions`](../security) | Contains functions for finding the logged in user entity, roles, and other useful functions. |
-
 ### Publishers
 
 #### `org.entityc.springboot.dto`

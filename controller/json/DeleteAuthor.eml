@@ -1,5 +1,4 @@
 $[D summary, main "This contains an author that generates delete endpoint methods for a controller class."]
-$[import "security/SecurityFunctions"]
 $[author to org.entityc.springboot.controller]
     $[author to outlet methods
     D "Adds delete endpoints to the controller class for its entity."]

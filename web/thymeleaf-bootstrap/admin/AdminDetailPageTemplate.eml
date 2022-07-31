@@ -413,11 +413,11 @@ $[* Treat to-one relationships like attributes assigned to an object of the rela
                         $[ if attribute.hasTag("summary") ]
                             $[ switch attribute.type ]
                                 $[ case date ]
-   			<td th:text="${$}{#dates.format(item.${attribute.name}, 'dd-MMM-yyyy')}"$[ if attribute#first ] scope="row"$[/ if ] style="width:auto"></td>
+            <td th:text="${$}{#dates.format(item.${attribute.name}, 'dd-MMM-yyyy')}"$[ if attribute#first ] scope="row"$[/ if ] style="width:auto"></td>
                                 $[ case enum ]
-			<td th:text="${$}{item.${attribute.name}.title}"$[ if attribute#first ] scope="row"$[/ if ] style="width:auto"></td>
+            <td th:text="${$}{item.${attribute.name}.title}"$[ if attribute#first ] scope="row"$[/ if ] style="width:auto"></td>
                                 $[ default ]
-			<td th:text="${$}{item.${attribute.name}}"$[ if attribute#first ] scope="row"$[/ if ] style="width:auto"></td>
+            <td th:text="${$}{item.${attribute.name}}"$[ if attribute#first ] scope="row"$[/ if ] style="width:auto"></td>
                             $[/ switch ]
                         $[/ if ]
                     $[/ foreach ]
@@ -427,7 +427,7 @@ $[* Treat to-one relationships like attributes assigned to an object of the rela
                             $[ if toEntityRelationship.isOptional ]
                                 $[ capture relItemExpr ]item.${toEntityRelationship.name} != null ? ${relItemExpr} : ''$[/ capture ]
                             $[/ if ]
-			<td th:text="${$}{${relItemExpr}}"></td>
+            <td th:text="${$}{${relItemExpr}}"></td>
                         $[/ if ]
                     $[/ foreach ]
             <td style="width:1%"><a class="btn btn-secondary active" role="button" aria-pressed="true" th:href="@{'${adminUrlPrefix}/${toEntity|domain:APIPath|name}/' + ${$}{item.id} + '/detail'}">Open</a></td>

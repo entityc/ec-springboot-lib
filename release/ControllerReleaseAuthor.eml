@@ -7,18 +7,23 @@ $[* Clear Release - endpoint to clear (gut contents but leave release object). *
 $[*--------------------------------------------------------------------------------------------*]
     $[ author to outlet methods ]
         $[ if entity.hasTag("release:top") && entity.hasRelationshipToEntityTagged("release:binder") ]
+            $[ publisher org.entityc.springboot.controller.release ]
     @RequestMapping(
         path = "/{id}/release/clear",
         method = RequestMethod.PUT,
         consumes = "application/json"
     )
     @ResponseStatus(HttpStatus.ACCEPTED)
-            $[ call preAuthorizeEntity(accessType: "write", entity: entity) ]
-            $[ let pkidtype = entity.pkType|language ]
+$[ outlet annotation
+   D "Resides just above the method declaration in the annocation area."
+]
+$[/ outlet ]
+                $[ let pkidtype = entity.pkType|language ]
     public void clearRelease${modelName}(@PathVariable("id") ${pkidtype} id) throws ServiceException {
         ${service}.clearRelease(id);
     }
 
+            $[/ publisher ]
         $[/ if ]
     $[/ author ]
 $[*--------------------------------------------------------------------------------------------*]

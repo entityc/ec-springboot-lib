@@ -26,7 +26,7 @@ This template is responsible for generating the protobuf-based Controller classe
 | |References|
 |---|---|
 | **Tags** |`parent:service` `rest:none` |
-| **Domains** |`Model` `Service` `ProtobufDTO` `Controller` `Security` `APIPath` `DTOMapper` |
+| **Domains** |`Model` `Service` `ProtobufDTO` `Controller` `APIPath` `DTOMapper` |
 
 ### Imported Templates
 
@@ -61,7 +61,7 @@ This template is responsible for generating the Controller classes of the micro-
 | |References|
 |---|---|
 | **Tags** |`parent:service` `rest:none` |
-| **Domains** |`Model` `Service` `JSONDTO` `Controller` `Security` `APIPath` `DTOMapper` |
+| **Domains** |`Model` `Service` `JSONDTO` `Controller` `APIPath` `DTOMapper` |
 
 ### Imported Templates
 

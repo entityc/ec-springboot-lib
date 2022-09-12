@@ -52,6 +52,13 @@ $[/outlet]
         <version.aws-java-sdk>1.11.478</version.aws-java-sdk>
     </properties>
 
+    <dependencyManagement>
+        <dependencies>
+$[outlet inheritDependencies]
+$[/outlet]
+        </dependencies>
+    </dependencyManagement>
+
     <dependencies>
         <dependency>
             <groupId>org.commonmark</groupId>

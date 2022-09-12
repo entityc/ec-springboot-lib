@@ -45,9 +45,6 @@ import ${utilsNamespace}.ResourceUtils;
 import ${exceptionNamespace}.ServiceException;
 import ${exceptionNamespace}.EntityNotFoundException;
 import ${exceptionNamespace}.ValidationException;
-                $[ if securityNamespace != null ]
-import ${securityNamespace}.UserDetailsMapper;
-                $[/ if ]
 
 import java.util.HashMap;
 import java.util.ArrayList;
@@ -67,11 +64,6 @@ public class ${className}Proto {
     @Autowired
     public ModelMapper mapper;
 
-                $[ if securityNamespace != null ]
-    @Autowired
-    public UserDetailsMapper userDetailsMapper;
-
-                $[/ if ]
     @PostConstruct
     private void postConstruct() {
         mapper.getConfiguration().setAmbiguityIgnored(true);

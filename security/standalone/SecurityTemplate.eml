@@ -55,6 +55,12 @@ $[/if]
 $[install "security/standalone/WebConfig.java" destDir]
 
 $[author to org.entityc.springboot.controller]
+$[send imports]
+import ${domain.namespace}.UserDetailsMapper;
+$[/send]
+    @Autowired
+    public UserDetailsMapper userDetailsMapper;
+
     $[author to update]
         $[author to outlet insideTop
           D "Add code at top of update method to basically null out incoming attribute values if the logged"

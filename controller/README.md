@@ -86,6 +86,7 @@ The following outlets are offered by this publisher:
 
 | Outlet | Description |
 |---|---|
+| `memberDecl` | *no description*|
 | `members` | Member variable declarations can be placed here.|
 | `methods` | Methods can be placed here.|
 

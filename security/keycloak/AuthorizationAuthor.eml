@@ -1,0 +1,91 @@
+$[ language java ]
+$[ D main, summary "This author template adds methods to service and repository classes relating to the the" ]
+$[ D main, summary "authorization of object access." ]
+$[ D "These methods can be used by an admin panel to know if it has a specific type of access without" ]
+$[ D "having to attempt the access." ]
+$[*----------------------------------------------------------------------------------------------------------------*]
+$[ author to org.entityc.springboot.service ]
+    $[ author to outlet methods
+       D "Adds service functions to check if the logged in user has permissions to edit objects of a"
+       D "certain entity."
+    ]
+        $[ import "security/SecurityFunctions" ]
+        $[ import "util/AutoWired" ]
+        $[ let roleEnum = (space|domain:Security).enumTagged("role") ]
+        $[ if roleEnum != null ]
+$[ send imports ]
+import org.springframework.security.core.context.SecurityContextHolder;
+import java.util.stream.Collectors;
+import java.util.Set;
+import ${roleEnum|domain:Model|fullname};
+$[/ send ]
+            $[ let entityForAccessPurposes = entity ]
+            $[ let inheritFromParent = (entity|domain:Security).hasTag("access:object:parent") ]
+            $[ if inheritFromParent ]
+                $[ let entityForAccessPurposes = entity.primaryParentEntity ]
+            $[/ if ]
+
+    public static Set<String> getRoles()
+    {
+        return SecurityContextHolder.getContext().getAuthentication().getAuthorities().stream()
+                            .map(r -> r.getAuthority()).collect(Collectors.toSet());
+    }
+
+$[*
+    Add canCreate() method to entity service class.
+*]
+    /**
+        Determines if a the logged user has permission to create an object of this entity.
+        [Template] ${__template.name}:${__outlet.name} < ${__author.template.name}
+     */
+    public boolean canCreate() throws ServiceException {
+
+            $[ call rolesContains(accessType: "write", rolesArrayName: "roles", entity: entityForAccessPurposes)->(hasRoles: hasRoles, rolesExpr: rolesExpr) ]
+            $[ if hasRoles ]
+        Set<String> roles = getRoles();
+        if (${rolesExpr}) {
+            return true;
+        }
+            $[/ if ]
+        return false;
+    }
+
+$[*
+    Add canView() method to entity service class.
+*]
+    /**
+        Determines if a the logged user has permission to view ny object$ of this entity.
+        [Template] ${__template.name}:${__outlet.name} < ${__author.template.name}
+     */
+    public boolean canView($[ if objectLevelAccess ]${entity.pkType|language} id$[/ if ]) throws ServiceException {
+            $[ call rolesContains(accessType: "read", rolesArrayName: "roles", entity: entityForAccessPurposes)->(hasRoles: hasRoles, rolesExpr: rolesExpr) ]
+            $[ if hasRoles ]
+        Set<String> roles = getRoles();
+        if (${rolesExpr}) {
+            return true;
+        }
+            $[/ if ]
+        return false;
+    }
+
+$[*
+    Add canEdit() method to entity service class.
+*]
+    /**
+        Determines if a the logged user has permission to edit any object of this entity.
+        [Template] ${__template.name}:${__outlet.name} < ${__author.template.name}
+     */
+    public boolean canEdit(${entity.pkType|language} id) throws ServiceException {
+            $[ call rolesContains(accessType: "write", rolesArrayName: "roles", entity: entityForAccessPurposes)->(hasRoles: hasRoles, rolesExpr: rolesExpr) ]
+            $[ if hasRoles ]
+        Set<String> roles = getRoles();
+        if (${rolesExpr}) {
+            return true;
+        }
+            $[/ if ]
+        return false;
+    }
+
+        $[/ if ]
+    $[/ author ]
+$[/ author ]

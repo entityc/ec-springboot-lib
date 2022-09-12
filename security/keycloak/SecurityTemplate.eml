@@ -1,0 +1,52 @@
+$[ language java ]
+$[ domain Security ]
+$[ D summary "This template builds code associated with keycloak based user authentication." ]
+$[ D "This template builds code associated with keycloak based user authentication. It uses tags" ]
+$[ D "placed on domain entities and attributes to enable and guide code generation." ]
+
+$[ import "security/SecurityFunctions" ]
+$[ import "security/keycloak/AuthorizationAuthor" ]
+
+$[ let destDir = domain.namespace|path ]
+
+$[ install "security/keycloak/KeycloakConfig.java" destDir ]
+$[ install "security/keycloak/SecurityConfig.java" destDir ]
+
+$[ author to org.entityc.springboot.controller ]
+    $[ author to associate, update, deleteById, deleteByRelationship, createWithParent, create ]
+        $[ author to outlet annotation
+           D "Make sure the user has write permission for these methods."
+        ]
+            $[ if !(entity|domain:Security).hasTag("access:object:level") ]
+                $[ call preAuthorizeEntity(accessType: "write", entity: entity) ]
+            $[/ if ]
+        $[/ author ]
+    $[/ author ]
+    $[ author to getListByRelationship, getList, getById ]
+        $[ author to outlet annotation
+           D "Make sure the user has read permission for these methods."
+        ]
+            $[ call preAuthorizeEntity(accessType: "read", entity: entity) ]
+        $[/ author ]
+    $[/ author ]
+$[/ author ]
+$[ author to springboot.pom ]
+    $[ author to outlet properties ]
+        <keycloak.adapter.version>18.0.0</keycloak.adapter.version>
+    $[/ author ]
+    $[ author to outlet inheritDependencies ]
+            <dependency>
+                <groupId>org.keycloak.bom</groupId>
+                <artifactId>keycloak-adapter-bom</artifactId>
+                <version>${$}{keycloak.adapter.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+    $[/ author ]
+    $[ author to outlet dependencies]
+        <dependency>
+            <groupId>org.keycloak</groupId>
+            <artifactId>keycloak-spring-boot-starter</artifactId>
+        </dependency>
+    $[/ author ]
+$[/ author ]

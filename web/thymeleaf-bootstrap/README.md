@@ -127,27 +127,6 @@ Supplies code for the top navigation bar.
 
 
 
-#### Attribute Text Expression
-
-```
-attributeTextExpression(type, variableName, fieldName) -> (textExpr)
-```
-
-##### Inputs
-
-|Name|Description|
-|---|---|
-|`type`||
-|`variableName`||
-|`fieldName`||
-
-##### Outputs
-
-|Name|Description|
-|---|---|
-|`textExpr`||
-
-
 #### Check If Attribute Is Editable
 
 ```

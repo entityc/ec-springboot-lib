@@ -88,14 +88,13 @@ Contains an author used to generate code related to creating associations betwee
 | |References|
 |---|---|
 | **Tags** |`internal:many-to-many` |
-| **Domains** |`Model` `JSONDTO` `Security` `APIPath` `DTOMapper` |
+| **Domains** |`Model` `JSONDTO` `APIPath` `DTOMapper` |
 
 ### Imported Templates
 
 | Name | Description |
 |---|---|
 | [`AutoWired`](../../util) | Helps to generate constructor based @Autowired code. |
-| [`SecurityFunctions`](../../security) | Contains functions for finding the logged in user entity, roles, and other useful functions. |
 
 ### Publishers
 
@@ -130,14 +129,13 @@ This contains an author that generates create endpoint methods for a controller 
 
 | |References|
 |---|---|
-| **Domains** |`Security` `APIPath` |
+| **Domains** |`APIPath` |
 
 ### Imported Templates
 
 | Name | Description |
 |---|---|
 | [`ReleaseFunctions`](../../release) | This template has functions specific for detecting and extracting information about a release management structure. |
-| [`SecurityFunctions`](../../security) | Contains functions for finding the logged in user entity, roles, and other useful functions. |
 
 ### Publishers
 
@@ -183,13 +181,7 @@ This contains an author that generates delete endpoint methods for a controller 
 
 | |References|
 |---|---|
-| **Domains** |`Security` `APIPath` |
-
-### Imported Templates
-
-| Name | Description |
-|---|---|
-| [`SecurityFunctions`](../../security) | Contains functions for finding the logged in user entity, roles, and other useful functions. |
+| **Domains** |`APIPath` |
 
 ### Publishers
 
@@ -235,13 +227,7 @@ This contains an author that generates various get endpoint methods for a contro
 
 | |References|
 |---|---|
-| **Domains** |`Model` `JSONDTO` `Security` `APIPath` |
-
-### Imported Templates
-
-| Name | Description |
-|---|---|
-| [`SecurityFunctions`](../../security) | Contains functions for finding the logged in user entity, roles, and other useful functions. |
+| **Domains** |`Model` `JSONDTO` `APIPath` |
 
 ### Publishers
 
@@ -303,13 +289,7 @@ Contains an author that generates update endpoint methods for a controller class
 | |References|
 |---|---|
 | **Tags** |`release:lock` |
-| **Domains** |`Model` `Security` |
-
-### Imported Templates
-
-| Name | Description |
-|---|---|
-| [`SecurityFunctions`](../../security) | Contains functions for finding the logged in user entity, roles, and other useful functions. |
+| **Domains** |`Model` |
 
 ### Publishers
 
@@ -323,6 +303,7 @@ The following outlets are offered by this publisher:
 |---|---|
 | `annotation` | Resides just above the method declaration in the annocation area.|
 | `insideTop` | This outlet is just inside the update endpoint method, the first code to execute. The request DTO object is called `requestDto`.|
+| `annotation` | Resides just above the method declaration in the annocation area.|
 
 
 ### Authors

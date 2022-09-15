@@ -1,3 +1,7 @@
+$[D main, summary "This author template adds methods to service and repository classes relating to the"]
+$[D main, summary "the authorization of object access."]
+$[D "These methods can be used by an admin panel to know if it has"]
+$[D "a specific type of access without having to attempt the access."]
 $[language java]
 $[*----------------------------------------------------------------------------------------------------------------*]
 $[author to org.entityc.springboot.service]

@@ -1,7 +1,6 @@
 $[ language java ]
 $[ D summary, main "This contains an author that generates various get endpoint methods for a controller class" ]
 $[ D summary, main "based on protobuf requests and responses." ]
-$[ import "security/SecurityFunctions" ]
 
 $[ author to org.entityc.springboot.controller.protobuf ]
     $[ author to outlet methods

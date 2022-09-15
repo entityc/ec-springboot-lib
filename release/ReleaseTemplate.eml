@@ -1,5 +1,3 @@
-$[ import "security/SecurityFunctions" ]
-
 $[ import "release/ControllerReleaseAuthor"]
 $[ import "release/ServiceReleaseAuthor"]
 $[ import "release/RepositoryReleaseAuthor"]

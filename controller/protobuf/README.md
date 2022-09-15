@@ -27,14 +27,13 @@ Contains an author used to generate code related to creating associations betwee
 | |References|
 |---|---|
 | **Tags** |`internal:many-to-many` |
-| **Domains** |`Model` `ProtobufDTO` `Security` `APIPath` `DTOMapper` |
+| **Domains** |`Model` `ProtobufDTO` `APIPath` `DTOMapper` |
 
 ### Imported Templates
 
 | Name | Description |
 |---|---|
 | [`AutoWired`](../../util) | Helps to generate constructor based @Autowired code. |
-| [`SecurityFunctions`](../../security) | Contains functions for finding the logged in user entity, roles, and other useful functions. |
 
 ### Publishers
 
@@ -104,13 +103,7 @@ This contains an author that generates various get endpoint methods for a contro
 
 | |References|
 |---|---|
-| **Domains** |`Model` `ProtobufDTO` `Security` `APIPath` |
-
-### Imported Templates
-
-| Name | Description |
-|---|---|
-| [`SecurityFunctions`](../../security) | Contains functions for finding the logged in user entity, roles, and other useful functions. |
+| **Domains** |`Model` `ProtobufDTO` `APIPath` |
 
 ### Publishers
 

@@ -2,7 +2,7 @@ $[ D main, summary "This template generates the Spring Boot Application class us
 $[ D main, summary "running." ]
 $[ let applicationName = space.getMetadataValue("microserviceName") ]
 $[ publisher springboot.application ]
-    $[ file space.namespace|path applicationName + "Application" "java" ]
+    $[ file (space.namespace|path) (applicationName + "Application") "java" ]
 package ${space.namespace};
 
 $[ receive distinct imports ]

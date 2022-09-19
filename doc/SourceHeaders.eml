@@ -12,7 +12,7 @@ $[function entityHeader(title, entity, __template)]
 //
 // THIS FILE IS GENERATED. DO NOT EDIT!!
 //
-// Template: ${__template.uri}
+// Template: ${__template.name}
 //
 $[/function]
 $[function enumHeader(title, enum, __template)]
@@ -29,6 +29,6 @@ $[function enumHeader(title, enum, __template)]
 //
 // THIS FILE IS GENERATED. DO NOT EDIT!!
 //
-// Template: ${__template.uri}
+// Template: ${__template.name}
 //
 $[/function]

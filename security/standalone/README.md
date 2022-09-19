@@ -110,6 +110,12 @@ This template builds code associated with user authentication. It uses tags plac
 
 ### Authors
 
+#### To Publisher: `springboot.application`
+
+
+
+
+
 #### To Publisher: `org.entityc.springboot.controller`
 
 

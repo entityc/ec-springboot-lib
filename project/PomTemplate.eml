@@ -28,7 +28,7 @@ $[/outlet]
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <version>2.5.5</version>
+        <version>2.7.3</version>
         <relativePath/> <!-- lookup parent from repository -->
 $[outlet parent]
 $[/outlet]
@@ -40,15 +40,12 @@ $[/outlet]
         <servlet.version>4.0.0</servlet.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
-        <java.version>8</java.version>
-        <rest-assured.version>2.9.0</rest-assured.version>
+        <java.version>17</java.version>
         <modelmapper.version>2.4.4</modelmapper.version>
         <commons-io.version>2.11.0</commons-io.version>
         <!-- plugins -->
         <thin.version>1.0.22.RELEASE</thin.version>
-        <spring-boot.version>2.4.0</spring-boot.version>
         <aspectjweaver.version>1.9.1</aspectjweaver.version>
-        <mockito.version>3.4.0</mockito.version>
         <version.aws-java-sdk>1.11.478</version.aws-java-sdk>
     </properties>
 
@@ -69,6 +66,11 @@ $[/outlet]
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-oauth2-resource-server</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-configuration-processor</artifactId>
+            <optional>true</optional>
         </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -122,12 +124,6 @@ $[/outlet]
         </dependency>
 
         <dependency>
-            <groupId>com.jayway.restassured</groupId>
-            <artifactId>rest-assured</artifactId>
-            <version>${$}{rest-assured.version}</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
             <groupId>org.modelmapper</groupId>
             <artifactId>modelmapper</artifactId>
             <version>${$}{modelmapper.version}</version>
@@ -156,17 +152,22 @@ $[/outlet]
         <dependency>
             <groupId>org.webjars</groupId>
             <artifactId>bootstrap</artifactId>
-            <version>5.0.1</version>
+            <version>5.2.0</version>
         </dependency>
         <dependency>
             <groupId>org.webjars</groupId>
             <artifactId>jquery</artifactId>
-            <version>3.6.0</version>
+            <version>3.6.1</version>
         </dependency>
         <dependency>
             <groupId>io.jsonwebtoken</groupId>
-            <artifactId>jjwt</artifactId>
-            <version>0.9.1</version>
+            <artifactId>jjwt-api</artifactId>
+            <version>0.11.5</version>
+        </dependency>
+        <dependency>
+            <groupId>org.webjars</groupId>
+            <artifactId>webjars-locator-core</artifactId>
+            <version>0.52</version>
         </dependency>
     </dependencies>
 

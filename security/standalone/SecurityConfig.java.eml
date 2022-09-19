@@ -6,25 +6,39 @@
 
 package ${domain.namespace};
 
+import com.nimbusds.jose.jwk.JWK;
+import com.nimbusds.jose.jwk.JWKSet;
+import com.nimbusds.jose.jwk.RSAKey;
+import com.nimbusds.jose.jwk.source.ImmutableJWKSet;
+import com.nimbusds.jose.jwk.source.JWKSource;
+import com.nimbusds.jose.proc.SecurityContext;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.AuthenticationProvider;
-import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
-import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
+import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
+import org.springframework.security.config.annotation.web.configurers.oauth2.server.resource.OAuth2ResourceServerConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.security.oauth2.jwt.JwtDecoder;
+import org.springframework.security.oauth2.jwt.JwtEncoder;
+import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
+import org.springframework.security.oauth2.jwt.NimbusJwtEncoder;
+import org.springframework.security.oauth2.server.resource.web.BearerTokenAuthenticationEntryPoint;
+import org.springframework.security.oauth2.server.resource.web.access.BearerTokenAccessDeniedHandler;
+import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
-import ${domain.namespace}.jwt.AuthEntryPointJwt;
-import ${domain.namespace}.jwt.AuthTokenFilter;
+import java.util.List;
+
 import ${domain.namespace}.workfactor.BcCryptWorkFactorService;
 
 @Configuration
@@ -34,91 +48,19 @@ import ${domain.namespace}.workfactor.BcCryptWorkFactorService;
 public class SecurityConfig extends WebSecurityConfigurerAdapter {
 
     private final BcCryptWorkFactorService bcCryptWorkFactorService;
+    private final RsaKeyProperties jwtConfigProperties;
     private final PersistentUserDetailsService persistentUserDetailsService;
     private final PersistentUserDetailsPasswordService persistentUserDetailsPasswordService;
 
-    @Autowired
-    private AuthEntryPointJwt unauthorizedHandler;
-
-    @Bean
-    public AuthTokenFilter authenticationJwtTokenFilter() {
-        return new AuthTokenFilter();
-    }
-
     public SecurityConfig(
           BcCryptWorkFactorService bcCryptWorkFactorService,
+          RsaKeyProperties jwtConfigProperties,
           PersistentUserDetailsService persistentUserDetailsService,
           PersistentUserDetailsPasswordService persistentUserDetailsPasswordService) {
         this.bcCryptWorkFactorService = bcCryptWorkFactorService;
+        this.jwtConfigProperties = jwtConfigProperties;
         this.persistentUserDetailsService = persistentUserDetailsService;
         this.persistentUserDetailsPasswordService = persistentUserDetailsPasswordService;
-    }
-
-$[ let authUrlPrefix = ((space|domain:APIPath).domain.tagValue("url:prefix:auth")) ]
-$[ let staticUrlPrefix = ((space|domain:APIPath).domain.tagValue("url:prefix:static")) ]
-$[ let apiUrlPrefix = ((space|domain:APIPath).domain.tagValue("url:prefix:api")) ]
-
-    @Override
-    protected void configure(HttpSecurity httpSecurity) throws Exception {
-//        httpSecurity.csrf().disable().authorizeRequests().anyRequest().permitAll();
-
-        httpSecurity.csrf().disable() // cors().and().
-                .authorizeRequests()
-                .antMatchers(
-$[if space.domain("Security").hasTag("feature:invite")]
-                        "${authUrlPrefix}/invite_accept**",
-$[else]
-                        "${authUrlPrefix}/signup**",
-$[/if]
-                        "${authUrlPrefix}/login**",
-$[if space.domain("Security").hasTag("api:auth:disable")]
-                        "${apiUrlPrefix}/**",
-$[else]
-                        "${apiUrlPrefix}/login**",
-$[/if]
-                        "${staticUrlPrefix}/js/**",
-                        "${staticUrlPrefix}/css/**",
-                        "${staticUrlPrefix}/img/**",
-                        "${staticUrlPrefix}/webjars/**",
-                        "${staticUrlPrefix}/swagger-ui.html",
-                        "${staticUrlPrefix}/swagger-ui/**",
-                        "${staticUrlPrefix}/public/**",
-                        "${staticUrlPrefix}/actuator/**").permitAll()
-                .anyRequest().authenticated()
-                .and()
-//                .formLogin()
-//                .loginPage("/login")
-//                .permitAll()
-//                .and()
-                .logout()
-                .invalidateHttpSession(true)
-                .clearAuthentication(true)
-                .deleteCookies("token")
-                .logoutRequestMatcher(new AntPathRequestMatcher("${authUrlPrefix}/logout"))
-                .logoutSuccessUrl("${authUrlPrefix}/login?logout")
-                .permitAll()
-                .and()
-                .exceptionHandling().authenticationEntryPoint(unauthorizedHandler)
-                .and()
-                .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS);
-
-        httpSecurity.addFilterBefore(authenticationJwtTokenFilter(), UsernamePasswordAuthenticationFilter.class);
-
-        httpSecurity.headers().frameOptions().disable();
-    }
-
-    @Bean("daoAuthenticationProvider")
-    public AuthenticationProvider daoAuthenticationProvider() {
-        DaoAuthenticationProvider provider = new DaoAuthenticationProvider();
-        provider.setPasswordEncoder(passwordEncoder());
-        provider.setUserDetailsPasswordService(this.persistentUserDetailsPasswordService);
-        provider.setUserDetailsService(this.persistentUserDetailsService);
-        return provider;
-    }
-
-    @Bean
-    public PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder(bcCryptWorkFactorService.calculateStrength());
     }
 
     @Override
@@ -127,8 +69,77 @@ $[/if]
         return super.authenticationManagerBean();
     }
 
+$[ let authUrlPrefix = (space|domain:APIPath).domain.tagValue("url:prefix:auth") ]
+$[ let staticUrlPrefix = (space|domain:APIPath).domain.tagValue("url:prefix:static") ]
+$[ let apiUrlPrefix = (space|domain:APIPath).domain.tagValue("url:prefix:api") ]
     @Override
-    protected void configure(AuthenticationManagerBuilder auth) throws Exception {
-        auth.authenticationProvider(daoAuthenticationProvider());
+    protected void configure(HttpSecurity httpSecurity) throws Exception {
+        httpSecurity
+            .csrf(csrf -> csrf.disable())
+            .authorizeRequests( auth -> auth
+                    .mvcMatchers("/token").permitAll()
+                    .antMatchers(
+$[ if space.domain("Security").hasTag("feature:invite") ]
+                        "${authUrlPrefix}/invite_accept**",
+$[ else ]
+                        "${authUrlPrefix}/signup**",
+$[/ if ]
+                        "${authUrlPrefix}/login**",
+$[ if space.domain("Security").hasTag("api:auth:disable") ]
+                        "${apiUrlPrefix}/**",
+$[ else ]
+                        "${apiUrlPrefix}/login**",
+$[/ if ]
+                        "${staticUrlPrefix}/js/**",
+                        "${staticUrlPrefix}/css/**",
+                        "${staticUrlPrefix}/img/**",
+                        "${staticUrlPrefix}/webjars/**",
+                        "${staticUrlPrefix}/swagger-ui.html",
+                        "${staticUrlPrefix}/swagger-ui/**",
+                        "${staticUrlPrefix}/public/**",
+                        "${staticUrlPrefix}/actuator/**").permitAll()
+                        .anyRequest().authenticated())
+            .logout()
+                .invalidateHttpSession(true).clearAuthentication(true).deleteCookies("token")
+                .logoutRequestMatcher(new AntPathRequestMatcher("/gem/terrain/auth/logout"))
+                .logoutSuccessUrl("/gem/terrain/auth/login?logout")
+                .permitAll()
+            .and()
+            .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+            .oauth2ResourceServer(OAuth2ResourceServerConfigurer::jwt)
+            .exceptionHandling((ex) -> ex
+                    .authenticationEntryPoint(new BearerTokenAuthenticationEntryPoint())
+                    .accessDeniedHandler(new BearerTokenAccessDeniedHandler())
+            )
+            .httpBasic(Customizer.withDefaults()) //
+            .headers().frameOptions().disable();
+    }
+
+    @Bean
+    public PasswordEncoder passwordEncoder() {
+        return new BCryptPasswordEncoder(bcCryptWorkFactorService.calculateStrength());
+    }
+
+    @Bean
+    JwtDecoder jwtDecoder() {
+        return NimbusJwtDecoder.withPublicKey(jwtConfigProperties.publicKey()).build();
+    }
+
+    @Bean
+    JwtEncoder jwtEncoder() {
+        JWK jwk = new RSAKey.Builder(jwtConfigProperties.publicKey()).privateKey(jwtConfigProperties.privateKey()).build();
+        JWKSource<SecurityContext> jwks = new ImmutableJWKSet<>(new JWKSet(jwk));
+        return new NimbusJwtEncoder(jwks);
+    }
+
+    @Bean
+    CorsConfigurationSource corsConfigurationSource() {
+        CorsConfiguration configuration = new CorsConfiguration();
+        configuration.setAllowedOrigins(List.of("https://localhost:3000"));
+        configuration.setAllowedHeaders(List.of("*"));
+        configuration.setAllowedMethods(List.of("GET"));
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", configuration);
+        return source;
     }
 }

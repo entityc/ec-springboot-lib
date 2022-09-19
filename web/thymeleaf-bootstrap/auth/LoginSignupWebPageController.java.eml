@@ -27,6 +27,7 @@ import ${space.domain("Exception").namespace}.ServiceException;
 $[let securityDomain = space.domain("Security")]
 import ${securityDomain.namespace}.PersistentUserDetailsService;
 import ${securityDomain.namespace}.SecurityService;
+import ${securityDomain.namespace}.jwt.TokenService;
 $[if useInviteFeature]
 import ${securityDomain.namespace}.UserInviteAcceptDto;
 import ${inviteEntity|domain:Service|fullname};
@@ -34,7 +35,6 @@ import ${inviteEntity|domain:JSONDTO|fullname};
 $[else]
 import ${securityDomain.namespace}.UserSignupDto;
 $[/if]
-import ${securityDomain.namespace}.jwt.JwtUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -89,7 +89,7 @@ $[/if]
     SecurityService securityService;
 
     @Autowired
-    JwtUtils jwtUtils;
+    TokenService tokenService;
 
     protected final Log logger = LogFactory.getLog(this.getClass());
 
@@ -119,7 +119,7 @@ $[/if]
                 new UsernamePasswordAuthenticationToken(username, password));
 
         SecurityContextHolder.getContext().setAuthentication(authentication);
-        String jwt = jwtUtils.generateJwtToken(authentication);
+        String jwt = tokenService.generateToken(authentication);
 
         Cookie cookie = new Cookie("token", jwt);
 

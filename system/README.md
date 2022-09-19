@@ -55,6 +55,7 @@ The following outlets are offered by this publisher:
 
 | Outlet | Description |
 |---|---|
+| `classAnnotation` | An outlet to place annotations to the Spring Boot application class.|
 | `main` | This outlet is just inside the `main()` method of the class right before starting up the application.|
 
 

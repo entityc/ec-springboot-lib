@@ -13,6 +13,7 @@ The templates and HTML files here all implement that web authorization (login, s
 |Template|Description|
 |---|---|
 | [`AuthPageTemplate`](#auth-page-template) | This template generates HTML code associated with user Login and Sign Up. |
+| [`LoginSignupWebPageController.java`](#login-signup-web-page-controller.java) | This Java source file with template code implements the controller class for login and signup. |
 
 Each of the template files will be covered in more detail below.
 
@@ -31,4 +32,20 @@ This template generates HTML code associated with user Login and Sign Up.
 | Name | Description |
 |---|---|
 | [`SecurityFunctions`](../../../security) | Contains functions for finding the logged in user entity, roles, and other useful functions. |
+
+<a name="login-signup-web-page-controller.java"></a>
+## Login Signup Web Page Controller.java
+
+This Java source file with template code implements the controller class for login and signup. Its endpoints will be used by login and signup HTML.
+
+| |References|
+|---|---|
+| **Tags** |`feature:invite` `code` `role` `role:default` `invite` `name:first` `name:last` |
+| **Domains** |`Repository` `AdminUI` `Model` `Service` `JSONDTO` `APIPath` `Localization` `Security` |
+
+### Imported Templates
+
+| Name | Description |
+|---|---|
+| [`WebPageFunctions`](..) | Contains a set of functions that produce web page code that is in common with the different types of pages. |
 

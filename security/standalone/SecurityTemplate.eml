@@ -1,155 +1,146 @@
-$[language java]
-$[domain Security]
-$[D summary "This template builds code associated with user authentication."]
-$[D "This template builds code associated with user authentication. It uses tags placed on"]
-$[D "domain entities and attributes to enable and guide code generation."]
+$[ language java ]
+$[ domain Security ]
+$[ D summary "This template builds code associated with user authentication." ]
+$[ D "This template builds code associated with user authentication. It uses tags placed on" ]
+$[ D "domain entities and attributes to enable and guide code generation." ]
 
-$[import "security/SecurityFunctions"]
-$[import "security/standalone/AuthorizationAuthor"]
+$[ import "security/SecurityFunctions" ]
+$[ import "security/standalone/AuthorizationAuthor" ]
 
-$[let destDir = (domain.namespace|path) + "/jwt"]
-$[install "security/standalone/jwt/AuthEntryPointJwt.java" destDir]
-$[install "security/standalone/jwt/AuthTokenFilter.java" destDir]
-$[install "security/standalone/jwt/JwtResponse.java" destDir]
-$[install "security/standalone/jwt/JwtUtils.java" destDir]
+$[ let destDir = (domain.namespace|path) + "/jwt" ]
+$[ install "security/standalone/jwt/AuthEntryPointJwt.java" destDir ]
+$[ install "security/standalone/jwt/AuthTokenFilter.java" destDir ]
+$[ install "security/standalone/jwt/JwtResponse.java" destDir ]
+$[ install "security/standalone/jwt/JwtUtils.java" destDir ]
 
-$[let destDir = (domain.namespace|path) + "/workfactor"]
-$[install "security/standalone/workfactor/BcCryptWorkFactorService.java" destDir]
-$[install "security/standalone/workfactor/BcryptWorkFactor.java" destDir]
-$[install "security/standalone/workfactor/Pbkdf2WorkFactorService.java" destDir]
+$[ let destDir = (domain.namespace|path) + "/workfactor" ]
+$[ install "security/standalone/workfactor/BcCryptWorkFactorService.java" destDir ]
+$[ install "security/standalone/workfactor/BcryptWorkFactor.java" destDir ]
+$[ install "security/standalone/workfactor/Pbkdf2WorkFactorService.java" destDir ]
 
-$[call findUserEntity()->(userEntity: userEntity, passwordAttribute: passwordAttribute, usernameAttribute: usernameAttribute)]
-$[call findRoleEnum()->(roleEnum: roleEnum, defaultEnumItem: defaultEnumItem)]
+$[ call findUserEntity()->(userEntity: userEntity, passwordAttribute: passwordAttribute, usernameAttribute: usernameAttribute) ]
+$[ call findRoleEnum()->(roleEnum: roleEnum, defaultEnumItem: defaultEnumItem) ]
 
-$[if userEntity == null]
-    $[log fatal]Security features require an entity tagged "user" in the Security domain, but none found.$[/log]
-$[/if]
+$[* Check to make sure all required variables are set *]
+$[ assert userEntity != null error ]Security features require an entity tagged "user" in the Security domain, but none found.$[/ assert ]
+$[ assert usernameAttribute != null error ]Security features require an attribute tagged "login:username" in the Security domain, but none found.$[/ assert ]
+$[ assert passwordAttribute != null error ]Security features require an attribute tagged "login:password" in the Security domain, but none found.$[/ assert ]
+$[ assert roleEnum != null error ]Security features require an enum tagged "role" in the Security domain, but none found.$[/ assert ]
+$[ assert !__assert_error fatal ]Add the required tags and try again.$[/ assert ]
 
-$[if usernameAttribute == null]
-    $[log fatal]Security features require an attribute tagged "login:username" in the Security domain, but none found.$[/log]
-$[/if]
+$[ let destDir = domain.namespace|path ]
+$[ install "security/standalone/userdetails/UserDetailsMapper.java" destDir ]
+$[ install "security/standalone/userdetails/PersistentUserDetailsService.java" destDir ]
+$[ install "security/standalone/userdetails/PersistentUserDetailsPasswordService.java" destDir ]
 
-$[if passwordAttribute == null]
-    $[log fatal]Security features require an attribute tagged "login:password" in the Security domain, but none found.$[/log]
-$[/if]
+$[ install "security/standalone/SecurityConfig.java" destDir ]
+$[ install "security/standalone/SecurityService.java" destDir ]
+$[ install "security/standalone/SecurityServiceImpl.java" destDir ]
+$[ install "security/standalone/AuthController.java" destDir ]
+$[ install "security/standalone/UserLoginDto.java" destDir ]
+$[ if domain.hasTag("feature:invite") && (space|domain:Security).hasEntityTagged("invite") ]
+    $[ install "security/standalone/UserInviteAcceptDto.java" destDir ]
+$[ else ]
+    $[ install "security/standalone/UserSignupDto.java" destDir ]
+$[/ if ]
+$[ install "security/standalone/WebConfig.java" destDir ]
 
-$[if roleEnum == null]
-    $[log fatal]Security features require an enum tagged "role" in the Security domain, but none found.$[/log]
-$[/if]
-
-$[let destDir = domain.namespace|path]
-$[install "security/standalone/userdetails/UserDetailsMapper.java" destDir]
-$[install "security/standalone/userdetails/PersistentUserDetailsService.java" destDir]
-$[install "security/standalone/userdetails/PersistentUserDetailsPasswordService.java" destDir]
-
-$[install "security/standalone/SecurityConfig.java" destDir]
-$[install "security/standalone/SecurityService.java" destDir]
-$[install "security/standalone/SecurityServiceImpl.java" destDir]
-$[install "security/standalone/AuthController.java" destDir]
-$[install "security/standalone/UserLoginDto.java" destDir]
-$[if domain.hasTag("feature:invite") && (space|domain:Security).hasEntityTagged("invite")]
-$[install "security/standalone/UserInviteAcceptDto.java" destDir]
-$[else]
-$[install "security/standalone/UserSignupDto.java" destDir]
-$[/if]
-$[install "security/standalone/WebConfig.java" destDir]
-
-$[author to org.entityc.springboot.controller]
-    $[author to update]
-        $[author to outlet insideTop
-          D "Add code at top of update method to basically null out incoming attribute values if the logged"
-          D "in user's role does not let them update those attributes."
+$[ author to org.entityc.springboot.controller ]
+    $[ author to update ]
+        $[ author to outlet insideTop
+           D "Add code at top of update method to basically null out incoming attribute values if the logged"
+           D "in user's role does not let them update those attributes."
         ]
-$[send imports]
+$[ send imports ]
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
-$[/send]
-            $[if (entity|domain:Security).hasTag("user")]
-                $[call getUserEntityAttributes(userEntity: entity)->(passwordAttribute: unused, usernameAttribute: usernameAttribute)]
-                $[call findRoleEnum(space: entity.space)->(roleEnum: rolesEnum, defaultEnumItem: unused)]
-$[send imports]
+$[/ send ]
+            $[ if (entity|domain:Security).hasTag("user") ]
+                $[ call getUserEntityAttributes(userEntity: entity)->(passwordAttribute: unused, usernameAttribute: usernameAttribute) ]
+                $[ call findRoleEnum(space: entity.space)->(roleEnum: rolesEnum, defaultEnumItem: unused) ]
+$[ send imports ]
 import ${rolesEnum|domain:Model|fullname};
 import java.util.Set;
-$[/send]
+$[/ send ]
         ${entity|domain:Model|name} user = ${service}.getBy${usernameAttribute|domain:Model|name|capitalize}(userDetails.getUsername());
         Set<${rolesEnum|domain:Model|name}> roles = user.get${(entity|domain:Security).attributeOfTypeTagged("role")|name|capitalize}();
         requestDto.adjustUpdateForRoles(user, roles);
-            $[elseif (entity|domain:Security).hasTag("access:object:level")]
-$[send imports]
+            $[ elseif (entity|domain:Security).hasTag("access:object:level") ]
+$[ send imports ]
 import ${exceptionNamespace}.ForbiddenException;
-$[/send]
+$[/ send ]
         if (!${service}.canEdit(id)) {
             throw new ForbiddenException("User does not have permission to edit this card.");
         }
-            $[else]
+            $[ else ]
         requestDto.adjustUpdateForRoles(userDetailsMapper.rolesForUserDetails(userDetails));
-            $[/if]
-        $[/author]
-    $[/author]
-    $[author to createWithParent, create, associate, update, deleteById, deleteByRelationship, release]
-        $[author to outlet annotation
-          D "Make sure the user has write permission for these methods."
+            $[/ if ]
+        $[/ author ]
+    $[/ author ]
+    $[ author to deleteById, associate, createWithParent, update, release, deleteByRelationship, create ]
+        $[ author to outlet annotation
+           D "Make sure the user has write permission for these methods."
         ]
-            $[if !(entity|domain:Security).hasTag("access:object:level")]
-                $[call preAuthorizeEntity(accessType: "write", entity: entity)]
-            $[/if]
-        $[/author]
-    $[/author]
-    $[author to getById, getListByRelationship, getList]
-        $[author to outlet annotation
-          D "Make sure the user has read permission for these methods."
+            $[ if !(entity|domain:Security).hasTag("access:object:level") ]
+                $[ call preAuthorizeEntity(accessType: "write", entity: entity) ]
+            $[/ if ]
+        $[/ author ]
+    $[/ author ]
+    $[ author to getById, getListByRelationship, getList ]
+        $[ author to outlet annotation
+           D "Make sure the user has read permission for these methods."
         ]
-            $[call preAuthorizeEntity(accessType: "read", entity: entity)]
-        $[/author]
-    $[/author]
-$[/author]
+            $[ call preAuthorizeEntity(accessType: "read", entity: entity) ]
+        $[/ author ]
+    $[/ author ]
+$[/ author ]
 
-$[author to org.entityc.springboot.dto]
-    $[author to outlet methods
-      D "Add the adjustUpdateForRoles() method to the DTO class."
+$[ author to org.entityc.springboot.dto ]
+    $[ author to outlet methods
+       D "Add the adjustUpdateForRoles() method to the DTO class."
     ]
-        $[if space.hasDomain("Security")]
-            $[call findRoleEnum()->(roleEnum: rolesEnum)]
-        $[/if]
-        $[if rolesEnum != null]
-$[send imports]
+        $[ if space.hasDomain("Security") ]
+            $[ call findRoleEnum()->(roleEnum: rolesEnum) ]
+        $[/ if ]
+        $[ if rolesEnum != null ]
+$[ send imports ]
 import ${rolesEnum|domain:Model|fullname};
-$[/send]
-            $[let isUserEntity = (entity|domain:Security).hasTag("user")]
-            $[if isUserEntity]
-$[send imports]
+$[/ send ]
+            $[ let isUserEntity = (entity|domain:Security).hasTag("user") ]
+            $[ if isUserEntity ]
+$[ send imports ]
 import ${entity|domain:Model|fullname};
-$[/send]
-            $[/if]
+$[/ send ]
+            $[/ if ]
 
-    public void adjustUpdateForRoles($[if isUserEntity]${entity|domain:Model|name} user, $[/if]Set<${rolesEnum|domain:Model|name}> roles) {
-            $[foreach attribute in entity.attributes]
-                $[if attribute.isCreation || attribute.isModification]
+    public void adjustUpdateForRoles($[ if isUserEntity ]${entity|domain:Model|name} user, $[/ if ]Set<${rolesEnum|domain:Model|name}> roles) {
+            $[ foreach attribute in entity.attributes ]
+                $[ if attribute.isCreation || attribute.isModification ]
         this.${attribute|domain:JSONDTO|name} = null;
-                $[/if]
-            $[/foreach]
-            $[let checkUser = isUserEntity && (entity|domain:Security).hasAttributeWithTagPrefixed("access:write:user")]
-            $[if checkUser]
-                $[let pk = entity.primaryKeyAttribute]
+                $[/ if ]
+            $[/ foreach ]
+            $[ let checkUser = isUserEntity && (entity|domain:Security).hasAttributeWithTagPrefixed("access:write:user") ]
+            $[ if checkUser ]
+                $[ let pk = entity.primaryKeyAttribute ]
         boolean _sameUser = user.get${pk|domain:Model|name|capitalize}().equals(this.${pk|domain:JSONDTO|name});
-            $[/if]
-            $[let hasAttributeLevelRoles = (entity|domain:Security).hasAttributeWithTagPrefixed("access:write:")]
-            $[if hasAttributeLevelRoles]
-                $[foreach attribute in entity.attributes]
-                    $[if (attribute|domain:Security).hasTag("login:password")]$[continue]$[/if]
-                    $[call attributeRolesContains(accessType: "write", rolesArrayName: "roles", attribute: attribute)->(hasRoles: hasRoles, rolesExpr: rolesExpr)]
-                    $[let checkUserForAttribute = checkUser && (attribute|domain:Security).hasTag("access:write:user")]
-                    $[if checkUserForAttribute]
-                        $[if !hasRoles]$[let rolesExpr = "_sameUser"]$[else]$[let rolesExpr = rolesExpr + " || _sameUser"]$[/if]
-                    $[/if]
-                    $[if hasRoles || checkUserForAttribute]
+            $[/ if ]
+            $[ let hasAttributeLevelRoles = (entity|domain:Security).hasAttributeWithTagPrefixed("access:write:") ]
+            $[ if hasAttributeLevelRoles ]
+                $[ foreach attribute in entity.attributes ]
+                    $[ if (attribute|domain:Security).hasTag("login:password") ]$[ continue ]$[/ if ]
+                    $[ call attributeRolesContains(accessType: "write", rolesArrayName: "roles", attribute: attribute)->(hasRoles: hasRoles, rolesExpr: rolesExpr) ]
+                    $[ let checkUserForAttribute = checkUser && (attribute|domain:Security).hasTag("access:write:user") ]
+                    $[ if checkUserForAttribute ]
+                        $[ if !hasRoles ]$[ let rolesExpr = "_sameUser" ]$[ else ]$[ let rolesExpr = rolesExpr + " || _sameUser" ]$[/ if ]
+                    $[/ if ]
+                    $[ if hasRoles || checkUserForAttribute ]
         if (!(${rolesExpr})) {
             this.${attribute|domain:JSONDTO|name} = null;
         }
-                    $[/if]
-                $[/foreach]
-            $[/if]
+                    $[/ if ]
+                $[/ foreach ]
+            $[/ if ]
     }
-        $[/if]
-    $[/author]
-$[/author]
+        $[/ if ]
+    $[/ author ]
+$[/ author ]

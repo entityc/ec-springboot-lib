@@ -214,7 +214,7 @@ $[****************************]
             List<${responseClassName}> dtoList = new ArrayList<>();
                     $[/ if ]
                 $[/ if ]
-            List<${responseModelName}> list = ${repositoryVariableName}.get${responseModelName}ListBy${attribute.name|capitalize}(${attribute.name}, start, limit);
+            List<${responseModelName}> list = ${repositoryVariableName}.get${responseModelName}ListBy${attribute.name|capitalize}(${attribute.name}$[if attribute.type.isEnumType()].getNumberValue()$[/if], start, limit);
                 $[ if isDtoVariant ]
             for(${responseModelName} modelObject : list) {
                 ${listName}.add(dtoFromModel(modelObject, hierarchical));
@@ -341,7 +341,7 @@ $[/ outlet ]
         Optional<${modelName}> objOptional = ${repositoryVariableName}.getById(objId);
         if (objOptional.isPresent()) {
             ${modelName} obj = objOptional.get();
-            ${parentPkType} parentId = obj.get${primaryParentEntity|domain:Model|name}Id();
+            ${parentPkType} parentId = obj.get${entity.primaryParentRelationship|domain:Model|name|capitalize}Id();
             return parentId;
         }
         return $[ if primaryParentEntity.pkType.isUUIDType ]null$[ else ]0$[/ if ];

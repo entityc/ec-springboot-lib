@@ -86,7 +86,7 @@ $[/ outlet ]
             "ORDER BY ${sortByAttribute|domain:Database|name} ${ascending ? "ASC":"DESC"} " +
                     $[/ if ]
             "LIMIT ?3 OFFSET ?2", nativeQuery = true)
-    List<${responseModelName}> get${responseModelName}ListBy${attribute.name|capitalize}(${attribute.type|language} ${attribute|domain|name}, long start, int limit);
+    List<${responseModelName}> get${responseModelName}ListBy${attribute.name|capitalize}($[if attribute.type.isEnumType()]int$[else]${attribute.type|language}$[/if] ${attribute|domain|name}, long start, int limit);
 
                 $[/ if ]
             $[/ foreach ]

@@ -11,6 +11,9 @@ $[function insertEntitySelectModalHTML
    D "The selection is being performed with respect to a relationship. So the objects being"
    D "selected from are objects of the relationship's **to** entity." 
   )]
+        <!-- -->
+        <!-- ENTITY SELECT MODAL for entity: ${entity|name} relationship: ${relationship|name} -->
+        <!-- -->
         <div class="modal fade" id="${relationship.name}_EditModal" tabindex="-1" role="dialog" aria-labelledby="${relationship.name}_EditModalLabel" aria-hidden="true">
           <div class="modal-dialog modal-sm" role="document">
             <form th:action="@{${adminUrlPrefix}/${entity|domain:APIPath|name}/{id}/update(id=${$}{${entityDtoClassName}.id})}" method="post">
@@ -25,12 +28,20 @@ $[function insertEntitySelectModalHTML
                   <div class="modal-body">
                       <div class="form-group">
                       <select id="edit-field-value" name="edit-field-value">
+    $[if !(relationship|domain:AdminUI).hasTag("display:attribute")]
+        $[log fatal]Missing "display:attribute" tag on entity ${entity|name} relationship ${relationship|name} in the AdminUI domain.$[/log]
+    $[/if]
     $[capture optionDisplayExpr]selectDtoObject.${(relationship|domain:AdminUI).tagValue("display:attribute")}$[/capture]
     $[if (relationship|domain:AdminUI).hasTag("display:attribute:abbr")]
         $[capture optionDisplayExpr]#strings.abbreviate(${optionDisplayExpr},${(relationship|domain:AdminUI).tagValue("display:attribute:abbr")})$[/capture]
     $[/if]
+    $[if (relationship|domain:AdminUI).hasTag("filter:attribute") && (relationship|domain:AdminUI).hasTag("filter:value")]
+                          <option th:each="selectDtoObject : ${$}{${relationship|domain:JSONDTO|name|uncapitalize}List}" th:value="${$}{selectDtoObject.id}" th:text="${$}{${optionDisplayExpr}}"
+                            th:selected="${$}{${entityDtoClassName}.${relationship|domain:JSONDTO|name} != null && selectDtoObject.id==${entityDtoClassName}.${relationship|domain:JSONDTO|name}.id}"></option>
+    $[else]
                           <option th:each="selectDtoObject : ${$}{${relationship.to.entity|domain:JSONDTO|name|uncapitalize}List}" th:value="${$}{selectDtoObject.id}" th:text="${$}{${optionDisplayExpr}}"
                             th:selected="${$}{${entityDtoClassName}.${relationship|domain:JSONDTO|name} != null && selectDtoObject.id==${entityDtoClassName}.${relationship|domain:JSONDTO|name}.id}"></option>
+    $[/if]
                       </select>
                       </div>
                   </div>

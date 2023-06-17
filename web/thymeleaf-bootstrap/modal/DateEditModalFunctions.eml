@@ -10,6 +10,9 @@ $[function insertDateEditModalHTML
    D "This is simply the DTO class name for the entity." 
   )
 ]
+        <!-- -->
+        <!-- DATE EDIT MODAL for entity: ${entity|name} -->
+        <!-- -->
         <div class="modal fade" id="dateEditModal" tabindex="-1" role="dialog" aria-labelledby="dateEditModalLabel" aria-hidden="true">
           <div class="modal-dialog modal-xl" role="document">
             <form th:action="@{${adminUrlPrefix}/${entity|domain:APIPath|name}/{id}/update(id=${$}{${entityDtoClassName}.id})}" method="post">

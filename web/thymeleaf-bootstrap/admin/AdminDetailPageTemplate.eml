@@ -134,13 +134,14 @@ $[/ outlet ]
 $[*-----------------------------------------------------------------------------------------------------------------*]
             $[ function tableForEntity
                D "Generates a table row for a single attribute. This is in a function so it can be used for"
-               D "secondary entity attributes." 
+               D "secondary entity attributes."
                (entity,
                 secondaryAttributeStack,
                 dtoVariable,
                 optShowMarkdownIcon
                )
             ]
+                $[ let fieldWidthStyle = "20%" ]
                 $[ let domainEntity = entity|domain:AdminUI ]
                 $[ let entityVariablePrefix = entity|name|uncapitalize ]
 	    <!-- Table for Entity: ${domainEntity|name} -->
@@ -171,7 +172,7 @@ $[* ATTRIBUTES *]
                                 $[ let urlAttributeName = attributeName + "." + domainUrlAttribute.name ]
                                 $[ capture canEditVariable ]canEdit${entity|name}$[/ capture ]
         <tr>
-			<th th:text="#{${entity|domain:StaticLocalization|name}.${domainAttribute|domain:StaticLocalization|name}}" scope="col" width="250">${domainAttribute|title}</th>
+			<th th:text="#{${entity|domain:StaticLocalization|name}.${domainAttribute|domain:StaticLocalization|name}}" scope="col" style="width:${fieldWidthStyle}">${domainAttribute|title}</th>
             <td style="width:auto">
                 <div class="mb-3">
                                 $[ if domainAttribute.hasTag("image") ]
@@ -199,7 +200,7 @@ $[* ATTRIBUTES *]
                             $[/ if ]
                         $[ else ]
 		<tr>
-			<th th:text="#{${entity|domain:StaticLocalization|name}.${domainAttribute|domain:StaticLocalization|name}}" scope="col" width="250">${domainAttribute|title}</th>
+			<th th:text="#{${entity|domain:StaticLocalization|name}.${domainAttribute|domain:StaticLocalization|name}}" scope="col" style="width:${fieldWidthStyle}">${domainAttribute|title}</th>
                             $[ if domainAttribute.hasTag("markdown") ]
                                 $[ if optShowMarkdownIcon ]
 			<td><img src="/images/MarkdownIcon.png" width="23" height="14"/></td>
@@ -320,11 +321,11 @@ $[* ATTRIBUTES *]
                         $[ let valueVariableName = valueVariableField + "." + displayAttributeName ]
                         $[ capture canEditVariable ]canEdit${entity|name}$[/ capture ]
 		<tr>
-			<th th:text="#{${entity|domain:StaticLocalization|name}.${domainRelationship|domain:StaticLocalization|name}}" scope="col" width="250">${domainRelationship|title}</th>
+			<th th:text="#{${entity|domain:StaticLocalization|name}.${domainRelationship|domain:StaticLocalization|name}}" scope="col" style="width:${fieldWidthStyle}">${domainRelationship|title}</th>
                         $[ if optShowMarkdownIcon ]
             <td></td>
                         $[/ if ]
-			<td th:text="${$}{${valueVariableField}==null?'':${valueVariableName}}"$[ if domainRelationship#first ] scope="row"$[/ if ] style="width:100%"></td>
+			<td th:text="${$}{${valueVariableField}==null?'':${valueVariableName}}"$[ if domainRelationship#first ] scope="row"$[/ if ] style="width:auto"></td>
 			<td style="width:auto">
             <button th:if="${$}{${canEditVariable}}" type="button" class="btn btn-primary"
                 data-bs-toggle="modal" data-bs-target="#${domainRelationship.name}_EditModal" data-bs-field-name="${domainRelationship|name}"
@@ -376,8 +377,6 @@ $[* Treat to-one relationships like attributes assigned to an object of the rela
                 $[ if relationship.relationship.isOneToMany ]
                     $[ let toEntity = relationship.to.entity ]
                     $[ if toEntity == null ]$[ log fatal ]Something is wrong with relationship ${relationship|fullname}!$[/ log ]$[/ if ]
-                    $[ let actionUrl = (toEntity|domain:APIPath|name) + "/add" ]
-                    $[ if toEntity.hasPrimaryParentRelationship ]$[ let actionUrl = actionUrl + "/{id}(id=${" + entityDtoClassName + ".id})" ]$[/ if ]
     <!-- -->
 	<!-- Table for Relationship: ${relationship|name} -->
     <!-- -->
@@ -389,12 +388,15 @@ $[* Treat to-one relationships like attributes assigned to an object of the rela
                 <div class="col-md-auto">
      	            <h3>${relationship|title}</h3>
                 </div>
+                    $[ if toEntity.hasPrimaryParentRelationship ]
+                        $[ let actionUrl = (toEntity|domain:APIPath|name) + "/add" + "/{id}(id=${" + entityDtoClassName + ".id})" ]
                 <div class="col-md-auto ms-auto">
                     <form th:if="${$}{canAdd${toEntity|name}}" th:action="@{${adminUrlPrefix}/${actionUrl}}" method="post">
                         <input type="submit" name="${toEntity.name}add" id="${toEntity.name}-add"
                                class="btn btn-primary" value="+" />
                     </form>
                 </div>
+                    $[/ if ]
             </div>
         </div>
 	    <!-- The table -->
@@ -644,7 +646,7 @@ $[/ send ]
         $[ if addedCanEditIf ]
         }
         $[/ if ]
-        $[* We need to find all the unique situations where we are not filtering and filtering for a specific attribute *]
+$[* We need to find all the unique situations where we are not filtering and filtering for a specific attribute *]
 
         $[ let filterAttributeMap = @{}@ ]
         $[ let toOneEntities = @[]@ ]
@@ -659,33 +661,33 @@ $[/ send ]
         }
             $[ elseif relationship.to.isOne && !(!relationship.isOptional && relationship.isParent) && (relationship|domain:AdminUI).hasTag("selectable") ]
                 $[ let adminRelationship = relationship|domain:AdminUI ]
-                $[* FILTER LISTS *]
-                $[ if adminRelationship.hasTag("filter:attribute") && adminRelationship.hasTag("filter:value")]
-                    $[let filterAttributeName = adminRelationship.tagValue("filter:attribute")]
-                    $[let filterAttributeValue = adminRelationship.tagValue("filter:value")]
-                    $[if !toEntity.hasAttributeNamed(filterAttributeName)]
-                        $[log fatal]Specified filter attribute doesn't exist: ${toEntity|name}.${filterAttributeName}$[/log]
-                    $[/if]
-                    $[let filterAttribute = toEntity.attributeNamed(filterAttributeName)]
-                    $[if !filterAttribute.isParent]
-                        $[log fatal]Specified filter attribute must be a parent attribute: ${toEntity|name}.${filterAttributeName}$[/log]
-                    $[/if]
-                    $[ switch filterAttribute.type]
-                        $[case enum]
-                            $[ let enumItem = filterAttribute.type.getItemByName(filterAttributeValue)]
-                            $[ if enumItem == null]
-                                $[log fatal]The attribute value "${filterAttributeValue}" to filter by is not a valid member of ${filterAttribute.type.name}.$[/log]
-                            $[/if]
-                            $[let filterAttributeValue = (enumItem.enum|domain:ProtobufDTO|name) + "." + (enumItem|domain:ProtobufDTO|name)]
-                        $[default]
-                        $[log fatal]Filter attribute type not supported.$[/log]
-                    $[/switch]
+$[* FILTER LISTS *]
+                $[ if adminRelationship.hasTag("filter:attribute") && adminRelationship.hasTag("filter:value") ]
+                    $[ let filterAttributeName = adminRelationship.tagValue("filter:attribute") ]
+                    $[ let filterAttributeValue = adminRelationship.tagValue("filter:value") ]
+                    $[ if !toEntity.hasAttributeNamed(filterAttributeName) ]
+                        $[ log fatal ]Specified filter attribute doesn't exist: ${toEntity|name}.${filterAttributeName}$[/ log ]
+                    $[/ if ]
+                    $[ let filterAttribute = toEntity.attributeNamed(filterAttributeName) ]
+                    $[ if !filterAttribute.isParent ]
+                        $[ log fatal ]Specified filter attribute must be a parent attribute: ${toEntity|name}.${filterAttributeName}$[/ log ]
+                    $[/ if ]
+                    $[ switch filterAttribute.type ]
+                        $[ case enum ]
+                            $[ let enumItem = filterAttribute.type.getItemByName(filterAttributeValue) ]
+                            $[ if enumItem == null ]
+                                $[ log fatal ]The attribute value "${filterAttributeValue}" to filter by is not a valid member of ${filterAttribute.type.name}.$[/ log ]
+                            $[/ if ]
+                            $[ let filterAttributeValue = (enumItem.enum|domain:ProtobufDTO|name) + "." + (enumItem|domain:ProtobufDTO|name) ]
+                        $[ default ]
+                            $[ log fatal ]Filter attribute type not supported.$[/ log ]
+                    $[/ switch ]
         {
             List<${filterAttribute.entity|domain:JSONDTO|name}> list = ${filterAttribute.entity|domain:Service|name|uncapitalize}.get${filterAttribute.entity|domain:JSONDTO|name}ListBy${filterAttribute|domain:Model|name|capitalize}(${filterAttributeValue}, 0, 1000, true);
             model.addAttribute("${relationship|domain:JSONDTO|name|uncapitalize}List", list);
         }
                 $[ else ]
-                    $[* UNIQUE FULL LISTS *]
+$[* UNIQUE FULL LISTS *]
                     $[ let toEntity = relationship.to.entity ]
                     $[ if !toOneEntities.contains(toEntity) ]
                         $[ do toOneEntities.add(toEntity) ]
@@ -693,7 +695,7 @@ $[/ send ]
                 $[/ if ]
             $[/ if ]
         $[/ foreach ]
-        $[* FULL LISTS *]
+$[* FULL LISTS *]
         $[ foreach toEntity in toOneEntities ]
         {
             $[ if toEntity.hasParentRelationshipToEntity(entity) ]
@@ -795,7 +797,7 @@ $[*-----------------------------------------------------------------------------
                     $[ return ]
                 $[/ if ]
                 $[ let addedIfBlock = true ]
-                $[ let fieldNameText = domainAttribute.attribute.name ]
+                $[ let fieldNameText = domainAttribute.name ]
                 $[ if secondaryAttributeStack.count > 0 ]
                     $[ let fieldNameTextPrefix = "" ]
                     $[ foreach secondaryAttribute in secondaryAttributeStack ]

@@ -278,6 +278,22 @@ $[/send]
             object.set${fieldName}(Long.valueOf(${paramVariable}));
         }
                             $[/if]
+                        $[case float]
+                            $[if !attribute.isOptional]
+        object.set${fieldName}(${paramVariable} != null ? Float.valueOf(${paramVariable}) : 0);
+                            $[else]
+        if (${paramVariable} != null) {
+            object.set${fieldName}(Float.valueOf(${paramVariable}));
+        }
+                            $[/if]
+                        $[case double]
+                            $[if !attribute.isOptional]
+        object.set${fieldName}(${paramVariable} != null ? Double.valueOf(${paramVariable}) : 0L);
+                            $[else]
+        if (${paramVariable} != null) {
+            object.set${fieldName}(Double.valueOf(${paramVariable}));
+        }
+                            $[/if]
                         $[case enum]
 $[send imports]
 import ${attribute.type.enumType|domain:Model|fullname};

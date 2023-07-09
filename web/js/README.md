@@ -1,7 +1,7 @@
 [//]: # ( =====preserve===== start-Introduction ===== )
 # Js
 
-Write a nice introduction here.
+This contains some javascript source files used for the admin panel.
 
 [//]: # ( =====preserve===== end-Introduction ===== )
 

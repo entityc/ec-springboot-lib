@@ -1,7 +1,7 @@
 [//]: # ( =====preserve===== start-Introduction ===== )
 # Handler
 
-Write a nice introduction here.
+The following is related to exception handlers. They help to build error messages based on the exception that was thrown.
 
 [//]: # ( =====preserve===== end-Introduction ===== )
 

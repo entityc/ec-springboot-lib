@@ -1,7 +1,7 @@
 [//]: # ( =====preserve===== start-Introduction ===== )
 # Userdetails
 
-Write a nice introduction here.
+Users details are part of the authentication method used.
 
 [//]: # ( =====preserve===== end-Introduction ===== )
 

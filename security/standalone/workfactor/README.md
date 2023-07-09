@@ -1,7 +1,7 @@
 [//]: # ( =====preserve===== start-Introduction ===== )
 # Workfactor
 
-Write a nice introduction here.
+Work factor deals with how passwords are encrypted and decrypted.
 
 [//]: # ( =====preserve===== end-Introduction ===== )
 

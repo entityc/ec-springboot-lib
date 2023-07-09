@@ -248,12 +248,19 @@ $[/send]
                         $[case boolean]
         object.set${fieldName}(${paramVariable} != null && (${paramVariable}.equalsIgnoreCase("true") || ${paramVariable}.equals("1")));
                         $[case string]
+                            $[if attribute.isArray]
+$[send imports]
+import java.util.Arrays;
+$[/send]
+        object.set${fieldName}(new HashSet<String>(Arrays.asList(${paramVariable} != null ? ${paramVariable}.split(" ") : new String[]{})));
+                            $[else]
                             $[if !attribute.isOptional]
         object.set${fieldName}(${paramVariable} != null ? ${paramVariable} : "");
                             $[else]
         if (${paramVariable} != null) {
             object.set${fieldName}(${paramVariable});
         }
+                            $[/if]
                             $[/if]
                         $[case int32]
                             $[if !attribute.isOptional]
@@ -269,6 +276,22 @@ $[/send]
                             $[else]
         if (${paramVariable} != null) {
             object.set${fieldName}(Long.valueOf(${paramVariable}));
+        }
+                            $[/if]
+                        $[case float]
+                            $[if !attribute.isOptional]
+        object.set${fieldName}(${paramVariable} != null ? Float.valueOf(${paramVariable}) : 0);
+                            $[else]
+        if (${paramVariable} != null) {
+            object.set${fieldName}(Float.valueOf(${paramVariable}));
+        }
+                            $[/if]
+                        $[case double]
+                            $[if !attribute.isOptional]
+        object.set${fieldName}(${paramVariable} != null ? Double.valueOf(${paramVariable}) : 0L);
+                            $[else]
+        if (${paramVariable} != null) {
+            object.set${fieldName}(Double.valueOf(${paramVariable}));
         }
                             $[/if]
                         $[case enum]

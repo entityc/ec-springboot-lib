@@ -10,6 +10,9 @@ $[function insertBooleanEditModalHTML
    D "This is simply the DTO class name for the entity." 
   )
 ]
+        <!-- -->
+        <!-- BOOLEAN EDIT MODAL for entity: ${entity|name} -->
+        <!-- -->
         <div class="modal fade" id="booleanEditModal" tabindex="-1" role="dialog" aria-labelledby="booleanEditModalLabel" aria-hidden="true">
           <div class="modal-dialog modal-sm" role="document">
             <form th:action="@{${adminUrlPrefix}/${entity|domain:APIPath|name}/{id}/update(id=${$}{${entityDtoClassName}.id})}" method="post">

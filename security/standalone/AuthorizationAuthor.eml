@@ -238,6 +238,9 @@ $[author to org.entityc.springboot.repository]
         $[import "security/SecurityFunctions"]
         $[if (entity|domain:Security).hasTag("user")]
             $[call getUserEntityAttributes(userEntity: entity)->(passwordAttribute: passwordAttribute, usernameAttribute: usernameAttribute)]
+            $[if usernameAttribute == null]
+                $[log fatal]The ${entity.name} entity must have an attribute tagged with "login:username".$[/log]
+            $[/if]
     /**
         Finds a user object by its username.
         [Template] ${__template.name}:${__outlet.name} < ${__author.template.name}

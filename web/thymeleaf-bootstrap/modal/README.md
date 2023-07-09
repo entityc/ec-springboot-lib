@@ -116,7 +116,7 @@ Contains functions for adding a modal dialog for selecting an object of a specif
 
 | |References|
 |---|---|
-| **Tags** |`display:attribute:abbr` |
+| **Tags** |`display:attribute` `display:attribute:abbr` |
 | **Domains** |`AdminUI` `JSONDTO` `APIPath` |
 
 ### Functions

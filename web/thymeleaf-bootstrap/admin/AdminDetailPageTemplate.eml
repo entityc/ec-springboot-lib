@@ -374,7 +374,11 @@ $[* Treat to-one relationships like attributes assigned to an object of the rela
             $[/ foreach ]
 	</div>
             $[ foreach relationship in domainEntity.declaredDomainRelationships if relationship.hasTag("detail") ]
-                $[ if relationship.relationship.isOneToMany ]
+                $[ if relationship.isManyToMany ]
+                    $[log info]UNSUPPORTED: The many-to-many relationship ${relationship.name} is not supported in generating detail page for entity ${domainEntity.entity.name}.$[/log]
+                    $[continue]
+                $[/if]
+                $[ if relationship.isOneToMany ]
                     $[ let toEntity = relationship.to.entity ]
                     $[ if toEntity == null ]$[ log fatal ]Something is wrong with relationship ${relationship|fullname}!$[/ log ]$[/ if ]
     <!-- -->
@@ -445,6 +449,7 @@ $[* Treat to-one relationships like attributes assigned to an object of the rela
 		</table>
 	</div>
                 $[ elseif relationship.relationship.isManyToMany ]
+                $[log info]UNSUPPORTED: Many to Many Picker not supported.$[/log]
     <!-- put many to many picker here -->
                 $[/ if ]
             $[/ foreach ]

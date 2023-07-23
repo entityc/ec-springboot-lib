@@ -1,5 +1,14 @@
 $[ D summary, main "Contains a set of functions that produce web page code that is in common with the different" ]
 $[ D summary, main "types of pages." ]
+
+$[ function stylesheet_css(href, th, attr) ]
+    <link rel="stylesheet" ${attr} type="text/css"
+          ${th?"th:":""}href="${href}"/>
+$[/function]
+$[ function javascript(src, th, attr) ]
+    <script type="text/javascript" ${th?"th:":""}src="${src}" ${attr}></script>
+$[/function]
+
 $[ function commonHead
    D "Supplies code for the <head> section of the web page for meta and stylesheets." 
    (title
@@ -8,27 +17,18 @@ $[ function commonHead
     D "The space." 
    )
 ]
-    $[ let staticUrlPrefix = (space|domain:APIPath).domain.tagValue("url:prefix:static") ]
     <meta charset="utf-8" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <link rel="stylesheet" type="text/css"
-          th:href="@{${staticUrlPrefix}/webjars/bootstrap/5.0.1/css/bootstrap.min.css}" />
-    <script type="text/javascript"
-            th:src="@{${staticUrlPrefix}/webjars/jquery/3.6.0/jquery.min.js/}"></script>
-    <script type="text/javascript"
-            th:src="@{${staticUrlPrefix}/webjars/bootstrap/5.0.1/js/bootstrap.min.js}"></script>
-    <script type="text/javascript"
-            th:src="@{${staticUrlPrefix}/js/restore-scroll-point.js}"></script>
-
     <title>${title}</title>
-$[/ function ]
-$[ function commonBodyScripts
-   D "Provides code that can be placed at the bottom of the <body> to define scripts." 
-   (
-   )
-]
+
+    $[ let staticUrlPrefix = (space|domain:APIPath).domain.tagValue("url:prefix:static") ]
+    $[ call stylesheet_css(href: "@{" + staticUrlPrefix + "/webjars/bootstrap/5.0.1/css/bootstrap.min.css}", th:true, attr:"") ]
+    $[ call javascript(src: "@{" + staticUrlPrefix + "/webjars/jquery/3.6.0/jquery.min.js/}", th:true, attr:"") ]
+    $[ call javascript(src: "@{" + staticUrlPrefix + "/webjars/bootstrap/5.0.1/js/bootstrap.min.js}", th:true, attr:"") ]
+    $[ call javascript(src: "@{" + staticUrlPrefix + "/js/restore-scroll-point.js}", th:true, attr:"") ]
+
 $[/ function ]
 $[ function commonBodyNavbar
    D "Supplies code for the top navigation bar." 

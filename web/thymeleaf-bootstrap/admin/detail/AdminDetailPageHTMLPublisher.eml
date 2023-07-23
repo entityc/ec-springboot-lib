@@ -82,47 +82,27 @@ $[ publisher org.entityc.springboot.web.admin.html.detail ]
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
             $[ call commonHead(title: pageTitle) ]
-    <link rel="stylesheet"
-          href="https://cdn.jsdelivr.net/npm/inscrybmde@1.11.6/dist/inscrybmde.min.css">
-    <script src="https://cdn.jsdelivr.net/npm/inscrybmde@1.11.6/dist/inscrybmde.min.js"></script>
-    <link rel="stylesheet"
-          href="https://cdn.jsdelivr.net/npm/github-markdown-css@4.0.0/github-markdown.min.css">
-    <script src="https://cdn.jsdelivr.net/npm/marked@4.0.0/marked.min.js"></script>
+            $[ call stylesheet_css(href: "https://cdn.jsdelivr.net/npm/inscrybmde@1.11.6/dist/inscrybmde.min.css", th:false, attr:"") ]
+            $[ call javascript(src: "https://cdn.jsdelivr.net/npm/inscrybmde@1.11.6/dist/inscrybmde.min.js", th:false, attr:"") ]
+            $[ call stylesheet_css(href: "https://cdn.jsdelivr.net/npm/github-markdown-css@4.0.0/github-markdown.min.css", th:false, attr:"") ]
+            $[ call javascript(src: "https://cdn.jsdelivr.net/npm/marked@4.0.0/marked.min.js", th:false, attr:"") ]
             $[ foreach attribute in entity.attributes ]
                 $[ if attribute.secondaryEntityIsTagged("asset:file") ]
-<link href="https://cdn.jsdelivr.net/gh/kartik-v/bootstrap-fileinput@5.2.5/css/fileinput.min.css"
-      media="all" rel="stylesheet" type="text/css" />
+                    $[ call stylesheet_css(href: "https://cdn.jsdelivr.net/gh/kartik-v/bootstrap-fileinput@5.2.5/css/fileinput.min.css", th:false, attr:"media=\"all\"") ]
                     $[ break ]
                 $[/ if ]
             $[/ foreach ]
+            $[ call stylesheet_css(href: "https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css", th:false, attr:"") ]
+            $[ call stylesheet_css(href: "https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.9.0/css/bootstrap-datepicker.css", th:false, attr:"") ]
+            $[ call javascript(src: "https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.9.0/js/bootstrap-datepicker.js", th:false, attr:"") ]
 </head>
 <body>
-            $[ call commonBodyScripts() ]
-    <link rel="stylesheet"
-          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
-    <link rel="stylesheet"
-          href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.9.0/css/bootstrap-datepicker.css">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.9.0/js/bootstrap-datepicker.js"></script>
-
             $[ call commonBodyNavbar(backURL: null, title: pageTitle) ]
 <br>
 <br>
 <div class="container">
-  <nav aria-label="breadcrumb">
-    <ol class="breadcrumb">
-      <li class="breadcrumb-item"> <a th:href="@{${adminUrlPrefix}}">Admin Home</a> </li>
-            $[ if domainEntity.hasTag("home") ]
-      <li class="breadcrumb-item"> <a th:href="@{${adminUrlPrefix}/${entity|domain:APIPath|name}}">${entity|title|plural}</a> </li>
-            $[/ if ]
-            $[ let parentNumber = 1 ]
-            $[ foreach parentEntity in entity.primaryParentAncestory ]
-                $[ call breadcrumbExpression(entity: parentEntity, dtoEntity: parentEntity|domain:JSONDTO)->(thExpression: breadcrumbExpression) ]
-      <li class="breadcrumb-item"> <a th:href="@{${adminUrlPrefix}/${parentEntity|domain:APIPath|name}/{id}/detail(id=${$}{${parentEntity|domain:JSONDTO|name|uncapitalize}.id})}" th:text="${breadcrumbExpression}">link</a> </li>
-                $[ let parentNumber = parentNumber + 1 ]
-            $[/ foreach ]
-      <li class="breadcrumb-item active" aria-current="page">${entity|title}</li>
-    </ol>
-  </nav>
+$[ outlet topSection ]
+$[/ outlet ]
             $[ call headlineExpression(dtoEntity: entity|domain:JSONDTO)->(thExpression: headlineExpression) ]
             $[ if headlineExpression != null ]
 $[ outlet headlineButtonArea ]

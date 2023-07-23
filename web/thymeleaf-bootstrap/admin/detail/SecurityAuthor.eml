@@ -16,7 +16,7 @@ $[ author to org.entityc.springboot.web.admin.controller.detail ]
 $[ send imports ]
 import ${exceptionNamespace}.ForbiddenException;
 $[/ send ]
-        if (!${entity|domain:Service|name|uncapitalize}.canView(id)) {
+        if (!${serviceName|uncapitalize}.canView(id)) {
             throw new ForbiddenException("User does not have permission to view this card.");
         }
         $[/ if ]

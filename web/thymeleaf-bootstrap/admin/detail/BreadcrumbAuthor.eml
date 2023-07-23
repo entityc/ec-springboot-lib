@@ -1,0 +1,54 @@
+$[ author to org.entityc.springboot.web.admin.controller.detail ]
+    $[ author to outlet getBody
+       D "This author sets page model variables that provide data to the breadcrumb navigation"
+       D "element."
+    ]
+$[ receive distinct parentDecl ]
+        $[ if entity.hasParentRelationship ]
+            $[ let parentNumber = 1 ]
+            $[ let prevParentIdName = "id" ]
+            $[ let nextEntity = entity ]
+            $[ foreach parentEntity in entity.primaryParentAncestory|reverse ]
+$[ send parentDecl ]
+
+        // Parent DTOs to provide data required for breadcrumb navigation bar.
+        Vector<Object> parentDtos = new Vector<>();
+$[/ send ]
+                $[ let parentPkTypeName = parentEntity.pkType|language ]
+                $[ call AutoWireEntity(entity: parentEntity) ]
+                $[ let parentServiceName = parentEntity|domain:Service|name ]
+        ${parentPkTypeName} ${nextEntity|name|uncapitalize}ParentId = ${nextEntity|domain:Service|name|uncapitalize}.getParentId(${prevParentIdName});
+        parentDtos.insertElementAt(${parentServiceName|uncapitalize}.get${parentEntity|domain:JSONDTO|name}ById(${nextEntity|name|uncapitalize}ParentId),0);
+                $[ let prevParentIdName = (nextEntity|name|uncapitalize) + "ParentId" ]
+                $[ let nextEntity = parentEntity ]
+            $[/ foreach ]
+            $[ foreach parentEntity in entity.primaryParentAncestory ]
+        model.addAttribute("${parentEntity|domain:JSONDTO|name|uncapitalize}", parentDtos.get(${parentNumber - 1}));
+                $[ let parentNumber = parentNumber + 1 ]
+            $[/ foreach ]
+        $[/ if ]
+    $[/ author ]
+$[/ author ]
+
+$[ author to org.entityc.springboot.web.admin.html.detail ]
+    $[ author to outlet topSection
+       D "This author sets page model variables that provide data to the breadcrumb navigation"
+       D "element."
+    ]
+  <nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+      <li class="breadcrumb-item"> <a th:href="@{${adminUrlPrefix}}">Admin Home</a> </li>
+            $[ if domainEntity.hasTag("home") ]
+      <li class="breadcrumb-item"> <a th:href="@{${adminUrlPrefix}/${entity|domain:APIPath|name}}">${entity|title|plural}</a> </li>
+            $[/ if ]
+            $[ let parentNumber = 1 ]
+            $[ foreach parentEntity in entity.primaryParentAncestory ]
+                $[ call breadcrumbExpression(entity: parentEntity, dtoEntity: parentEntity|domain:JSONDTO)->(thExpression: breadcrumbExpression) ]
+      <li class="breadcrumb-item"> <a th:href="@{${adminUrlPrefix}/${parentEntity|domain:APIPath|name}/{id}/detail(id=${$}{${parentEntity|domain:JSONDTO|name|uncapitalize}.id})}" th:text="${breadcrumbExpression}">link</a> </li>
+                $[ let parentNumber = parentNumber + 1 ]
+            $[/ foreach ]
+      <li class="breadcrumb-item active" aria-current="page">${entity|title}</li>
+    </ol>
+  </nav>
+    $[/ author ]
+$[/ author ]

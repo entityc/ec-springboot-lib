@@ -24,7 +24,6 @@ $[foreach entity in space.entities]
         $[call commonHead(title: pageTitle)]
 </head>
 <body>
-        $[call commonBodyScripts()]
         $[call commonBodyNavbar(backURL: null, title: pageTitle)]
 <br>
 <br>

@@ -109,140 +109,16 @@ $[ outlet securityReadMethod
    D "This is where an author place code that checks for specific access rights."
 ]
 $[/ outlet ]
+
+        // Get the DTO object by its ID and add it in the page model
         ${entityDtoClassName} dto = ${serviceName|uncapitalize}.get${entityDtoClassName}ById(id);
-            $[ let isUserEntity = (entity|domain:Security).hasTag("user") ]
         model.addAttribute("${entityDtoClassName|uncapitalize}", dto);
-            $[ let entityVariablePrefix = entity|name|uncapitalize ]
-        boolean canEdit = ${entity|domain:Service|name|uncapitalize}.canEdit(id);
-        model.addAttribute("canEdit${entity|name}", canEdit);
-            $[ foreach attribute in entity.flatAttributeList ]
-                $[ let getMethod = "" ]
-                $[ let fullAttributeName = "" ]
-                $[ let hasArray = false ]
-                $[ if attribute.isSecondary ]
-                    $[ foreach secondaryAttribute in attribute.path ]
-                        $[ if secondaryAttribute.isArray ]
-                            $[ let hasArray = true ]
-                            $[ break ]
-                        $[/ if ]
-                        $[ let getMethod = getMethod + ".get" + (secondaryAttribute|domain:JSONDTO|name|capitalize) + "()" ]
-                        $[ let fullAttributeName = fullAttributeName + "_" + secondaryAttribute.name ]
-                    $[/ foreach ]
-                $[ else ]
-                    $[ let getMethod = ".get" + (attribute.name|capitalize) + "()" ]
-                    $[ let fullAttributeName = "_" + (attribute|name) ]
-                $[/ if ]
-                $[ if hasArray ]$[ continue ]$[/ if ]
-                $[ if attribute.type.isEnumType ]
-                    $[ if attribute.isArray ]
-        model.addAttribute("${entityVariablePrefix}${fullAttributeName}_text", dto${getMethod}.stream().map(e -> e.getTitle()).collect(Collectors.joining(", ")));
-                        $[ let valueVariableName = entityVariablePrefix + fullAttributeName + "_enum_values" ]
-        model.addAttribute("${valueVariableName}", dto${getMethod}.stream().map(e -> e.getNumberValue()).collect(Collectors.toSet()));
-                    $[ else ]
-        model.addAttribute("${entityVariablePrefix}${fullAttributeName}_text", dto${getMethod}.getTitle());
-                        $[ let valueVariableName = entityVariablePrefix + fullAttributeName + "_enum_value" ]
-        model.addAttribute("${valueVariableName}", dto${getMethod}.getNumberValue());
-                    $[/ if ]
-                $[/ if ]
-            $[/ foreach ]
-            $[ let addedCanEditIf = false ]
-            $[ call writeAccessAttributes(entity: entity)->(attributeList: attributeWriteAccessList) ]
-            $[ foreach attribute in attributeWriteAccessList if !attribute.isSecondaryEntityType ]
-                $[ if !addedCanEditIf ]
-        if (canEdit) {
-                    $[ let addedCanEditIf = true ]
-                $[/ if ]
-            boolean canUpdate${attribute|name|capitalize} = ${entity|domain:Service|name|uncapitalize}.canUpdateAttribute($[ if isUserEntity ]dto, $[/ if ]"${attribute|name}");
-            model.addAttribute("canEdit${entity|name}_${attribute|name}", canUpdate${attribute|name|capitalize});
-            $[/ foreach ]
-            $[ if addedCanEditIf ]
-        }
-            $[/ if ]
+$[ outlet getBody
+   D "The author can include anything here in the body of the get method."
+]
+$[/ outlet ]
 $[* We need to find all the unique situations where we are not filtering and filtering for a specific attribute *]
 
-            $[ let filterAttributeMap = @{}@ ]
-            $[ let toOneEntities = @[]@ ]
-            $[ foreach relationship in entity.relationships ]
-                $[ let toEntity = relationship.to.entity ]
-                $[ if relationship.isOneToMany ]
-                    $[ call AutoWireEntity(entity: toEntity) ]
-        {
-            List<${toEntity|domain:JSONDTO|name}> list = ${toEntity|domain:Service|name|uncapitalize}.get${toEntity|domain:JSONDTO|name}ListBy${relationship.reverseRelationship|domain:Model|name|capitalize}(id, 0, 1000, true);
-            model.addAttribute("${relationship.name}List", list);
-            boolean canAdd = ${toEntity|domain:Service|name|uncapitalize}.canCreate();
-            model.addAttribute("canAdd${toEntity|name}", canAdd);
-        }
-                $[ elseif relationship.to.isOne && !(!relationship.isOptional && relationship.isParent) && (relationship|domain:AdminUI).hasTag("selectable") ]
-                    $[ let adminRelationship = relationship|domain:AdminUI ]
-$[* FILTER LISTS *]
-                    $[ if adminRelationship.hasTag("filter:attribute") && adminRelationship.hasTag("filter:value") ]
-                        $[ let filterAttributeName = adminRelationship.tagValue("filter:attribute") ]
-                        $[ let filterAttributeValue = adminRelationship.tagValue("filter:value") ]
-                        $[ if !toEntity.hasAttributeNamed(filterAttributeName) ]
-                            $[ log fatal ]Specified filter attribute doesn't exist: ${toEntity|name}.${filterAttributeName}$[/ log ]
-                        $[/ if ]
-                        $[ let filterAttribute = toEntity.attributeNamed(filterAttributeName) ]
-                        $[ if !filterAttribute.isParent ]
-                            $[ log fatal ]Specified filter attribute must be a parent attribute: ${toEntity|name}.${filterAttributeName}$[/ log ]
-                        $[/ if ]
-                        $[ switch filterAttribute.type ]
-                            $[ case enum ]
-                                $[ let enumItem = filterAttribute.type.getItemByName(filterAttributeValue) ]
-                                $[ if enumItem == null ]
-                                    $[ log fatal ]The attribute value "${filterAttributeValue}" to filter by is not a valid member of ${filterAttribute.type.name}.$[/ log ]
-                                $[/ if ]
-                                $[ let filterAttributeValue = (enumItem.enum|domain:ProtobufDTO|name) + "." + (enumItem|domain:ProtobufDTO|name) ]
-                            $[ default ]
-                                $[ log fatal ]Filter attribute type not supported.$[/ log ]
-                        $[/ switch ]
-        {
-                        $[ call AutoWireEntity(entity: filterAttribute.entity) ]
-$[ send imports ]
-import ${filterAttribute.type|domain:Model|fullname};
-$[/ send ]
-            List<${filterAttribute.entity|domain:JSONDTO|name}> list = ${filterAttribute.entity|domain:Service|name|uncapitalize}.get${filterAttribute.entity|domain:JSONDTO|name}ListBy${filterAttribute|domain:Model|name|capitalize}(${filterAttributeValue}, 0, 1000, true);
-            model.addAttribute("${relationship|domain:JSONDTO|name|uncapitalize}List", list);
-        }
-                    $[ else ]
-$[* UNIQUE FULL LISTS *]
-                        $[ let toEntity = relationship.to.entity ]
-                        $[ if !toOneEntities.contains(toEntity) ]
-                            $[ do toOneEntities.add(toEntity) ]
-                        $[/ if ]
-                    $[/ if ]
-                $[/ if ]
-            $[/ foreach ]
-$[* FULL LISTS *]
-            $[ foreach toEntity in toOneEntities ]
-                $[ call AutoWireEntity(entity: toEntity) ]
-        {
-                $[ if toEntity.hasParentRelationshipToEntity(entity) ]
-            List<${toEntity|domain:JSONDTO|name}> list = ${toEntity|domain:Service|name|uncapitalize}.get${toEntity|domain:JSONDTO|name}ListBy${entity|domain:Model|name}(id, 0, 1000, true);
-                $[ else ]
-            List<${toEntity|domain:JSONDTO|name}> list = ${toEntity|domain:Service|name|uncapitalize}.get${toEntity|domain:JSONDTO|name}List(0, 1000, true);
-                $[/ if ]
-            model.addAttribute("${toEntity|domain:JSONDTO|name|uncapitalize}List", list);
-        }
-            $[/ foreach ]
-            $[ if entity.hasParentRelationship ]
-                $[ let parentNumber = 1 ]
-        Vector<Object> parentDtos = new Vector<>();
-                $[ let prevParentIdName = "id" ]
-                $[ let nextEntity = entity ]
-                $[ foreach parentEntity in entity.primaryParentAncestory|reverse ]
-                    $[ let parentPkTypeName = parentEntity.pkType|language ]
-                    $[ call AutoWireEntity(entity: parentEntity) ]
-                    $[ let parentServiceName = parentEntity|domain:Service|name ]
-        ${parentPkTypeName} ${nextEntity|name|uncapitalize}ParentId = ${nextEntity|domain:Service|name|uncapitalize}.getParentId(${prevParentIdName});
-        parentDtos.insertElementAt(${parentServiceName|uncapitalize}.get${parentEntity|domain:JSONDTO|name}ById(${nextEntity|name|uncapitalize}ParentId),0);
-                    $[ let prevParentIdName = (nextEntity|name|uncapitalize) + "ParentId" ]
-                    $[ let nextEntity = parentEntity ]
-                $[/ foreach ]
-                $[ foreach parentEntity in entity.primaryParentAncestory ]
-        model.addAttribute("${parentEntity|domain:JSONDTO|name|uncapitalize}", parentDtos.get(${parentNumber - 1}));
-                    $[ let parentNumber = parentNumber + 1 ]
-                $[/ foreach ]
-            $[/ if ]
         populateUser(model);
         return "${htmlFilename}";
     }

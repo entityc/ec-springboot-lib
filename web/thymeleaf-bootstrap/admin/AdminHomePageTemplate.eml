@@ -65,9 +65,6 @@ $[/ outlet ]
         $[/ foreach ]
     </div>
 </div>
-
-        $[ call commonBodyScripts() ]
-
 </body>
 </html>
     $[/ file ]
@@ -207,9 +204,6 @@ $[/ outlet ]
 			</tbody>
 		</table>
 </div>
-
-            $[ call commonBodyScripts() ]
-
 </body>
 </html>
         $[/ file ]

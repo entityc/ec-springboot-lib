@@ -32,6 +32,15 @@ $[author to org.entityc.springboot.repository]
              "ORDER BY pt.created_on DESC LIMIT ?3 OFFSET ?2", nativeQuery = true)
     List<${modelName}> get${modelName}ListAssociatedWith${destMMEntity|domain:Model|name}(${destPKType} ${destPKVarName}, long start, int limit);
 
+    @Query(value =
+            "SELECT COUNT(pt.*) " +
+            "FROM ${entity|domain:Database|name} pt " +
+            "WHERE pt.${sourcePKDBName} IN " +
+              "(SELECT ${sourcePKDBName} " +
+                 "FROM ${manyToManyEntity|domain:Database|name} " +
+                 "WHERE ${destPKDBName} = ?1) ", nativeQuery = true)
+    Long count${modelName}By${destMMEntity|domain:Model|name}Id(${destPKType} ${destPKVarName});
+
     @Modifying
     @Query(value =
             "INSERT INTO ${manyToManyEntity|domain:Database|name} " +

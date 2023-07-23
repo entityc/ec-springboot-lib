@@ -5,7 +5,7 @@ $[author to org.entityc.springboot.service]
     $[author to outlet commentHeader phase = initial
       D "Standard source header."
     ]
-    $[call entityHeader(title:"s Service class is responsible for higher level functions for the following entity.") ]
+    $[call entityHeader(title:"A Service class is responsible for higher level functions for the following entity.") ]
     $[/author]
 
     $[author to outlet entityLoopTop scope = publisher phase = initial

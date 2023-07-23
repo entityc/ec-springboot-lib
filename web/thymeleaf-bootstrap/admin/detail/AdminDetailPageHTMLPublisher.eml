@@ -70,7 +70,7 @@ $[ import "web/thymeleaf-bootstrap/WebPageFunctions" ]
 $[ import "web/thymeleaf-bootstrap/modal/ModalFunctions" ]
 $[ import "security/SecurityFunctions" ]
 
-$[ publisher org.entityc.springboot.web.admin.detail ]
+$[ publisher org.entityc.springboot.web.admin.html.detail ]
     $[ foreach entity in space.entities ]
         $[ if entity.isImplicit || entity.isExtern || entity.isIncluded || entity.isTransient || entity.isSecondary ]$[ continue ]$[/ if ]
         $[ let domainEntity = entity|domain ]

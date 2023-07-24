@@ -14,13 +14,13 @@ $[function insertEntitySelectModalHTML
         <!-- -->
         <!-- ENTITY SELECT MODAL for entity: ${entity|name} relationship: ${relationship|name} -->
         <!-- -->
-        <div class="modal fade" id="${relationship.name}_EditModal" tabindex="-1" role="dialog" aria-labelledby="${relationship.name}_EditModalLabel" aria-hidden="true">
+        <div class="modal fade" id="${relationship.name}_EntitySelectModal" tabindex="-1" role="dialog" aria-labelledby="${relationship.name}_EntitySelectModalLabel" aria-hidden="true">
           <div class="modal-dialog modal-sm" role="document">
             <form th:action="@{${adminUrlPrefix}/${entity|domain:APIPath|name}/{id}/update(id=${$}{${entityDtoClassName}.id})}" method="post">
 				<input id="${relationship.name|dashes}-edit-field-ident" name="edit-field-ident" type="hidden"/>
                 <div class="modal-content">
                   <div class="modal-header">
-                    <h5 class="modal-title" id="${relationship.name}_EditModalLabel">Edit Field</h5>
+                    <h5 class="modal-title" id="${relationship.name}_EntitySelectModalLabel">Edit Field</h5>
                     <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
                       <span aria-hidden="true">&times;</span>
                     </button>
@@ -62,16 +62,16 @@ $[function insertEntitySelectModalScript
   )
 ]
 <script>
-var ${relationship.name}_EditModal = document.getElementById('${relationship.name}_EditModal')
-${relationship.name}_EditModal.addEventListener('show.bs.modal', function (event) {
+var ${relationship.name}_EntitySelectModal = document.getElementById('${relationship.name}_EntitySelectModal')
+${relationship.name}_EntitySelectModal.addEventListener('show.bs.modal', function (event) {
   // Button that triggered the modal
   var button = event.relatedTarget
   var fieldName = button.getAttribute('data-bs-field-name')
   var fieldTitle = button.getAttribute('data-bs-field-title')
   var enumItems = button.getAttribute('data-bs-field-value');
   var modalFieldIdent = document.getElementById('${relationship.name|dashes}-edit-field-ident')
-  var modalTitle = ${relationship.name}_EditModal.querySelector('.modal-title')
-  var modalBodySelect = ${relationship.name}_EditModal.querySelector('.modal-body select')
+  var modalTitle = ${relationship.name}_EntitySelectModal.querySelector('.modal-title')
+  var modalBodySelect = ${relationship.name}_EntitySelectModal.querySelector('.modal-body select')
   modalFieldIdent.value = fieldName
   modalTitle.textContent = 'Edit ' + fieldTitle
   for ( var i = 0, len = modalBodySelect.options.length; i < len; i++ ) {

@@ -31,9 +31,8 @@ $[/ send ]
 $[/ author ]
 
 $[ author to org.entityc.springboot.web.admin.html.detail ]
-    $[ author to outlet topSection
-       D "This author sets page model variables that provide data to the breadcrumb navigation"
-       D "element."
+    $[ author to outlet BodyTopSection
+       D "This author provides the HTML for the breadcrumb bar."
     ]
   <nav aria-label="breadcrumb">
     <ol class="breadcrumb">

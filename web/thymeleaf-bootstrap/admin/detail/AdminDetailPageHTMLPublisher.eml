@@ -83,9 +83,9 @@ $[ publisher org.entityc.springboot.web.admin.html.detail ]
 <head>
             $[ call commonHead(title: pageTitle) ]
             $[ call stylesheet_css(href: "https://cdn.jsdelivr.net/npm/inscrybmde@1.11.6/dist/inscrybmde.min.css", th:false, attr:"") ]
-            $[ call javascript(src: "https://cdn.jsdelivr.net/npm/inscrybmde@1.11.6/dist/inscrybmde.min.js", th:false, attr:"") ]
+            $[ call javascript(     src: "https://cdn.jsdelivr.net/npm/inscrybmde@1.11.6/dist/inscrybmde.min.js", th:false, attr:"") ]
             $[ call stylesheet_css(href: "https://cdn.jsdelivr.net/npm/github-markdown-css@4.0.0/github-markdown.min.css", th:false, attr:"") ]
-            $[ call javascript(src: "https://cdn.jsdelivr.net/npm/marked@4.0.0/marked.min.js", th:false, attr:"") ]
+            $[ call javascript(     src: "https://cdn.jsdelivr.net/npm/marked@4.0.0/marked.min.js", th:false, attr:"") ]
             $[ foreach attribute in entity.attributes ]
                 $[ if attribute.secondaryEntityIsTagged("asset:file") ]
                     $[ call stylesheet_css(href: "https://cdn.jsdelivr.net/gh/kartik-v/bootstrap-fileinput@5.2.5/css/fileinput.min.css", th:false, attr:"media=\"all\"") ]
@@ -94,265 +94,22 @@ $[ publisher org.entityc.springboot.web.admin.html.detail ]
             $[/ foreach ]
             $[ call stylesheet_css(href: "https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css", th:false, attr:"") ]
             $[ call stylesheet_css(href: "https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.9.0/css/bootstrap-datepicker.css", th:false, attr:"") ]
-            $[ call javascript(src: "https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.9.0/js/bootstrap-datepicker.js", th:false, attr:"") ]
+            $[ call javascript(     src: "https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.9.0/js/bootstrap-datepicker.js", th:false, attr:"") ]
 </head>
 <body>
             $[ call commonBodyNavbar(backURL: null, title: pageTitle) ]
 <br>
 <br>
 <div class="container">
-$[ outlet topSection ]
+$[ outlet BodyTopSection ]
 $[/ outlet ]
-            $[ call headlineExpression(dtoEntity: entity|domain:JSONDTO)->(thExpression: headlineExpression) ]
-            $[ if headlineExpression != null ]
-$[ outlet headlineButtonArea ]
-    <h2 th:text="${headlineExpression}"></h2>
+$[ outlet HeadlineSection ]
 $[/ outlet ]
-            $[/ if ]
 	<div class="container">
+$[ outlet BodyMainSection ]
+$[/ outlet ]
 
 $[*-----------------------------------------------------------------------------------------------------------------*]
-            $[ function tableForEntity
-               D "Generates a table row for a single attribute. This is in a function so it can be used for"
-               D "secondary entity attributes."
-               (entity,
-                secondaryAttributeStack,
-                dtoVariable,
-                optShowMarkdownIcon
-               )
-            ]
-                $[ let fieldWidthStyle = "20%" ]
-                $[ let domainEntity = entity|domain:AdminUI ]
-                $[ let entityVariablePrefix = entity|name|uncapitalize ]
-	    <!-- Table for Entity: ${domainEntity|name} -->
-		<table class="table">
-                $[ if entity.isSecondary && secondaryAttributeStack != null && secondaryAttributeStack.count > 0 ]
-                    $[ let secondaryAttribute = secondaryAttributeStack.last() ]
-			<thead>
-			<tr>
-				<th th:text="#{${secondaryAttribute.attribute.entity|domain:StaticLocalization|name}.${secondaryAttribute|domain:StaticLocalization|name}}"></th>
-			</tr>
-			</thead>
-                $[/ if ]
-		<tbody>
-$[* ATTRIBUTES *]
-                $[ let domainAttributeList = domainEntity.declaredDomainAttributes ]
-                $[ if domainAttributeList.isEmpty ]
-                    $[ let domainAttributeList = domainEntity.attributes ]
-                $[/ if ]
-        <!-- Attributes -->
-                $[ foreach domainAttribute in domainAttributeList ]
-                    $[ if domainAttribute.hasTag("detail") || entity.isSecondary ]
-                        $[ if domainAttribute.type.isEntityType ]
-                            $[ let secondaryEntity = domainAttribute.attribute.typeEntity ]
-                            $[ if secondaryEntity.hasTag("asset:file") ]
-                                $[ let editModalType = "asset" ]
-                                $[ let domainUrlAttribute = secondaryEntity.attributeTagged("url") ]
-                                $[ let attributeName = dtoVariable + "." + domainAttribute.name ]
-                                $[ let urlAttributeName = attributeName + "." + domainUrlAttribute.name ]
-                                $[ capture canEditVariable ]canEdit${entity|name}$[/ capture ]
-        <tr>
-			<th th:text="#{${entity|domain:StaticLocalization|name}.${domainAttribute|domain:StaticLocalization|name}}" scope="col" style="width:${fieldWidthStyle}">${domainAttribute|title}</th>
-            <td style="width:auto">
-                <div class="mb-3">
-                                $[ if domainAttribute.hasTag("image") ]
-                  <img th:src="@{${$}{(${attributeName} == null || ${urlAttributeName} == null) ? '/images/default.png' : ${urlAttributeName}}}" width="128" height="128"/>
-                                $[ else ]
-                  <span th:text="@{${$}{(${attributeName} == null || ${urlAttributeName} == null) ? 'no file' : ${urlAttributeName}}}">
-                                $[/ if ]
-                </div>
-            </td>
-            <td style="width:1%">
-            <button th:if="${$}{${canEditVariable}}" type="button" class="btn btn-primary"
-                data-bs-toggle="modal" data-bs-target="#${editModalType}UploadModal" data-bs-field-name="${domainAttribute|name}"
-                data-bs-field-title="${domainAttribute|title}">Edit</button>
-            </td>
-        </tr>
-                            $[ else ]
-        <tr>
-            <td colspan="4">
-                                $[ let attributeStack = secondaryAttributeStack != null ? secondaryAttributeStack:(@[]@) ]
-                                $[ do attributeStack.add(domainAttribute) ]
-                                $[ call tableForEntity(dtoVariable: dtoVariable + "." + (domainAttribute|domain:JSONDTO|name), optShowMarkdownIcon: optShowMarkdownIcon, entity: secondaryEntity, secondaryAttributeStack: attributeStack) ]
-                                $[ do attributeStack.remove(domainAttribute) ]
-            </td>
-        </tr>
-                            $[/ if ]
-                        $[ else ]
-		<tr>
-			<th th:text="#{${entity|domain:StaticLocalization|name}.${domainAttribute|domain:StaticLocalization|name}}" scope="col" style="width:${fieldWidthStyle}">${domainAttribute|title}</th>
-                            $[ if domainAttribute.hasTag("markdown") ]
-                                $[ if optShowMarkdownIcon ]
-			<td><img src="/images/MarkdownIcon.png" width="23" height="14"/></td>
-                                $[/ if ]
-			<td>
-                                $[ let fieldName = domainAttribute|name ]
-                                $[ if secondaryAttributeStack != null && secondaryAttributeStack.count > 0 ]
-                                    $[ let fieldNamePrefix = "" ]
-                                    $[ foreach item in secondaryAttributeStack ]
-                                        $[ if !item#first ]$[ let fieldNamePrefix += "-" ]$[/ if ]
-                                        $[ let fieldNamePrefix += item|name ]
-                                    $[/ foreach ]
-                                    $[ let fieldName = fieldNamePrefix + "-" + fieldName ]
-                                $[/ if ]
-			<input type="hidden" id="${fieldName}-hidden-value" th:value="${$}{${dtoVariable}.${domainAttribute.name}}"/>
-			  <div id="${fieldName}-value" class="markdown-body"/>
-              <script>
-                document.getElementById('${fieldName}-value').innerHTML =
-                  marked.parse(document.getElementById('${fieldName}-hidden-value').value, {pedantic: false, gfm: true});
-              </script>
-			</td>
-                            $[ else ]
-                                $[ if optShowMarkdownIcon ]
-            <td></td>
-                                $[/ if ]
-                                $[ let fieldName = domainAttribute|name ]
-                                $[ if secondaryAttributeStack != null && secondaryAttributeStack.count > 0 ]
-                                    $[ let fieldNamePrefix = "" ]
-                                    $[ foreach item in secondaryAttributeStack ]
-                                        $[ if item#first ]
-                                            $[ let fieldNamePrefix = (item.attribute.entity.name|uncapitalize) + "_" ]
-                                        $[ else ]
-                                            $[ let fieldNamePrefix += "_" ]
-                                        $[/ if ]
-                                        $[ let fieldNamePrefix = fieldNamePrefix + (item|name) ]
-                                    $[/ foreach ]
-                                    $[ let fieldName = fieldNamePrefix + "_" + fieldName ]
-                                $[ else ]
-                                    $[ let fieldName = (entity.name|uncapitalize) + "_" + domainAttribute.name ]
-                                $[/ if ]
-                                $[ switch domainAttribute.type ]
-                                    $[ case date ]
-                                        $[ capture textExpr ]#dates.format(${dtoVariable}.${domainAttribute.name}, 'dd-MMM-yyyy')$[/ capture ]
-                                    $[ case enum ]
-                                        $[ capture textExpr ]${fieldName}_text$[/ capture ]
-                                    $[ default ]
-                                        $[ capture textExpr ]${dtoVariable}.${domainAttribute.name}$[/ capture ]
-                                $[/ switch ]
-            <td th:text="${$}{${textExpr}}"$[ if domainAttribute#first ] scope="row"$[/ if ] style="width:auto"></td>
-                            $[/ if ]
-            <td style="width:1%">
-                            $[ call checkIfAttributeIsEditable(attribute: domainAttribute.attribute)->(editable: editable) ]
-                            $[ if editable ]
-                                $[ let editModalType = "string" ]
-                                $[ let valueVariableName = dtoVariable + "." + domainAttribute.name ]
-                                $[ switch domainAttribute.attribute.type ]
-                                    $[ case date ]
-                                        $[ capture valueVariableName ]#dates.format(${dtoVariable}.${domainAttribute.name}, 'dd-MMM-yyyy')$[/ capture ]
-                                        $[ let editModalType = "date" ]
-                                    $[ case boolean ]
-                                        $[ let editModalType = "boolean" ]
-                                    $[ case enum ]
-                                        $[ let enumAttributeName = entityVariablePrefix + "_" + domainAttribute.name ]
-                                        $[ if secondaryAttributeStack != null && secondaryAttributeStack.count > 0 ]
-                                            $[ let fieldNamePrefix = "" ]
-                                            $[ foreach item in secondaryAttributeStack ]
-                                                $[ if !item#first ]
-                                                    $[ let fieldNamePrefix += "_" ]
-                                                $[ else ]
-                                                    $[ let fieldNamePrefix = (item.attribute.entity.name|uncapitalize) + "_" ]
-                                                $[/ if ]
-                                                $[ let fieldNamePrefix += item|name ]
-                                            $[/ foreach ]
-                                            $[ let enumAttributeName = fieldNamePrefix + "_" + domainAttribute.name ]
-                                        $[/ if ]
-                                        $[ let editModalType = domainAttribute.attribute.type.name + "_" ]
-                                        $[ let valueVariableName = enumAttributeName + "_enum_value" ]
-                                        $[ if domainAttribute.attribute.isArray ]
-                                            $[ let editModalType = editModalType + "Multi_" ]
-                                            $[ let valueVariableName += "s" ]
-                                        $[/ if ]
-                                    $[ default ]
-                                $[/ switch ]
-                                $[ if secondaryAttributeStack != null && secondaryAttributeStack.count > 0 ]
-                                    $[ capture canEditVariable ]canEdit${(secondaryAttributeStack.first()).domainEntity.entity|name}$[/ capture ]
-                                $[ else ]
-                                    $[ call writeAccessAttributes(entity: entity)->(attributeList: attributeList) ]
-                                    $[ capture canEditVariable ]canEdit${entity|name}$[ if attributeList.contains(domainAttribute.attribute) ]_${domainAttribute.name}$[/ if ]$[/ capture ]
-                                $[/ if ]
-                                $[ let fieldName = domainAttribute|name ]
-                                $[ if secondaryAttributeStack != null && secondaryAttributeStack.count > 0 ]
-                                    $[ let fieldNamePrefix = "" ]
-                                    $[ foreach item in secondaryAttributeStack ]
-                                        $[ if !item#first ]$[ let fieldNamePrefix += "." ]$[/ if ]
-                                        $[ let fieldNamePrefix += item|name ]
-                                    $[/ foreach ]
-                                    $[ let fieldName = fieldNamePrefix + "." + fieldName ]
-                                $[/ if ]
-            <button th:if="${$}{${canEditVariable}}" type="button" class="btn btn-primary"
-                data-bs-toggle="modal" data-bs-target="#${editModalType}EditModal" data-bs-field-name="${fieldName}"
-                data-bs-field-title="${domainAttribute|title}"
-                th:attr="data-bs-field-value=${$}{${valueVariableName}}">Edit</button>
-                            $[/ if ]
-            </td>
-		</tr>
-                        $[/ if ]
-                    $[/ if ]
-                $[/ foreach ]
-        <!-- Relationships -->
-                $[ foreach domainRelationship in domainEntity.declaredDomainRelationships ]
-                    $[ if domainRelationship.to.isOne ]
-                        $[ let toEntity = domainRelationship.to.entity ]
-                        $[ if !domainRelationship.hasTag("display:attribute") ]
-                            $[ continue ]
-                        $[/ if ]
-                        $[ let displayAttributeName = domainRelationship.tagValue("display:attribute") ]
-                        $[ let valueVariableField = dtoVariable + "." + domainRelationship.name ]
-                        $[ let valueVariableName = valueVariableField + "." + displayAttributeName ]
-                        $[ capture canEditVariable ]canEdit${entity|name}$[/ capture ]
-		<tr>
-			<th th:text="#{${entity|domain:StaticLocalization|name}.${domainRelationship|domain:StaticLocalization|name}}" scope="col" style="width:${fieldWidthStyle}">${domainRelationship|title}</th>
-                        $[ if optShowMarkdownIcon ]
-            <td></td>
-                        $[/ if ]
-			<td th:text="${$}{${valueVariableField}==null?'':${valueVariableName}}"$[ if domainRelationship#first ] scope="row"$[/ if ] style="width:auto"></td>
-			<td style="width:auto">
-            <button th:if="${$}{${canEditVariable}}" type="button" class="btn btn-primary"
-                data-bs-toggle="modal" data-bs-target="#${domainRelationship.name}_EditModal" data-bs-field-name="${domainRelationship|name}"
-                data-bs-field-title="${domainRelationship|title}"
-                th:attr="data-bs-field-value=${$}{${valueVariableField}==null?'':${valueVariableName}}">Edit</button>
-            </td>
-		</tr>
-                    $[/ if ]
-                $[/ foreach ]
-		</tbody>
-		</table>
-            $[/ function ]
-$[*-----------------------------------------------------------------------------------------------------------------*]
-            $[ call tableForEntity(dtoVariable: entity|domain:JSONDTO|name|uncapitalize, optShowMarkdownIcon: optShowMarkdownIcon, entity: entity, secondaryAttributeStack: null) ]
-            $[ call insertDateEditModalHTML() ]
-            $[ call insertStringEditModalHTML() ]
-            $[ call insertBooleanEditModalHTML() ]
-$[* Add HTML for Enums (both single and array (many)), don't allow duplicates *]
-            $[ let singleEnumsInserted = @[]@ ]
-            $[ let manyEnumsInserted = @[]@ ]
-            $[ foreach domainAttribute in domainEntity.getFlatDeclaredAttributeList(@["enum","entity"]@) ]
-                $[ if domainAttribute.type.isEnumType ]
-                    $[ if domainAttribute.attribute.isArray ]
-                        $[ if !manyEnumsInserted.contains(domainAttribute.type) ]
-                            $[ call insertManyEnumEditModalHTML(attribute: domainAttribute.attribute) ]
-                            $[ do manyEnumsInserted.add(domainAttribute.type) ]
-                        $[/ if ]
-                    $[ else ]
-                        $[ if !singleEnumsInserted.contains(domainAttribute.type) ]
-                            $[ call insertEnumEditModalHTML(attribute: domainAttribute.attribute) ]
-                            $[ do singleEnumsInserted.add(domainAttribute.type) ]
-                        $[/ if ]
-                    $[/ if ]
-                $[ elseif domainAttribute.type.isEntityType ]
-                    $[ let secondaryEntity = domainAttribute.attribute.typeEntity ]
-                    $[ if secondaryEntity.hasTag("asset:file") ]
-                        $[ call insertFileUploadModalHTML() ]
-                    $[/ if ]
-                $[/ if ]
-            $[/ foreach ]
-$[* Treat to-one relationships like attributes assigned to an object of the relationships entity *]
-            $[ foreach domainRelationship in domainEntity.declaredDomainRelationships if domainRelationship.hasTag("detail") ]
-                $[ if domainRelationship.to.isOne ]
-                    $[ call insertEntitySelectModalHTML(relationship: domainRelationship.relationship) ]
-                $[/ if ]
-            $[/ foreach ]
-	</div>
             $[ foreach relationship in domainEntity.declaredDomainRelationships if relationship.hasTag("detail") ]
                 $[ if relationship.isOneToMany || relationship.isManyToMany ]
                     $[ let toEntity = relationship.to.entity ]

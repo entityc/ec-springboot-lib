@@ -8,6 +8,8 @@ $[import "web/thymeleaf-bootstrap/admin/detail/AdminDetailPageControllerPublishe
 $[import "web/thymeleaf-bootstrap/admin/detail/SecurityAuthor"]
 $[import "web/thymeleaf-bootstrap/admin/detail/GetAuthor"]
 $[import "web/thymeleaf-bootstrap/admin/detail/BreadcrumbAuthor"]
+$[import "web/thymeleaf-bootstrap/admin/detail/HeadlineAuthor"]
+$[import "web/thymeleaf-bootstrap/admin/detail/DetailTableAuthor"]
 $[import "web/thymeleaf-bootstrap/admin/detail/AdminDetailPageHTMLPublisher"]
 $[import "web/thymeleaf-bootstrap/admin/AdminNewPageTemplate"]
 $[install "web/js/restore-scroll-point.js" "resources/static/js"]

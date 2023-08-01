@@ -5,6 +5,7 @@ $[ author to org.entityc.springboot.controller.protobuf ]
     $[ author to outlet methods
        D "Adds an associatedTo... endpoint to the controller for protobuf objects."
     ]
+        $[ let protobufNamespace = (space|domain:ProtobufDTO).domain.namespace ]
         $[ foreach relationship in entity.implicitRelationships ]
             $[ if relationship.to.entity.hasTag("internal:many-to-many") ]
                 $[ let manyToManyEntity = relationship.to.entity ]
@@ -15,13 +16,14 @@ $[ author to org.entityc.springboot.controller.protobuf ]
                         $[ break ]
                     $[/ if ]
                 $[/ foreach ]
-                $[ capture fullProtobufClassName ]${module.name|capitalize}.${destMMEntity|domain:ProtobufDTO|name}$[/ capture ]
+                $[ capture fullProtobufClassName ]${destMMEntity.module.name|capitalize}.${destMMEntity|domain:ProtobufDTO|name}$[/ capture ]
                 $[ let destModelName = destMMEntity|domain:Model|name ]
                 $[ let destPbMapper = destMMEntity|domain:DTOMapper|name|uncapitalize ]
                 $[ call addAutoWired(domainEntity: destMMEntity|domain:DTOMapper) ]
                 $[ let destPKMethName = destMMEntity.primaryKeyAttribute|domain:Model|name|capitalize ]
 $[ send imports ]
 import ${destMMEntity|domain:Model|fullname};
+import ${protobufNamespace}.${destMMEntity.module.name|capitalize};
 $[/ send ]
                 $[ publisher org.entityc.springboot.controller.associate
                    D "Associate endpoint"

@@ -53,6 +53,12 @@ $[author to org.entityc.springboot.repository]
             "WHERE ${sourcePKDBName} = ?1 AND ${destPKDBName} = ?2", nativeQuery = true)
     void removeAssociationTo${destMMEntity|domain:Model|name}(${sourcePKType} ${sourcePKVarName}, ${destPKType} ${destPKVarName});
 
+    @Modifying
+    @Query(value =
+            "DELETE FROM ${manyToManyEntity|domain:Database|name} " +
+            "WHERE ${sourcePKDBName} = ?1", nativeQuery = true)
+    void removeAllAssociationTo${destMMEntity|domain:Model|name}(${sourcePKType} ${sourcePKVarName});
+
     @Query(value =
          "SELECT CASE WHEN COUNT(t) > 0 THEN true ELSE false END " +
          "FROM ${manyToManyEntity|domain:Database|name} t WHERE t.${sourcePKDBName} = ?1 AND t.${destPKDBName} = ?2", nativeQuery = true)

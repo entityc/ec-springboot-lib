@@ -323,6 +323,8 @@ $[ foreach space.modules ]
             $[ call enumHeader(title: "This class is for the implementation of the following enum.") ]
 package ${domain.namespace};
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+
 public enum ${enum|domain|name} {
             $[ foreach item in enum.items ]
                 $[ if item.hasDescription ]
@@ -380,6 +382,19 @@ public enum ${enum|domain|name} {
     public String getProtobufValue() {
         return protobufValue;
     }
+$[*
+    /**
+     This method is needed to convert by the numberValue field instead of by ordinate.
+     */
+    @JsonCreator
+    public static ${enum|domain|name} fromValue(int value) {
+        for (${enum|domain|name} item : ${enum|domain|name}.values()) {
+            if (item.numberValue == value) {
+                return item;
+            }
+        }
+        throw new IllegalArgumentException("Invalid value for ${enum|domain|name} enum: " + value);
+    } *]
             $[/ if ]
 }
 

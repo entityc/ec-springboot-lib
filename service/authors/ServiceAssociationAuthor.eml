@@ -1,0 +1,91 @@
+$[ author to org.entityc.springboot.service ]
+    $[ author to outlet methods
+       D "**Associate To** This method allows the association between two entities that have a"
+       D "many-to-many relationship to be created."
+    ]
+        $[ foreach relationship in entity.implicitRelationships ]
+            $[ if relationship.to.entity.hasTag("internal:many-to-many") ]
+                $[ let manyToManyEntity = relationship.to.entity ]
+                $[ let toMMEntity = null ]
+                $[ foreach mmRel in manyToManyEntity.implicitRelationships ]
+                    $[ if mmRel.to.entity.name != entity.name ]
+                        $[ let toMMEntity = mmRel.to.entity ]
+                        $[ break ]
+                    $[/ if ]
+                $[/ foreach ]
+                $[ let fromModelName = modelName]
+                $[ let fromRepoVarName = repositoryVariableName]
+                $[ let toModelName = toMMEntity|domain:Model|name ]
+                $[ let toRepoEntityName = toMMEntity|domain:Repository|name ]
+                $[ let toRepoVarName = toRepoEntityName|uncapitalize ]
+                $[ let fromPKType = entity.pkType|language ]
+                $[ let fromPKVarName = entity.primaryKeyAttribute|domain|name ]
+                $[ let toPKType = toMMEntity.pkType|language ]
+                $[ let toPKVarName = toMMEntity.primaryKeyAttribute|domain|name ]
+                $[ let fromDtoName = entity|domain:JSONDTO|name ]
+                $[ let toDtoName = toMMEntity|domain:JSONDTO|name ]
+$[ send imports ]
+import ${toMMEntity|domain:Model|fullname};
+import ${toMMEntity|domain:JSONDTO|fullname};
+$[/ send ]
+                $[ call addAutoWired(domainEntity: toMMEntity|domain:Repository) ]
+    public List<${fromDtoName}> get${fromDtoName}ListAssociatedWith${toModelName}(${toPKType} ${toPKVarName}, long start, int limit) throws ServiceException {
+        Optional<${toModelName}> otherModelObjectOptional = ${toRepoVarName}.findById(${toPKVarName});
+        if (!otherModelObjectOptional.isPresent()) {
+            throw new EntityNotFoundException("${toModelName} not found.");
+        }
+
+        try {
+            List<${fromDtoName}> dtoList = new ArrayList<>();
+            List<${fromModelName}> list = ${fromRepoVarName}.get${fromModelName}ListAssociatedWith${toModelName}(${toPKVarName}, start, limit);
+            for(${fromModelName} modelObject : list) {
+                dtoList.add(dtoFromModel(modelObject, true));
+            }
+            return dtoList;
+        } catch (DataAccessException ex) {
+            throw new DaoException(ex.getMessage(), ex);
+        }
+    }
+
+    public void associateTo${toModelName}(${fromPKType} ${fromPKVarName}, ${toPKType} ${toPKVarName}) throws ServiceException {
+        Optional<${modelName}> modelObjectOptional = ${repositoryVariableName}.findById(${fromPKVarName});
+        if (!modelObjectOptional.isPresent()) {
+            throw new EntityNotFoundException("${modelName} not found.");
+        }
+
+        Optional<${toModelName}> otherModelObjectOptional = ${toRepoVarName}.findById(${toPKVarName});
+        if (!otherModelObjectOptional.isPresent()) {
+            throw new EntityNotFoundException("${toModelName} not found.");
+        }
+        if (!${repositoryVariableName}.isAssociatedTo${toModelName}(${fromPKVarName}, ${toPKVarName}) ) {
+            ${repositoryVariableName}.addAssociationTo${toModelName}(${fromPKVarName}, ${toPKVarName});
+        }
+    }
+
+    public void unassociateTo${toModelName}(${fromPKType} ${fromPKVarName}, ${toPKType} ${toPKVarName}) throws ServiceException {
+        Optional<${modelName}> modelObjectOptional = ${repositoryVariableName}.findById(${fromPKVarName});
+        if (!modelObjectOptional.isPresent()) {
+            throw new EntityNotFoundException("${modelName} not found.");
+        }
+
+        Optional<${toModelName}> otherModelObjectOptional = ${toRepoVarName}.findById(${toPKVarName});
+        if (!otherModelObjectOptional.isPresent()) {
+            throw new EntityNotFoundException("${toModelName} not found.");
+        }
+        if (${repositoryVariableName}.isAssociatedTo${toModelName}(${fromPKVarName}, ${toPKVarName}) ) {
+            ${repositoryVariableName}.removeAssociationTo${toModelName}(${fromPKVarName}, ${toPKVarName});
+        }
+    }
+
+    public void unassociateAll${toModelName}(${fromPKType} ${fromPKVarName}) throws ServiceException {
+        Optional<${modelName}> modelObjectOptional = ${repositoryVariableName}.findById(${fromPKVarName});
+        if (!modelObjectOptional.isPresent()) {
+            throw new EntityNotFoundException("${modelName} not found.");
+        }
+
+        ${repositoryVariableName}.removeAllAssociationTo${toModelName}(${fromPKVarName});
+    }
+            $[/ if ]
+        $[/ foreach ]
+    $[/ author ]
+$[/ author ]

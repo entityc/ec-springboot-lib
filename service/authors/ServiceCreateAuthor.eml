@@ -63,48 +63,5 @@ $[/outlet]
                 $[/foreach]
             $[/if]
         $[/author]
-        $[author to outlet methods
-          D "**Associate To** This method allows the association between two entities that have a"
-          D "many-to-many relationship to be created."
-        ]
-            $[foreach relationship in entity.implicitRelationships]
-                $[if relationship.to.entity.hasTag("internal:many-to-many")]
-                    $[let manyToManyEntity = relationship.to.entity]
-                    $[let destMMEntity = null]
-                    $[foreach mmRel in manyToManyEntity.implicitRelationships]
-                        $[if mmRel.to.entity.name != entity.name]
-                            $[let destMMEntity = mmRel.to.entity]
-                            $[break]
-                        $[/if]
-                    $[/foreach]
-                    $[let destModelName = destMMEntity|domain:Model|name]
-                    $[let destRepoEntityName = destMMEntity|domain:Repository|name]
-                    $[let destRepoVarName = destRepoEntityName|uncapitalize]
-                    $[let sourcePKType = entity.pkType|language]
-                    $[let sourcePKVarName = entity.primaryKeyAttribute|domain|name]
-                    $[let destPKType = destMMEntity.pkType|language]
-                    $[let destPKVarName = destMMEntity.primaryKeyAttribute|domain|name]
-$[send imports]
-import ${destMMEntity|domain:Model|fullname};
-$[/send]
-                    $[call addAutoWired(domainEntity:destMMEntity|domain:Repository)]
-
-    public void associateTo${destModelName}(${sourcePKType} ${sourcePKVarName}, ${destPKType} ${destPKVarName}) throws ServiceException {
-        Optional<${modelName}> modelObjectOptional = ${repositoryVariableName}.findById(${sourcePKVarName});
-        if (!modelObjectOptional.isPresent()) {
-            throw new EntityNotFoundException("${modelName} not found.");
-        }
-
-        Optional<${destModelName}> otherModelObjectOptional = ${destRepoVarName}.findById(${destPKVarName});
-        if (!otherModelObjectOptional.isPresent()) {
-            throw new EntityNotFoundException("${destModelName} not found.");
-        }
-        if (!${repositoryVariableName}.isAssociatedTo${destModelName}(${sourcePKVarName}, ${destPKVarName}) ) {
-            ${repositoryVariableName}.addAssociationTo${destModelName}(${sourcePKVarName}, ${destPKVarName});
-        }
-    }
-                $[/if]
-            $[/foreach]
-        $[/author]
     $[/author]
 $[/publisher]

@@ -8,30 +8,57 @@ $[ author to org.entityc.springboot.controller ]
         $[ foreach relationship in entity.implicitRelationships ]
             $[ if relationship.to.entity.hasTag("internal:many-to-many") ]
                 $[ let manyToManyEntity = relationship.to.entity ]
-                $[ let destMMEntity = null ]
+                $[ let toMMEntity = null ]
                 $[ foreach mmRel in manyToManyEntity.implicitRelationships ]
                     $[ if mmRel.to.entity.name != entity.name ]
-                        $[ let destMMEntity = mmRel.to.entity ]
+                        $[ let toMMEntity = mmRel.to.entity ]
                         $[ break ]
                     $[/ if ]
                 $[/ foreach ]
-                $[ let destModelName = destMMEntity|domain:Model|name ]
-                $[ let destDtoName = destMMEntity|domain:JSONDTO|name ]
-                $[ call addAutoWired(domainEntity: destMMEntity|domain:DTOMapper) ]
-                $[ let sourcePKType = entity.pkType|language ]
-                $[ let sourcePKVarName = entity.primaryKeyAttribute|domain|name ]
-                $[ let destPKType = destMMEntity.pkType|language ]
-                $[ let destPKMethName = destMMEntity.primaryKeyAttribute|domain:Model|name|capitalize ]
+                $[ let fromService = entity|domain:Service|name|uncapitalize ]
+                $[ let fromModelName = entity|domain:Model|name ]
+                $[ let fromDtoName = entity|domain:JSONDTO|name ]
+                $[ let fromPKType = entity.pkType|language ]
+                $[ let fromPKVarName = entity.primaryKeyAttribute|domain|name ]
+                $[ let toModelName = toMMEntity|domain:Model|name ]
+                $[ let toDtoName = toMMEntity|domain:JSONDTO|name ]
+                $[ let toPKType = toMMEntity.pkType|language ]
+                $[ let toPKMethName = toMMEntity.primaryKeyAttribute|domain:Model|name|capitalize ]
+                $[ call addAutoWired(domainEntity: toMMEntity|domain:DTOMapper) ]
 $[ send imports ]
-import ${destMMEntity|domain:Model|fullname};
-import ${destMMEntity|domain:JSONDTO|fullname};
+import ${toMMEntity|domain:Model|fullname};
+import ${toMMEntity|domain:JSONDTO|fullname};
 $[/ send ]
                 $[ publisher org.entityc.springboot.controller.associate
                    D "Associate endpoint"
                 ]
     // [Template] ${__template.name}:${__outlet.name} < ${__author.template.name}
     @RequestMapping(
-            path = "{id}/${destMMEntity|domain:APIPath|name}",
+            path = "${toMMEntity|domain:APIPath|name}/{id}",
+            method = RequestMethod.GET,
+            produces = "application/json"
+    )
+    @ResponseStatus(HttpStatus.ACCEPTED)
+$[ outlet annotation
+   D "Resides just above the method declaration in the annocation area."
+]
+$[/ outlet ]
+    public ResponseEntity<List<${fromDtoName}>> get${fromModelName}ListAssociatedWith${toModelName}(@PathVariable("id") UUID id,
+            @RequestParam(value = "start", required = false) Integer start,
+            @RequestParam(value = "limit", required = false) Integer limit)
+            throws ServiceException {
+        final int queryStart = ResourceUtils.defaultTo(start, 0);
+        final int queryLimit = ResourceUtils.defaultTo(limit, 10);
+        List<${fromDtoName}> results = ${fromService}.get${fromDtoName}ListAssociatedWith${toModelName}(id, queryStart, queryLimit);
+        HttpHeaders headers = new HttpHeaders();
+        headers.add("X-Total-Count", "" + results.size());
+        headers.add("Access-Control-Expose-Headers", "X-Total-Count");
+        return new ResponseEntity(results, headers, HttpStatus.OK);
+    }
+
+    // [Template] ${__template.name}:${__outlet.name} < ${__author.template.name}
+    @RequestMapping(
+            path = "{id}/${toMMEntity|domain:APIPath|name}/{to_id}",
             method = RequestMethod.POST,
             consumes = "application/json"
     )
@@ -40,9 +67,36 @@ $[ outlet annotation
    D "Resides just above the method declaration in the annocation area."
 ]
 $[/ outlet ]
-    public void associateTo${destModelName}(@PathVariable("id") UUID id, @RequestBody ${destDtoName} requestDto) throws ServiceException {
-        ${destModelName} requestObject = mapper.map(requestDto, ${destModelName}.class);
-        ${service}.associateTo${destModelName}(id, requestObject.get${destPKMethName}());
+    public void associateTo${toModelName}(@PathVariable("id") UUID id, @PathVariable("to_id") UUID to_id) throws ServiceException {
+        ${service}.associateTo${toModelName}(id, to_id);
+    }
+
+    // [Template] ${__template.name}:${__outlet.name} < ${__author.template.name}
+    @RequestMapping(
+            path = "{id}/${toMMEntity|domain:APIPath|name}/{toId}",
+            method = RequestMethod.DELETE
+    )
+    @ResponseStatus(HttpStatus.ACCEPTED)
+$[ outlet annotation
+   D "Resides just above the method declaration in the annocation area."
+]
+$[/ outlet ]
+    public void unassociateTo${toModelName}(@PathVariable("id") UUID id, @PathVariable("toId") UUID toId) throws ServiceException {
+        ${service}.unassociateTo${toModelName}(id, toId);
+    }
+
+    // [Template] ${__template.name}:${__outlet.name} < ${__author.template.name}
+    @RequestMapping(
+            path = "{id}/${toMMEntity|domain:APIPath|name}/all",
+            method = RequestMethod.DELETE
+    )
+    @ResponseStatus(HttpStatus.ACCEPTED)
+$[ outlet annotation
+   D "Resides just above the method declaration in the annocation area."
+]
+$[/ outlet ]
+    public void unassociateAll${toModelName}(@PathVariable("id") UUID id) throws ServiceException {
+        ${service}.unassociateAll${toModelName}(id);
     }
 
                 $[/ publisher ]

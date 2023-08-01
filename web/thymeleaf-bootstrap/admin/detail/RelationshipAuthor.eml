@@ -1,0 +1,201 @@
+$[ function RelationshipHeader
+   (relationship
+   ) ]
+    <!-- -->
+	<!-- Table for Relationship: ${relationship|name} -->
+    <!-- -->
+    <hr/>
+$[/ function ]
+
+$[ function SubObjectHeadingAndAddButton
+   (relationship,
+    toEntity,
+    adminUrlPrefix,
+    entityDtoClassName,
+    includeCanAdd
+   ) ]
+	    <div class="container g-0" th:if="${$}{!#lists.isEmpty(${relationship.name}List)$[ if includeCanAdd && toEntity.hasPrimaryParentRelationship ] || canAdd${toEntity|name}$[/ if ]}">
+            <div class="row">
+                <div class="col-md-auto">
+     	            <h3>${toEntity.entity|name|plural|title}</h3>
+                </div>
+    $[ if includeCanAdd && toEntity.hasPrimaryParentRelationship ]
+        $[ let actionUrl = (toEntity|domain:APIPath|name) + "/add" + "/{id}(id=${" + entityDtoClassName + ".id})" ]
+        	    <!-- Button for adding a sub-object -->
+                <div class="col-md-auto ms-auto">
+                    <form th:if="${$}{canAdd${toEntity|name}}" th:action="@{${adminUrlPrefix}/${actionUrl}}" method="post">
+                        <input type="submit" name="${toEntity.name}add" id="${toEntity.name}-add"
+                               class="btn btn-primary" value="+" />
+                    </form>
+                </div>
+    $[/ if ]
+            </div>
+        </div>
+$[/ function ]
+
+$[ function MainTable
+   (relationship,
+    adminUrlPrefix,
+    toEntity
+   ) ]
+	    <!-- The table -->
+		<table class="table" th:unless="${$}{#lists.isEmpty(${relationship|domain:JSONDTO|name}List)}">
+		<thead>
+		<tr>
+    $[ foreach attribute in toEntity.declaredDomainAttributes ]
+        $[ if attribute.hasTag("summary") ]
+		  <th th:text="#{${toEntity|domain:StaticLocalization|name}.${attribute|domain:StaticLocalization|name}}" scope="col" style="width:auto">${attribute|title}</th>
+        $[/ if ]
+    $[/ foreach ]
+    $[ foreach toEntityRelationship in toEntity.declaredDomainRelationships ]
+        $[ if toEntityRelationship.hasTag("summary") ]
+	      <th th:text="#{${toEntity|domain:StaticLocalization|name}.${toEntityRelationship|domain:StaticLocalization|name}}" scope="col" style="width:auto">${toEntityRelationship|title}</th>
+        $[/ if ]
+    $[/ foreach ]
+          <th th:text="Action" style="width:1%">Action</th>
+        </tr>
+		</thead>
+		<tbody>
+		<tr th:each="item : ${$}{${relationship.name}List}">
+    $[ foreach attribute in toEntity.declaredDomainAttributes ]
+        $[ if attribute.hasTag("summary") ]
+            $[ switch attribute.type ]
+                $[ case date ]
+            <td th:text="${$}{#dates.format(item.${attribute.name}, 'dd-MMM-yyyy')}"$[ if attribute#first ] scope="row"$[/ if ] style="width:auto"></td>
+                $[ case enum ]
+            <td th:text="${$}{item.${attribute.name}.title}"$[ if attribute#first ] scope="row"$[/ if ] style="width:auto"></td>
+                $[ default ]
+            <td th:text="${$}{item.${attribute.name}}"$[ if attribute#first ] scope="row"$[/ if ] style="width:auto"></td>
+            $[/ switch ]
+        $[/ if ]
+    $[/ foreach ]
+    $[ foreach toEntityRelationship in toEntity.declaredDomainRelationships ]
+        $[ if toEntityRelationship.hasTag("summary") ]
+            $[ capture relItemExpr ]item.${toEntityRelationship.name}.${(toEntityRelationship|domain:AdminUI).tagValue("display:attribute")}$[/ capture ]
+            $[ if toEntityRelationship.isOptional ]
+                $[ capture relItemExpr ]item.${toEntityRelationship.name} != null ? ${relItemExpr} : ''$[/ capture ]
+            $[/ if ]
+            <td th:text="${$}{${relItemExpr}}"></td>
+        $[/ if ]
+    $[/ foreach ]
+            <td style="width:1%"><a class="btn btn-secondary active" role="button" aria-pressed="true" th:href="@{'${adminUrlPrefix}/${toEntity|domain:APIPath|name}/' + ${$}{item.id} + '/detail'}">Open</a></td>
+		</tr>
+		</tbody>
+		</table>
+$[/ function ]
+
+$[ author to org.entityc.springboot.web.admin.html.detail ]
+    $[ author to outlet BodyMainSection ]
+        $[ foreach relationship in domainEntity.declaredDomainRelationships if relationship.isOneToMany && relationship.hasTag("detail") ]
+            $[ let toEntity = relationship.to.entity ]
+            $[ if toEntity == null ]$[ log fatal ]Something is wrong with relationship ${relationship|fullname}!$[/ log ]$[/ if ]
+            $[ call RelationshipHeader(relationship: relationship) ]
+	<div class="container">
+            $[ call SubObjectHeadingAndAddButton(relationship: relationship, adminUrlPrefix: adminUrlPrefix, entityDtoClassName: entityDtoClassName, toEntity: toEntity, includeCanAdd: true) ]
+            $[ call MainTable(relationship: relationship, toEntity: toEntity, adminUrlPrefix: adminUrlPrefix) ]
+	</div>
+        $[/ foreach ]
+    $[/ author ]
+$[/ author ]
+
+$[ author to org.entityc.springboot.web.admin.html.detail ]
+    $[ author to outlet BodyMainSection ]
+        $[ foreach relationship in entity.implicitRelationships ]
+            $[ let toEntity = relationship.implicitToEntity|domain:AdminUI ]
+            $[ if toEntity == null ]$[ log fatal ]Something is wrong with relationship ${relationship|fullname}!$[/ log ]$[/ if ]
+            $[ call RelationshipHeader(relationship: relationship) ]
+	<div class="container">
+            $[ call SubObjectHeadingAndAddButton(relationship: relationship, adminUrlPrefix: adminUrlPrefix, entityDtoClassName: entityDtoClassName, toEntity: toEntity, includeCanAdd: false) ]
+            $[ call MainTable(relationship: relationship, toEntity: toEntity, adminUrlPrefix: adminUrlPrefix) ]
+	</div>
+        $[/ foreach ]
+    $[/ author ]
+$[/ author ]
+
+$[ author to org.entityc.springboot.web.admin.controller.detail ]
+    $[ author to outlet getBody
+       D "This author deals with relationships from this entity to others."
+    ]
+        $[ let filterAttributeMap = @{}@ ]
+        $[ let toOneEntities = @[]@ ]
+        $[ foreach relationship in entity.relationships ]
+            $[ let toEntity = relationship.to.entity ]
+            $[ if relationship.isOneToMany ]
+                $[ call AutoWireEntity(entity: toEntity) ]
+
+        // For relationship `${relationship.name}` add the list of possible ${toEntity.name} values, this will support
+        // a UI element that allows the user to select a value to assign to the `${relationship.name}` field.
+        {
+            List<${toEntity|domain:JSONDTO|name}> list = ${toEntity|domain:Service|name|uncapitalize}.get${toEntity|domain:JSONDTO|name}ListBy${relationship.reverseRelationship|domain:Model|name|capitalize}(id, 0, 1000, true);
+            model.addAttribute("${relationship.name}List", list);
+            boolean canAdd = ${toEntity|domain:Service|name|uncapitalize}.canCreate();
+            model.addAttribute("canAdd${toEntity|name}", canAdd);
+        }
+            $[ elseif relationship.to.isOne && !(!relationship.isOptional && relationship.isParent) && (relationship|domain:AdminUI).hasTag("selectable") ]
+                $[ let adminRelationship = relationship|domain:AdminUI ]
+$[* FILTER LISTS *]
+                $[ if adminRelationship.hasTag("filter:attribute") && adminRelationship.hasTag("filter:value") ]
+                    $[ let filterAttributeName = adminRelationship.tagValue("filter:attribute") ]
+                    $[ let filterAttributeValue = adminRelationship.tagValue("filter:value") ]
+                    $[ if !toEntity.hasAttributeNamed(filterAttributeName) ]
+                        $[ log fatal ]Specified filter attribute doesn't exist: ${toEntity|name}.${filterAttributeName}$[/ log ]
+                    $[/ if ]
+                    $[ let filterAttribute = toEntity.attributeNamed(filterAttributeName) ]
+                    $[ if !filterAttribute.isParent ]
+                        $[ log fatal ]Specified filter attribute must be a parent attribute: ${toEntity|name}.${filterAttributeName}$[/ log ]
+                    $[/ if ]
+                    $[ switch filterAttribute.type ]
+                        $[ case enum ]
+                            $[ let enumItem = filterAttribute.type.getItemByName(filterAttributeValue) ]
+                            $[ if enumItem == null ]
+                                $[ log fatal ]The attribute value "${filterAttributeValue}" to filter by is not a valid member of ${filterAttribute.type.name}.$[/ log ]
+                            $[/ if ]
+                            $[ let filterAttributeValue = (enumItem.enum|domain:ProtobufDTO|name) + "." + (enumItem|domain:ProtobufDTO|name) ]
+                        $[ default ]
+                            $[ log fatal ]Filter attribute type not supported.$[/ log ]
+                    $[/ switch ]
+            {
+                    $[ call AutoWireEntity(entity: filterAttribute.entity) ]
+$[ send imports ]
+    import ${filterAttribute.type|domain:Model|fullname};
+$[/ send ]
+                List<${filterAttribute.entity|domain:JSONDTO|name}> list = ${filterAttribute.entity|domain:Service|name|uncapitalize}.get${filterAttribute.entity|domain:JSONDTO|name}ListBy${filterAttribute|domain:Model|name|capitalize}(${filterAttributeValue}, 0, 1000, true);
+                model.addAttribute("${relationship|domain:JSONDTO|name|uncapitalize}List", list);
+            }
+                $[ else ]
+$[* UNIQUE FULL LISTS *]
+                    $[ let toEntity = relationship.to.entity ]
+                    $[ if !toOneEntities.contains(toEntity) ]
+                        $[ do toOneEntities.add(toEntity) ]
+                    $[/ if ]
+                $[/ if ]
+            $[/ if ]
+        $[/ foreach ]
+        $[ foreach relationship in entity.implicitRelationships ]
+            $[ let toEntity = relationship.implicitToEntity ]
+$[ send imports ]
+    import ${toEntity|domain:JSONDTO|fullname};
+$[/ send ]
+            $[ call AutoWireEntity(entity: toEntity) ]
+
+        // Many-to-Many Relationship: ${relationship.name}
+        // This will allow this detail page show the ${toEntity.name} objects associated with this ${entity.name} object.
+        {
+            List<${toEntity|domain:JSONDTO|name}> list = ${toEntity|domain:Service|name|uncapitalize}.get${toEntity|domain:JSONDTO|name}ListAssociatedWith${entity|domain:Model|name}(id,0,10000);
+            model.addAttribute("${relationship|domain:JSONDTO|name|uncapitalize}List", list);
+        }
+        $[/ foreach ]
+$[* FULL LISTS *]
+        $[ foreach toEntity in toOneEntities ]
+            $[ call AutoWireEntity(entity: toEntity) ]
+            {
+            $[ if toEntity.hasParentRelationshipToEntity(entity) ]
+                List<${toEntity|domain:JSONDTO|name}> list = ${toEntity|domain:Service|name|uncapitalize}.get${toEntity|domain:JSONDTO|name}ListBy${entity|domain:Model|name}(id, 0, 1000, true);
+            $[ else ]
+                List<${toEntity|domain:JSONDTO|name}> list = ${toEntity|domain:Service|name|uncapitalize}.get${toEntity|domain:JSONDTO|name}List(0, 1000, true);
+            $[/ if ]
+                model.addAttribute("${toEntity|domain:JSONDTO|name|uncapitalize}List", list);
+            }
+        $[/ foreach ]
+    $[/ author ]
+$[/ author ]

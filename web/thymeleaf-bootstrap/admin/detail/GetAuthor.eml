@@ -1,30 +1,5 @@
 $[ author to org.entityc.springboot.web.admin.controller.detail ]
     $[ author to outlet getBody
-       D "This author adds values to help the controller to determine if the user should be able to edit"
-       D "the data or can just view it."
-    ]
-
-        // This code allows the controller to know if it should allow the user to edit the data. It is
-        // better to know up front than when it tries and gets an error.
-        $[ let isUserEntity = (entity|domain:Security).hasTag("user") ]
-        boolean canEdit = ${serviceName|uncapitalize}.canEdit(id);
-        model.addAttribute("canEdit${entity|name}", canEdit);
-        $[ let addedCanEditIf = false ]
-        $[ call writeAccessAttributes(entity: entity)->(attributeList: attributeWriteAccessList) ]
-        $[ foreach attribute in attributeWriteAccessList if !attribute.isSecondaryEntityType ]
-            $[ if !addedCanEditIf ]
-        if (canEdit) {
-                $[ let addedCanEditIf = true ]
-            $[/ if ]
-            boolean canUpdate${attribute|name|capitalize} = ${serviceName|uncapitalize}.canUpdateAttribute($[ if isUserEntity ]dto, $[/ if ]"${attribute|name}");
-            model.addAttribute("canEdit${entity|name}_${attribute|name}", canUpdate${attribute|name|capitalize});
-        $[/ foreach ]
-        $[ if addedCanEditIf ]
-        }
-        $[/ if ]
-    $[/ author ]
-
-    $[ author to outlet getBody
        D "This author is designed to add code that populates the page model to have enum related"
        D "information. It also supports multilevel secondary attributes."
     ]
@@ -62,77 +37,4 @@ $[ author to org.entityc.springboot.web.admin.controller.detail ]
             $[/ if ]
         $[/ foreach ]
     $[/ author ]
-
-    $[ author to outlet getBody
-       D "This author deals with relationships from this entity to others."
-    ]
-        $[ let filterAttributeMap = @{}@ ]
-        $[ let toOneEntities = @[]@ ]
-        $[ foreach relationship in entity.relationships ]
-            $[ let toEntity = relationship.to.entity ]
-            $[ if relationship.isOneToMany ]
-                $[ call AutoWireEntity(entity: toEntity) ]
-
-        // For relationship `${relationship.name}` add the list of possible ${toEntity.name} values, this will support
-        // a UI element that allows the user to select a value to assign to the `${relationship.name}` field.
-        {
-            List<${toEntity|domain:JSONDTO|name}> list = ${toEntity|domain:Service|name|uncapitalize}.get${toEntity|domain:JSONDTO|name}ListBy${relationship.reverseRelationship|domain:Model|name|capitalize}(id, 0, 1000, true);
-            model.addAttribute("${relationship.name}List", list);
-            boolean canAdd = ${toEntity|domain:Service|name|uncapitalize}.canCreate();
-            model.addAttribute("canAdd${toEntity|name}", canAdd);
-        }
-            $[ elseif relationship.to.isOne && !(!relationship.isOptional && relationship.isParent) && (relationship|domain:AdminUI).hasTag("selectable") ]
-                $[ let adminRelationship = relationship|domain:AdminUI ]
-$[* FILTER LISTS *]
-                $[ if adminRelationship.hasTag("filter:attribute") && adminRelationship.hasTag("filter:value") ]
-                    $[ let filterAttributeName = adminRelationship.tagValue("filter:attribute") ]
-                    $[ let filterAttributeValue = adminRelationship.tagValue("filter:value") ]
-                    $[ if !toEntity.hasAttributeNamed(filterAttributeName) ]
-                        $[ log fatal ]Specified filter attribute doesn't exist: ${toEntity|name}.${filterAttributeName}$[/ log ]
-                    $[/ if ]
-                    $[ let filterAttribute = toEntity.attributeNamed(filterAttributeName) ]
-                    $[ if !filterAttribute.isParent ]
-                        $[ log fatal ]Specified filter attribute must be a parent attribute: ${toEntity|name}.${filterAttributeName}$[/ log ]
-                    $[/ if ]
-                    $[ switch filterAttribute.type ]
-                        $[ case enum ]
-                            $[ let enumItem = filterAttribute.type.getItemByName(filterAttributeValue) ]
-                            $[ if enumItem == null ]
-                                $[ log fatal ]The attribute value "${filterAttributeValue}" to filter by is not a valid member of ${filterAttribute.type.name}.$[/ log ]
-                            $[/ if ]
-                            $[ let filterAttributeValue = (enumItem.enum|domain:ProtobufDTO|name) + "." + (enumItem|domain:ProtobufDTO|name) ]
-                        $[ default ]
-                            $[ log fatal ]Filter attribute type not supported.$[/ log ]
-                    $[/ switch ]
-            {
-                    $[ call AutoWireEntity(entity: filterAttribute.entity) ]
-$[ send imports ]
-    import ${filterAttribute.type|domain:Model|fullname};
-$[/ send ]
-                List<${filterAttribute.entity|domain:JSONDTO|name}> list = ${filterAttribute.entity|domain:Service|name|uncapitalize}.get${filterAttribute.entity|domain:JSONDTO|name}ListBy${filterAttribute|domain:Model|name|capitalize}(${filterAttributeValue}, 0, 1000, true);
-                model.addAttribute("${relationship|domain:JSONDTO|name|uncapitalize}List", list);
-            }
-                $[ else ]
-$[* UNIQUE FULL LISTS *]
-                    $[ let toEntity = relationship.to.entity ]
-                    $[ if !toOneEntities.contains(toEntity) ]
-                        $[ do toOneEntities.add(toEntity) ]
-                    $[/ if ]
-                $[/ if ]
-            $[/ if ]
-        $[/ foreach ]
-$[* FULL LISTS *]
-        $[ foreach toEntity in toOneEntities ]
-            $[ call AutoWireEntity(entity: toEntity) ]
-            {
-            $[ if toEntity.hasParentRelationshipToEntity(entity) ]
-                List<${toEntity|domain:JSONDTO|name}> list = ${toEntity|domain:Service|name|uncapitalize}.get${toEntity|domain:JSONDTO|name}ListBy${entity|domain:Model|name}(id, 0, 1000, true);
-            $[ else ]
-                List<${toEntity|domain:JSONDTO|name}> list = ${toEntity|domain:Service|name|uncapitalize}.get${toEntity|domain:JSONDTO|name}List(0, 1000, true);
-            $[/ if ]
-                model.addAttribute("${toEntity|domain:JSONDTO|name|uncapitalize}List", list);
-            }
-        $[/ foreach ]
-    $[/ author ]
-
 $[/ author ]

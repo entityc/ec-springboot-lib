@@ -148,14 +148,15 @@ $[ function RowForAttribute
 $[/ function ]
 
 $[ function RowForToOneRelationship
-   D "Generates a single row for a \"to-one\" relationship. This means that, assuming it is editable, it can"
-   D "offer the ability to set this relationship field by selecting a single object (to-one) from the entity"
-   D "on the other side of the relationship."
+   D "Generates a single row for a \"to-one\" relationship. This means that, assuming it is"
+   D "editable, it can offer the ability to set this relationship field by selecting a single"
+   D "object (to-one) from the entity on the other side of the relationship."
    (entity,
     domainRelationship,
     fieldWidthStyle,
     dtoVariable,
-    optShowMarkdownIcon
+    optShowMarkdownIcon,
+    adminUrlPrefix
    )
 ]
     $[ let toEntity = domainRelationship.to.entity ]
@@ -168,7 +169,9 @@ $[ function RowForToOneRelationship
     $[ if optShowMarkdownIcon ]
             <td></td>
     $[/ if ]
-			<td th:text="${$}{${valueVariableField}==null?'':${valueVariableName}}"$[ if domainRelationship#first ] scope="row"$[/ if ] style="width:auto"></td>
+			<td $[ if domainRelationship#first ] scope="row"$[/ if ] style="width:auto">
+			<a th:if="${$}{${valueVariableField}!=null}" th:text="${$}{${valueVariableField}==null?'':${valueVariableName}}" th:href="@{'${adminUrlPrefix}/${toEntity|domain:APIPath|name}/' + ${$}{${valueVariableField}.id} + '/detail'}"></a>
+			</td>
 			<td style="width:auto">
             <button th:if="${$}{${canEditVariable}}" type="button" class="btn btn-primary"
                 data-bs-toggle="modal" data-bs-target="#${domainRelationship.name}_EntitySelectModal" data-bs-field-name="${domainRelationship|name}"
@@ -184,7 +187,8 @@ $[ function TableForEntity
    (entity,
     secondaryAttributeStack,
     dtoVariable,
-    optShowMarkdownIcon
+    optShowMarkdownIcon,
+    adminUrlPrefix
    )
 ]
     $[ let fieldWidthStyle = "20%" ]
@@ -218,7 +222,7 @@ $[* ATTRIBUTES *]
             <td colspan="4">
                     $[ let attributeStack = secondaryAttributeStack != null ? secondaryAttributeStack:(@[]@) ]
                     $[ do attributeStack.add(domainAttribute) ]
-                    $[ call TableForEntity(dtoVariable: dtoVariable + "." + (domainAttribute|domain:JSONDTO|name), optShowMarkdownIcon: optShowMarkdownIcon, entity: secondaryEntity, secondaryAttributeStack: attributeStack) ]
+                    $[ call TableForEntity(dtoVariable: dtoVariable + "." + (domainAttribute|domain:JSONDTO|name), optShowMarkdownIcon: optShowMarkdownIcon, entity: secondaryEntity, secondaryAttributeStack: attributeStack, adminUrlPrefix: adminUrlPrefix) ]
                     $[ do attributeStack.remove(domainAttribute) ]
             </td>
         </tr>
@@ -231,7 +235,7 @@ $[* ATTRIBUTES *]
         <!-- Relationships (to-one) -->
     $[ foreach domainRelationship in domainEntity.declaredDomainRelationships if
 domainRelationship.to != null && domainRelationship.to.isOne && domainRelationship.hasTag("display:attribute") ]
-        $[ call RowForToOneRelationship(entity: entity, domainRelationship: domainRelationship, fieldWidthStyle: fieldWidthStyle, optShowMarkdownIcon: optShowMarkdownIcon, dtoVariable: dtoVariable) ]
+        $[ call RowForToOneRelationship(entity: entity, domainRelationship: domainRelationship, fieldWidthStyle: fieldWidthStyle, optShowMarkdownIcon: optShowMarkdownIcon, dtoVariable: dtoVariable, adminUrlPrefix: adminUrlPrefix) ]
     $[/ foreach ]
 		</tbody>
 		</table>
@@ -242,7 +246,7 @@ $[ author to org.entityc.springboot.web.admin.html.detail ]
     $[ author to outlet BodyMainSection
        D "This author provides the main body of the detail page."
     ]
-        $[ call TableForEntity(dtoVariable: entity|domain:JSONDTO|name|uncapitalize, optShowMarkdownIcon: optShowMarkdownIcon, entity: entity, secondaryAttributeStack: null) ]
+        $[ call TableForEntity(dtoVariable: entity|domain:JSONDTO|name|uncapitalize, optShowMarkdownIcon: optShowMarkdownIcon, entity: entity, secondaryAttributeStack: null, adminUrlPrefix: adminUrlPrefix) ]
         $[ call insertDateEditModalHTML() ]
         $[ call insertStringEditModalHTML() ]
         $[ call insertBooleanEditModalHTML() ]

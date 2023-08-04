@@ -5,6 +5,9 @@ $[ author to org.entityc.springboot.controller ]
     $[ author to outlet methods
        D "Adds get endpoints to the controller class for its entity."
     ]
+    $[let defaultStart = 0]
+    $[let defaultLimit = 10]
+    $[let defaultLevels = 1]
 $[ send imports ]
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
@@ -28,8 +31,8 @@ $[ outlet annotation
    D "Resides just above the method declaration in the annocation area."
 ]
 $[/ outlet ]
-    public ${dtoClassName} get${modelName}ById(@PathVariable("id") ${entity.pkType|language} id) throws ServiceException {
-        return ${service}.get${entity|domain:JSONDTO|name|capitalize}ById(id);
+    public ${dtoClassName} get${modelName}ById(@PathVariable("id") ${entity.pkType|language} id, @RequestParam(value = "levels", required = false) Integer levels) throws ServiceException {
+        return ${service}.get${entity|domain:JSONDTO|name|capitalize}ById(id, ResourceUtils.defaultTo(levels, ${defaultLevels}));
     }
 
             $[/ if ]
@@ -66,25 +69,27 @@ $[ outlet parameters
 ]
 $[/ outlet ]
         @RequestParam(value = "start", required = false) Integer start,
-        @RequestParam(value = "limit", required = false) Integer limit)
+        @RequestParam(value = "limit", required = false) Integer limit,
+        @RequestParam(value = "levels", required = false) Integer levels)
         throws ServiceException {
 $[ outlet declarations
    D "This is where you want to include variable declarations."
 ]
 $[/ outlet ]
-        final int queryStart = ResourceUtils.defaultTo(start, 0);
-        final int queryLimit = ResourceUtils.defaultTo(limit, 10);
+        final int queryStart = ResourceUtils.defaultTo(start, ${defaultStart});
+        final int queryLimit = ResourceUtils.defaultTo(limit, ${defaultLimit});
+        final int queryLevels = ResourceUtils.defaultTo(levels, ${defaultLevels});
         List<${dtoClassName}> results = null;
             $[ let indent = hasParentId ? "    ":"" ]
             $[ if hasParentId ]
         if (${parentId} != ${isNativeId ? "0":"null"}) {
 $[ outlet parentGet ]
-            results = ${service}.get${entity|domain:JSONDTO|name|capitalize}ListBy${parentName}(${parentIdArg}, queryStart, queryLimit, false);
+            results = ${service}.get${entity|domain:JSONDTO|name|capitalize}ListBy${parentName}(${parentIdArg}, queryStart, queryLimit, queryLevels);
 $[/ outlet ]
         } else {
             $[/ if ]
 $[ outlet noParentGet ]
-        ${indent}results = ${service}.get${entity|domain:JSONDTO|name|capitalize}List(queryStart, queryLimit, false);
+        ${indent}results = ${service}.get${entity|domain:JSONDTO|name|capitalize}List(queryStart, queryLimit, ResourceUtils.defaultTo(levels, ${defaultLevels}));
 $[/ outlet ]
             $[ if hasParentId ]
         }
@@ -114,11 +119,13 @@ $[/ outlet ]
     public ResponseEntity<List<${dtoClassName}>> get${modelName}ListBy${relationship.name|capitalize}(
         @PathVariable("id") ${relationship.to.entity.primaryKey.type|language} ${relationship.name}Id,
         @RequestParam(value = "start", required = false) Integer start,
-        @RequestParam(value = "limit", required = false) Integer limit)
+        @RequestParam(value = "limit", required = false) Integer limit,
+        @RequestParam(value = "levels", required = false) Integer levels)
         throws ServiceException {
-        final int queryStart = ResourceUtils.defaultTo(start, 0);
-        final int queryLimit = ResourceUtils.defaultTo(limit, 10);
-        List<${dtoClassName}> results = ${service}.get${entity|domain:JSONDTO|name|capitalize}ListBy${relationship.name|capitalize}(${relationship.name}Id, queryStart, queryLimit, true);
+        final int queryStart = ResourceUtils.defaultTo(start, ${defaultStart});
+        final int queryLimit = ResourceUtils.defaultTo(limit, ${defaultLimit});
+        final int queryLevels = ResourceUtils.defaultTo(levels, ${defaultLevels});
+        List<${dtoClassName}> results = ${service}.get${entity|domain:JSONDTO|name|capitalize}ListBy${relationship.name|capitalize}(${relationship.name}Id, queryStart, queryLimit, queryLevels);
         HttpHeaders headers = new HttpHeaders();
         headers.add("X-Total-Count", "" + results.size());
         headers.add("Access-Control-Expose-Headers", "X-Total-Count");

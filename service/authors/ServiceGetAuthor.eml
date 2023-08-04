@@ -71,7 +71,7 @@ $[*************]
                 $[ let repositoryVariableName = entity|domain:Repository|name|uncapitalize ]
                 $[ let pkidtype = entity.pkType|language ]
                 $[ let pkidname = entity.primaryKeyAttribute|domain:Service|name ]
-    public ${responseClassName} get${responseInMethodName}ById(${pkidtype} id) throws ServiceException {
+    public ${responseClassName} get${responseInMethodName}ById(${pkidtype} id, int levels) throws ServiceException {
         try {
             ${responseClassName} responseObject = null;
                 $[ let indent = "" ]
@@ -90,11 +90,11 @@ $[*************]
 
             ${indent}${responseModelName} modelObject = modelObjectOptional.get();
                 $[ if responseDomain.name == "JSONDTO" ]
-            ${indent}responseObject = dtoFromModel(modelObject);
+            ${indent}responseObject = dtoFromModel(modelObject, levels);
                 $[ elseif responseDomain.name == "Model" ]
             ${indent}responseObject = modelObject;
                 $[ else ]
-            ${indent}responseObject = protobufFromModel(modelObject);
+            ${indent}responseObject = protobufFromModel(modelObject, levels);
                 $[/ if ]
 
                 $[ if useCache && useSingleCache ]
@@ -146,12 +146,12 @@ $[************]
         }
     }
 
-    public List<${responseDtoName}> get${responseDtoName}List(long start, int limit, boolean hierarchical) throws ServiceException {
+    public List<${responseDtoName}> get${responseDtoName}List(long start, int limit, int levels) throws ServiceException {
         try {
             List<${responseDtoName}> dtoList = new ArrayList<>();
             List<${responseModelName}> list = ${repositoryVariableName}.get${responseModelName}List(start, limit);
             for(${responseModelName} modelObject : list) {
-                dtoList.add(dtoFromModel(modelObject, hierarchical));
+                dtoList.add(dtoFromModel(modelObject, levels));
             }
             return dtoList;
         } catch (DataAccessException ex) {
@@ -162,12 +162,12 @@ $[************]
 
                 $[ let protobufClassName = entity|domain:ProtobufDTO|name ]
                 $[ capture fullProtobufClassName ]${entity.module|domain:ProtobufDTO|name}.${protobufClassName}$[/ capture ]
-    public ${fullProtobufClassName}List get${protobufClassName}PBList(long start, int limit, boolean hierarchical) throws ServiceException {
+    public ${fullProtobufClassName}List get${protobufClassName}PBList(long start, int limit, int levels) throws ServiceException {
         try {
             ${fullProtobufClassName}List.Builder pbList = ${fullProtobufClassName}List.newBuilder();
             List<${responseModelName}> list = ${repositoryVariableName}.get${responseModelName}List(start, limit);
             for(${responseModelName} modelObject : list) {
-                pbList.addItem(protobufFromModel(modelObject));
+                pbList.addItem(protobufFromModel(modelObject, levels));
             }
             return pbList.build();
         } catch (DataAccessException ex) {
@@ -204,7 +204,7 @@ $[****************************]
         ${attribute.type|language} ${attribute.name},
         long start,
         int limit,
-        boolean hierarchical) throws ServiceException {
+        int levels) throws ServiceException {
 
         try {
                 $[ if isModelVariant || isDtoVariant ]
@@ -217,13 +217,13 @@ $[****************************]
             List<${responseModelName}> list = ${repositoryVariableName}.get${responseModelName}ListBy${attribute.name|capitalize}(${attribute.name}$[if attribute.type.isEnumType()].getNumberValue()$[/if], start, limit);
                 $[ if isDtoVariant ]
             for(${responseModelName} modelObject : list) {
-                ${listName}.add(dtoFromModel(modelObject, hierarchical));
+                ${listName}.add(dtoFromModel(modelObject, levels));
             }
                 $[ elseif isProtobufVariant ]
             ${fullResponseName}.Builder pbList = ${fullResponseName}.newBuilder();
                     $[ let listName = "pbList.build()" ]
             for(${responseModelName} modelObject : list) {
-                pbList.addItem(protobufFromModel(modelObject, hierarchical));
+                pbList.addItem(protobufFromModel(modelObject, levels));
             }
                 $[/ if ]
             return ${listName};
@@ -274,7 +274,7 @@ $[*******************************]
         ${relationship.to.entity.pkType|language} ${toPrimaryKeyName},
         long start,
         int limit,
-        boolean hierarchical) throws ServiceException {
+        int levels) throws ServiceException {
 
         try {
                 $[ let listName = "list" ]
@@ -289,9 +289,9 @@ $[*******************************]
                 $[ if isDtoVariant || isPBVariant ]
             for(${responseModelName} modelObject : list) {
                     $[ if isDtoVariant ]
-                ${listName}.add(dtoFromModel(modelObject, hierarchical));
+                ${listName}.add(dtoFromModel(modelObject, levels));
                     $[ else ]
-                ${listName}.addItem(protobufFromModel(modelObject));
+                ${listName}.addItem(protobufFromModel(modelObject, levels));
                     $[/ if ]
             }
                 $[/ if ]

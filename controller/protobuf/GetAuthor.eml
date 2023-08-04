@@ -6,6 +6,9 @@ $[ author to org.entityc.springboot.controller.protobuf ]
     $[ author to outlet methods
        D "Adds get endpoints to the controller class for its entity."
     ]
+        $[ let defaultStart = 0 ]
+        $[ let defaultLimit = 10 ]
+        $[ let defaultLevels = 1 ]
         $[ let protobufNamespace = (space|domain:ProtobufDTO).domain.namespace ]
         $[ capture fullProtobufClassName ]${module.name|capitalize}.${entity|domain:ProtobufDTO|name}$[/ capture ]
 $[ send imports ]
@@ -33,8 +36,8 @@ $[ outlet annotation
    D "Resides just above the method declaration in the annocation area."
 ]
 $[/ outlet ]
-    public ${fullProtobufClassName} get${entity|domain:Model|name}PBById(@PathVariable("id") ${entity.pkType|language} id) throws ServiceException {
-        return ${service}.get${entity|domain:Model|name|capitalize}PBById(id);
+    public ${fullProtobufClassName} get${entity|domain:Model|name}PBById(@PathVariable("id") ${entity.pkType|language} id, @RequestParam(value = "levels", required = false) Integer levels) throws ServiceException {
+        return ${service}.get${entity|domain:Model|name|capitalize}PBById(id, ResourceUtils.defaultTo(levels, ${defaultLevels}));
     }
 
             $[/ if ]
@@ -71,22 +74,24 @@ $[ outlet parameters
 ]
 $[/ outlet ]
         @RequestParam(value = "start", required = false) Integer start,
-        @RequestParam(value = "limit", required = false) Integer limit)
+        @RequestParam(value = "limit", required = false) Integer limit,
+        @RequestParam(value = "levels", required = false) Integer levels)
         throws ServiceException {
 $[ outlet declarations
    D "This is where you want to include variable declarations."
 ]
 $[/ outlet ]
-        final int queryStart = ResourceUtils.defaultTo(start, 0);
-        final int queryLimit = ResourceUtils.defaultTo(limit, 10);
+        final int queryStart = ResourceUtils.defaultTo(start, ${defaultStart});
+        final int queryLimit = ResourceUtils.defaultTo(limit, ${defaultLimit});
+        final int queryLevels = ResourceUtils.defaultTo(levels, ${defaultLevels});
         ${fullProtobufClassName}List results = null;
             $[ let indent = hasParentId ? "    ":"" ]
             $[ if hasParentId ]
         if (${parentId} != ${isNativeId ? "0":"null"}) {
-            results = ${service}.get${modelName|capitalize}PBListBy${parentName}(${parentIdArg}, queryStart, queryLimit, false);
+            results = ${service}.get${modelName|capitalize}PBListBy${parentName}(${parentIdArg}, queryStart, queryLimit, queryLevels);
         } else {
             $[/ if ]
-        ${indent}results = ${service}.get${modelName|capitalize}PBList(queryStart, queryLimit, false);
+        ${indent}results = ${service}.get${modelName|capitalize}PBList(queryStart, queryLimit, queryLevels);
             $[ if hasParentId ]
         }
             $[/ if ]
@@ -115,11 +120,13 @@ $[/ outlet ]
     public ResponseEntity<${fullProtobufClassName}List> get${entity|domain:Model|name}PBListBy${relationship.name|capitalize}(
         @PathVariable("id") ${relationship.to.entity.primaryKey.type|language} ${relationship.name}Id,
         @RequestParam(value = "start", required = false) Integer start,
-        @RequestParam(value = "limit", required = false) Integer limit)
+        @RequestParam(value = "limit", required = false) Integer limit,
+        @RequestParam(value = "levels", required = false) Integer levels)
         throws ServiceException {
         final int queryStart = ResourceUtils.defaultTo(start, 0);
         final int queryLimit = ResourceUtils.defaultTo(limit, 10);
-        ${fullProtobufClassName}List results = ${service}.get${entity|domain:Model|name|capitalize}PBListBy${relationship.name|capitalize}(${relationship.name}Id, queryStart, queryLimit, true);
+        final int queryLevels = ResourceUtils.defaultTo(levels, ${defaultLevels});
+        ${fullProtobufClassName}List results = ${service}.get${entity|domain:Model|name|capitalize}PBListBy${relationship.name|capitalize}(${relationship.name}Id, queryStart, queryLimit, queryLevels);
         HttpHeaders headers = new HttpHeaders();
         headers.add("X-Total-Count", "" + results.getItemCount());
         headers.add("Access-Control-Expose-Headers", "X-Total-Count");

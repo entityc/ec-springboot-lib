@@ -18,7 +18,7 @@ $[/ send ]
                 $[ call AutoWireEntity(entity: parentEntity) ]
                 $[ let parentServiceName = parentEntity|domain:Service|name ]
         ${parentPkTypeName} ${nextEntity|name|uncapitalize}ParentId = ${nextEntity|domain:Service|name|uncapitalize}.getParentId(${prevParentIdName});
-        parentDtos.insertElementAt(${parentServiceName|uncapitalize}.get${parentEntity|domain:JSONDTO|name}ById(${nextEntity|name|uncapitalize}ParentId),0);
+        parentDtos.insertElementAt(${parentServiceName|uncapitalize}.get${parentEntity|domain:JSONDTO|name}ById(${nextEntity|name|uncapitalize}ParentId, 0 /*levels*/),0);
                 $[ let prevParentIdName = (nextEntity|name|uncapitalize) + "ParentId" ]
                 $[ let nextEntity = parentEntity ]
             $[/ foreach ]

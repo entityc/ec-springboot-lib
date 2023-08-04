@@ -192,7 +192,7 @@ $[send imports]
 import java.util.List;
 $[/send]
          {
-             List<${toEntity|domain:JSONDTO|name}> list = ${toEntity|domain:Service|name|uncapitalize}.get${toEntity|domain:JSONDTO|name}List(0, 1000, true);
+             List<${toEntity|domain:JSONDTO|name}> list = ${toEntity|domain:Service|name|uncapitalize}.get${toEntity|domain:JSONDTO|name}List(0, 1000, 1 /*levels*/);
              model.addAttribute("${toEntity|domain:JSONDTO|name|uncapitalize}List", list);
          }
         $[/foreach]

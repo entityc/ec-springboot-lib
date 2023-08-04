@@ -55,24 +55,24 @@ $[* Now we used the "lockedOnly" option to call the appropriate service method f
     $[ author to getList outlet parentGet ]
         $[ if hasLockAttribute ]
             if (lockedOnly) {
-                results = ${service}.getLocked${dtoNameInMethod}ListBy${parentName}(${parentIdArg}, queryStart, queryLimit, false);
+                results = ${service}.getLocked${dtoNameInMethod}ListBy${parentName}(${parentIdArg}, queryStart, queryLimit, 0 /*levels*/);
             } else {
-                results = ${service}.get${dtoNameInMethod}ListBy${parentName}(${parentIdArg}, queryStart, queryLimit, false);
+                results = ${service}.get${dtoNameInMethod}ListBy${parentName}(${parentIdArg}, queryStart, queryLimit, 0 /*levels*/);
             }
         $[ else ]
-            results = ${service}.get${dtoNameInMethod}ListBy${parentName}(${parentIdArg}, queryStart, queryLimit, false);
+            results = ${service}.get${dtoNameInMethod}ListBy${parentName}(${parentIdArg}, queryStart, queryLimit, 0 /*levels*/);
         $[/ if ]
     $[/ author ]
 $[* Now we used the "lockedOnly" option to call the appropriate service method for when a parent object is NOT specified. *]
     $[ author to getList outlet noParentGet ]
         $[ if hasLockAttribute ]
             if (lockedOnly) {
-                results = ${service}.getLocked${dtoNameInMethod}List(queryStart, queryLimit, false);
+                results = ${service}.getLocked${dtoNameInMethod}List(queryStart, queryLimit, 0 /*levels*/);
             } else {
-                results = ${service}.get${dtoNameInMethod}List(queryStart, queryLimit, false);
+                results = ${service}.get${dtoNameInMethod}List(queryStart, queryLimit, 0 /*levels*/);
             }
         $[ else ]
-            results = ${service}.get${dtoNameInMethod}List(queryStart, queryLimit, false);
+            results = ${service}.get${dtoNameInMethod}List(queryStart, queryLimit, 0 /*levels*/);
         $[/ if ]
     $[/ author ]
 

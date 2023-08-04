@@ -56,7 +56,7 @@ $[/outlet]
         $[let modelVariableName = modelName|uncapitalize]
         ${modelName} ${modelVariableName};
         try {
-            ${modelVariableName} = ${service}.get${modelName}ById(id);
+            ${modelVariableName} = ${service}.get${modelName}ById(id, 0 /*levels*/);
         } catch (EntityNotFoundException e) {
             throw new ValidationException("Could not find ${modelName} by its id: " + id);
         }
@@ -91,7 +91,7 @@ $[/outlet]
                                 ) throws ServiceException {
         ${modelName} ${modelVariableName};
         try {
-            ${modelVariableName} = ${service}.get${modelName}ById(id);
+            ${modelVariableName} = ${service}.get${modelName}ById(id, 0 /*levels*/);
         } catch (EntityNotFoundException e) {
             throw new ValidationException("Could not find ${modelName} by its id: " + id);
         }

@@ -111,7 +111,7 @@ $[ outlet securityReadMethod
 $[/ outlet ]
 
         // Get the DTO object by its ID and add it in the page model
-        ${entityDtoClassName} dto = ${serviceName|uncapitalize}.get${entityDtoClassName}ById(id);
+        ${entityDtoClassName} dto = ${serviceName|uncapitalize}.get${entityDtoClassName}ById(id, 1 /*levels*/);
         model.addAttribute("${entityDtoClassName|uncapitalize}", dto);
 $[ outlet getBody
    D "The author can include anything here in the body of the get method."
@@ -148,7 +148,7 @@ $[ outlet securityWriteMethod
    D "This is where an author place code that checks for specific access rights."
 ]
 $[/ outlet ]
-        ${entity|domain:Model|name} object = ${serviceName|uncapitalize}.get${entity|domain:Model|name}ById(id);
+        ${entity|domain:Model|name} object = ${serviceName|uncapitalize}.get${entity|domain:Model|name}ById(id, 0 /*levels*/);
                 $[ if isUserEntity ]
 $[ send imports ]
 import ${entity|domain:Model|fullname};
@@ -324,7 +324,7 @@ $[/ send ]
                 $[ let parentPkTypeName = parentEntity.pkType|language ]
         ${parentPkTypeName} ${entity|name|uncapitalize}ParentId = ${entity|domain:Service|name|uncapitalize}.getParentId(id);
             $[/ if ]
-        ${entity|domain:Model|name} object = ${serviceName|uncapitalize}.get${entity|domain:Model|name}ById(id);
+        ${entity|domain:Model|name} object = ${serviceName|uncapitalize}.get${entity|domain:Model|name}ById(id, 0 /*levels*/);
         ${serviceName|uncapitalize}.delete${entity|domain:Model|name}ById(id);
             $[ if entity.hasPrimaryParentRelationship ]
         return new ModelAndView("redirect:${adminUrlPrefix}/${parentEntity|domain:APIPath|name}/" + ${entity|name|uncapitalize}ParentId + "/detail");
@@ -372,7 +372,7 @@ $[/ send ]
                 $[ let modelVariableName = modelName|uncapitalize ]
         ${modelName} ${modelVariableName};
         try {
-            ${modelVariableName} = ${serviceName|uncapitalize}.get${modelName}ById(id);
+            ${modelVariableName} = ${serviceName|uncapitalize}.get${modelName}ById(id, 0 /*levels*/);
         } catch (EntityNotFoundException e) {
             throw new ValidationException("Could not find ${modelName} by its id: " + id);
         }

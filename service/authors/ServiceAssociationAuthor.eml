@@ -29,7 +29,7 @@ import ${toMMEntity|domain:Model|fullname};
 import ${toMMEntity|domain:JSONDTO|fullname};
 $[/ send ]
                 $[ call addAutoWired(domainEntity: toMMEntity|domain:Repository) ]
-    public List<${fromDtoName}> get${fromDtoName}ListAssociatedWith${toModelName}(${toPKType} ${toPKVarName}, long start, int limit) throws ServiceException {
+    public List<${fromDtoName}> get${fromDtoName}ListAssociatedWith${toModelName}(${toPKType} ${toPKVarName}, long start, int limit, int levels) throws ServiceException {
         Optional<${toModelName}> otherModelObjectOptional = ${toRepoVarName}.findById(${toPKVarName});
         if (!otherModelObjectOptional.isPresent()) {
             throw new EntityNotFoundException("${toModelName} not found.");
@@ -39,7 +39,7 @@ $[/ send ]
             List<${fromDtoName}> dtoList = new ArrayList<>();
             List<${fromModelName}> list = ${fromRepoVarName}.get${fromModelName}ListAssociatedWith${toModelName}(${toPKVarName}, start, limit);
             for(${fromModelName} modelObject : list) {
-                dtoList.add(dtoFromModel(modelObject, true));
+                dtoList.add(dtoFromModel(modelObject, levels));
             }
             return dtoList;
         } catch (DataAccessException ex) {

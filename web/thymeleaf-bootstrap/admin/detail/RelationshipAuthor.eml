@@ -126,7 +126,7 @@ $[ author to org.entityc.springboot.web.admin.controller.detail ]
         // For relationship `${relationship.name}` add the list of possible ${toEntity.name} values, this will support
         // a UI element that allows the user to select a value to assign to the `${relationship.name}` field.
         {
-            List<${toEntity|domain:JSONDTO|name}> list = ${toEntity|domain:Service|name|uncapitalize}.get${toEntity|domain:JSONDTO|name}ListBy${relationship.reverseRelationship|domain:Model|name|capitalize}(id, 0, 1000, true);
+            List<${toEntity|domain:JSONDTO|name}> list = ${toEntity|domain:Service|name|uncapitalize}.get${toEntity|domain:JSONDTO|name}ListBy${relationship.reverseRelationship|domain:Model|name|capitalize}(id, 0, 1000, 1 /*levels*/);
             model.addAttribute("${relationship.name}List", list);
             boolean canAdd = ${toEntity|domain:Service|name|uncapitalize}.canCreate();
             model.addAttribute("canAdd${toEntity|name}", canAdd);
@@ -159,7 +159,7 @@ $[* FILTER LISTS *]
 $[ send imports ]
     import ${filterAttribute.type|domain:Model|fullname};
 $[/ send ]
-                List<${filterAttribute.entity|domain:JSONDTO|name}> list = ${filterAttribute.entity|domain:Service|name|uncapitalize}.get${filterAttribute.entity|domain:JSONDTO|name}ListBy${filterAttribute|domain:Model|name|capitalize}(${filterAttributeValue}, 0, 1000, true);
+                List<${filterAttribute.entity|domain:JSONDTO|name}> list = ${filterAttribute.entity|domain:Service|name|uncapitalize}.get${filterAttribute.entity|domain:JSONDTO|name}ListBy${filterAttribute|domain:Model|name|capitalize}(${filterAttributeValue}, 0, 1000, 1 /*levels*/);
                 model.addAttribute("${relationship|domain:JSONDTO|name|uncapitalize}List", list);
             }
                 $[ else ]
@@ -181,7 +181,7 @@ $[/ send ]
         // Many-to-Many Relationship: ${relationship.name}
         // This will allow this detail page show the ${toEntity.name} objects associated with this ${entity.name} object.
         {
-            List<${toEntity|domain:JSONDTO|name}> list = ${toEntity|domain:Service|name|uncapitalize}.get${toEntity|domain:JSONDTO|name}ListAssociatedWith${entity|domain:Model|name}(id,0,10000);
+            List<${toEntity|domain:JSONDTO|name}> list = ${toEntity|domain:Service|name|uncapitalize}.get${toEntity|domain:JSONDTO|name}ListAssociatedWith${entity|domain:Model|name}(id,0,10000, 1 /*levels*/);
             model.addAttribute("${relationship|domain:JSONDTO|name|uncapitalize}List", list);
         }
         $[/ foreach ]
@@ -190,9 +190,9 @@ $[* FULL LISTS *]
             $[ call AutoWireEntity(entity: toEntity) ]
             {
             $[ if toEntity.hasParentRelationshipToEntity(entity) ]
-                List<${toEntity|domain:JSONDTO|name}> list = ${toEntity|domain:Service|name|uncapitalize}.get${toEntity|domain:JSONDTO|name}ListBy${entity|domain:Model|name}(id, 0, 1000, true);
+                List<${toEntity|domain:JSONDTO|name}> list = ${toEntity|domain:Service|name|uncapitalize}.get${toEntity|domain:JSONDTO|name}ListBy${entity|domain:Model|name}(id, 0, 1000, 1 /*levels*/);
             $[ else ]
-                List<${toEntity|domain:JSONDTO|name}> list = ${toEntity|domain:Service|name|uncapitalize}.get${toEntity|domain:JSONDTO|name}List(0, 1000, true);
+                List<${toEntity|domain:JSONDTO|name}> list = ${toEntity|domain:Service|name|uncapitalize}.get${toEntity|domain:JSONDTO|name}List(0, 1000, 1 /*levels*/);
             $[/ if ]
                 model.addAttribute("${toEntity|domain:JSONDTO|name|uncapitalize}List", list);
             }

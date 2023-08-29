@@ -154,14 +154,35 @@ $[* FILTER LISTS *]
                         $[ default ]
                             $[ log fatal ]Filter attribute type not supported.$[/ log ]
                     $[/ switch ]
-            {
+        // Attribute Filter List
+        {
                     $[ call AutoWireEntity(entity: filterAttribute.entity) ]
 $[ send imports ]
-    import ${filterAttribute.type|domain:Model|fullname};
+import ${filterAttribute.type|domain:Model|fullname};
 $[/ send ]
-                List<${filterAttribute.entity|domain:JSONDTO|name}> list = ${filterAttribute.entity|domain:Service|name|uncapitalize}.get${filterAttribute.entity|domain:JSONDTO|name}ListBy${filterAttribute|domain:Model|name|capitalize}(${filterAttributeValue}, 0, 1000, 1 /*levels*/);
-                model.addAttribute("${relationship|domain:JSONDTO|name|uncapitalize}List", list);
-            }
+            List<${filterAttribute.entity|domain:JSONDTO|name}> list = ${filterAttribute.entity|domain:Service|name|uncapitalize}.get${filterAttribute.entity|domain:JSONDTO|name}ListBy${filterAttribute|domain:Model|name|capitalize}(${filterAttributeValue}, 0, 1000, 1 /*levels*/);
+            model.addAttribute("${relationship|domain:JSONDTO|name|uncapitalize}List", list);
+        }
+                $[ elseif adminRelationship.hasTag("filter:relationship") ]
+                    $[ let filterRelationshipName = adminRelationship.tagValue("filter:relationship") ]
+                    $[ if !toEntity.hasRelationshipNamed(filterRelationshipName) ]
+                        $[ log fatal ]Specified filter relationship doesn't exist: ${toEntity|name}.${filterRelationshipName}$[/ log ]
+                    $[/ if ]
+                    $[ let filterRelationship = toEntity.relationshipNamed(filterRelationshipName) ]
+                    $[ if !filterRelationship.isParent ]
+                        $[ log fatal ]Specified filter relationship must be a parent relationship: ${toEntity|name}.${filterRelationshipName}$[/ log ]
+                    $[/ if ]
+                    $[ let filterToEntity = filterRelationship.to.entity ]
+                    $[ let filterToEntityPK = filterToEntity.primaryKeyAttribute]
+        // Relationship Filter List
+        {
+                    $[ call AutoWireEntity(entity: toEntity) ]
+$[ send imports ]
+import ${toEntity|domain:JSONDTO|fullname};
+$[/ send ]
+            List<${toEntity|domain:JSONDTO|name}> list = ${toEntity|domain:Service|name|uncapitalize}.get${toEntity|domain:JSONDTO|name}ListBy${filterToEntity|domain:Model|name|capitalize}(dto.get${filterRelationship|domain:JSONDTO|name|capitalize}().get${filterToEntityPK|domain:JSONDTO|name|capitalize}(), 0, 1000, 1 /*levels*/);
+            model.addAttribute("${toEntity|domain:JSONDTO|name|uncapitalize}List", list);
+        }
                 $[ else ]
 $[* UNIQUE FULL LISTS *]
                     $[ let toEntity = relationship.to.entity ]
@@ -174,7 +195,7 @@ $[* UNIQUE FULL LISTS *]
         $[ foreach relationship in entity.implicitRelationships ]
             $[ let toEntity = relationship.implicitToEntity ]
 $[ send imports ]
-    import ${toEntity|domain:JSONDTO|fullname};
+import ${toEntity|domain:JSONDTO|fullname};
 $[/ send ]
             $[ call AutoWireEntity(entity: toEntity) ]
 
@@ -188,14 +209,14 @@ $[/ send ]
 $[* FULL LISTS *]
         $[ foreach toEntity in toOneEntities ]
             $[ call AutoWireEntity(entity: toEntity) ]
-            {
+        {
             $[ if toEntity.hasParentRelationshipToEntity(entity) ]
-                List<${toEntity|domain:JSONDTO|name}> list = ${toEntity|domain:Service|name|uncapitalize}.get${toEntity|domain:JSONDTO|name}ListBy${entity|domain:Model|name}(id, 0, 1000, 1 /*levels*/);
+            List<${toEntity|domain:JSONDTO|name}> list = ${toEntity|domain:Service|name|uncapitalize}.get${toEntity|domain:JSONDTO|name}ListBy${entity|domain:Model|name}(id, 0, 1000, 1 /*levels*/);
             $[ else ]
-                List<${toEntity|domain:JSONDTO|name}> list = ${toEntity|domain:Service|name|uncapitalize}.get${toEntity|domain:JSONDTO|name}List(0, 1000, 1 /*levels*/);
+            List<${toEntity|domain:JSONDTO|name}> list = ${toEntity|domain:Service|name|uncapitalize}.get${toEntity|domain:JSONDTO|name}List(0, 1000, 1 /*levels*/);
             $[/ if ]
-                model.addAttribute("${toEntity|domain:JSONDTO|name|uncapitalize}List", list);
-            }
+            model.addAttribute("${toEntity|domain:JSONDTO|name|uncapitalize}List", list);
+        }
         $[/ foreach ]
     $[/ author ]
 $[/ author ]

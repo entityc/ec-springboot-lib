@@ -48,8 +48,13 @@ $[ function MainTable
         $[/ if ]
     $[/ foreach ]
     $[ foreach toEntityRelationship in toEntity.declaredDomainRelationships ]
-        $[ if toEntityRelationship.hasTag("summary") ]
+        $[ if toEntityRelationship.hasTag("summary") && (toEntityRelationship|domain:AdminUI).hasTag("display:attribute") ]
 	      <th th:text="#{${toEntity|domain:StaticLocalization|name}.${toEntityRelationship|domain:StaticLocalization|name}}" scope="col" style="width:auto">${toEntityRelationship|title}</th>
+        $[/ if ]
+        $[ if toEntityRelationship.hasFields ]
+            $[ foreach field in toEntityRelationship.fields ]
+	      <th th:text="#{${toEntityRelationship.to.entity|domain:StaticLocalization|name}.${field.attribute.name}}" scope="col" style="width:auto">${field.attribute|title}</th>
+            $[/ foreach ]
         $[/ if ]
     $[/ foreach ]
           <th th:text="Action" style="width:1%">Action</th>
@@ -70,12 +75,21 @@ $[ function MainTable
         $[/ if ]
     $[/ foreach ]
     $[ foreach toEntityRelationship in toEntity.declaredDomainRelationships ]
-        $[ if toEntityRelationship.hasTag("summary") ]
+        $[ if toEntityRelationship.hasTag("summary") && (toEntityRelationship|domain:AdminUI).hasTag("display:attribute") ]
             $[ capture relItemExpr ]item.${toEntityRelationship.name}.${(toEntityRelationship|domain:AdminUI).tagValue("display:attribute")}$[/ capture ]
             $[ if toEntityRelationship.isOptional ]
                 $[ capture relItemExpr ]item.${toEntityRelationship.name} != null ? ${relItemExpr} : ''$[/ capture ]
             $[/ if ]
             <td th:text="${$}{${relItemExpr}}"></td>
+        $[/ if ]
+        $[ if toEntityRelationship.hasFields ]
+            $[ foreach field in toEntityRelationship.fields ]
+                $[ capture relItemExpr ]item.${toEntityRelationship.name}.${field.name}$[/ capture ]
+                $[ if toEntityRelationship.isOptional ]
+                    $[ capture relItemExpr ]item.${toEntityRelationship.name} != null ? ${relItemExpr} : ''$[/ capture ]
+                $[/ if ]
+            <td th:text="${$}{${relItemExpr}}"></td>
+            $[/ foreach ]
         $[/ if ]
     $[/ foreach ]
             <td style="width:1%"><a class="btn btn-secondary active" role="button" aria-pressed="true" th:href="@{'${adminUrlPrefix}/${toEntity|domain:APIPath|name}/' + ${$}{item.id} + '/detail'}">Open</a></td>
@@ -173,7 +187,7 @@ $[/ send ]
                         $[ log fatal ]Specified filter relationship must be a parent relationship: ${toEntity|name}.${filterRelationshipName}$[/ log ]
                     $[/ if ]
                     $[ let filterToEntity = filterRelationship.to.entity ]
-                    $[ let filterToEntityPK = filterToEntity.primaryKeyAttribute]
+                    $[ let filterToEntityPK = filterToEntity.primaryKeyAttribute ]
         // Relationship Filter List
         {
                     $[ call AutoWireEntity(entity: toEntity) ]

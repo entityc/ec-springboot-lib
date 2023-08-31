@@ -141,6 +141,7 @@ $[ function requiredEditableFields
     $[ let relationships = @[]@ ]
     $[ foreach domainAttribute in (entity|domain:AdminUI).orderedDomainAttributes ]
         $[ let attribute = domainAttribute.attribute ]
+        $[ if attribute == null]$[log fatal]Found domain attribute not resolved: ${domainAttribute|name} on entity: ${entity.name}$[/log]$[/if]
         $[ call checkIfAttributeIsRequired(attribute: attribute)->(required: required) ]
         $[ call checkIfAttributeIsEditable(attribute: attribute)->(editable: editable) ]
         $[ if (required || domainAttribute.hasTag("required")) && editable ]

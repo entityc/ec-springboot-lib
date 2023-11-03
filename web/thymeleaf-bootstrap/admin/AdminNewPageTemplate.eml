@@ -146,6 +146,7 @@ $[ receive distinct autowired ]
 
     $[ foreach entity in space.entities ]
         $[ if entity.isImplicit || entity.isExtern || entity.isIncluded || entity.isTransient || entity.isSecondary ]$[ continue ]$[/ if ]
+        $[ if entity.isCompositeEntity ]$[ continue ]$[/ if ]
         $[ let domainEntity = entity|domain ]
         $[ let htmlFilename = domainEntity.name + "_detail" ]
         $[ let entityDtoClassName = entity|domain:JSONDTO|name ]

@@ -10,13 +10,16 @@ $[ publisher org.entityc.springboot.service.update ]
     $[ import "util/AutoWired" ]
     $[ author to org.entityc.springboot.service ]
         $[ author to outlet methods ]
+$[* Composite entities can't be updated. *]
+            $[ if entity.isCompositeEntity ]
+                $[ return ]
+            $[/ if ]
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public ${modelName} update${entity.name}(${modelName} object) throws ServiceException {
         return save${entity.name}(object);
     }
 
 $[ send imports ]
-import org.springframework.dao.DataAccessException;
 import ${exceptionNamespace}.DaoException;
 $[/ send ]
 $[ outlet aboveSave

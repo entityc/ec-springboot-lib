@@ -13,8 +13,8 @@ $[ author to org.entityc.springboot.service ]
                         $[ break ]
                     $[/ if ]
                 $[/ foreach ]
-                $[ let fromModelName = modelName]
-                $[ let fromRepoVarName = repositoryVariableName]
+                $[ let fromModelName = modelName ]
+                $[ let fromRepoVarName = repositoryVariableName ]
                 $[ let toModelName = toMMEntity|domain:Model|name ]
                 $[ let toRepoEntityName = toMMEntity|domain:Repository|name ]
                 $[ let toRepoVarName = toRepoEntityName|uncapitalize ]
@@ -46,6 +46,10 @@ $[/ send ]
             throw new DaoException(ex.getMessage(), ex);
         }
     }
+
+                $[ if entity.isCompositeEntity ]
+                    $[ continue ]
+                $[/ if ]
 
     public void associateTo${toModelName}(${fromPKType} ${fromPKVarName}, ${toPKType} ${toPKVarName}) throws ServiceException {
         Optional<${modelName}> modelObjectOptional = ${repositoryVariableName}.findById(${fromPKVarName});

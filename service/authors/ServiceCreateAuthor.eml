@@ -1,67 +1,75 @@
-$[D summary, main "This template contains the author that is responsible for generating the create object"]
-$[D summary, main "service methods."]
-$[D "**Create**"]
-$[D ""]
-$[D "The create method is called by create endpoints implemented in the controller class. This"]
-$[D "method in turn calls a create method in the repository class however before that it will"]
-$[D "assign a UUID primary key. This is also where it places some of the in-memory caching code. It"]
-$[D "will also set relationships associated with the logged in (principle) user."]
-$[publisher org.entityc.springboot.service.create]
-    $[import "service/ServiceFunctions"]
-    $[import "util/AutoWired"]
-    $[author to org.entityc.springboot.service]
-        $[author to outlet methods]
-$[send imports]
+$[ D summary, main "This template contains the author that is responsible for generating the create object" ]
+$[ D summary, main "service methods." ]
+$[ D "**Create**" ]
+$[ D "" ]
+$[ D "The create method is called by create endpoints implemented in the controller class. This" ]
+$[ D "method in turn calls a create method in the repository class however before that it will" ]
+$[ D "assign a UUID primary key. This is also where it places some of the in-memory caching code. It" ]
+$[ D "will also set relationships associated with the logged in (principle) user." ]
+$[ publisher org.entityc.springboot.service.create ]
+    $[ import "service/ServiceFunctions" ]
+    $[ import "util/AutoWired" ]
+    $[ author to org.entityc.springboot.service ]
+        $[ author to outlet methods ]
+$[* Composite entities can't be created. *]
+            $[ if entity.isCompositeEntity ]
+                $[ return ]
+            $[/ if ]
+$[ send imports ]
 import java.util.UUID;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.annotation.Propagation;
 import ${exceptionNamespace}.ServiceException;
-$[/send]
+$[/ send ]
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public ${modelName} create${modelName}(${modelName} object) throws ServiceException {
-            $[if entity.hasPrimaryKey && entity.pkType.isUUIDType]
+            $[ if entity.hasPrimaryKey && entity.pkType.isUUIDType ]
         object.setId(UUID.randomUUID());
-            $[/if]
-            $[call setCreatedByUserFields()]
+            $[/ if ]
+            $[ call setCreatedByUserFields() ]
         ${modelName} savedObject = this.save${entity.name}(object);
-$[outlet saved
-  D "The object, in variable `savedObject`, has just be created and saved to persistent storage"
-  D "by the simple create object service method."
+$[ outlet saved
+   D "The object, in variable `savedObject`, has just be created and saved to persistent storage"
+   D "by the simple create object service method."
 ]
-$[/outlet]
+$[/ outlet ]
         return savedObject;
     }
 
-        $[/author]
-        $[author to outlet methods
-          D "**Create With Parent** A create method is generated where the ID of a parent object is"
-          D "specified. This in turn calls a create method in the repository class however before that it"
-          D "will assign a UUID primary key. It will also set relationships associated with the logged in"
-          D "(principle) user."
+        $[/ author ]
+        $[ author to outlet methods
+           D "**Create With Parent** A create method is generated where the ID of a parent object is"
+           D "specified. This in turn calls a create method in the repository class however before that it"
+           D "will assign a UUID primary key. It will also set relationships associated with the logged in"
+           D "(principle) user."
         ]
-            $[if entity.hasPrimaryParentRelationship]
-                $[foreach relationship in entity.relationships if relationship.to.isOne]
-                    $[let toPrimaryKeyName = relationship.to.entity.primaryKeyAttribute.name]
-                    $[if relationship.isParent && !relationship.isOptional]
+$[* Composite entities can't be created. *]
+            $[ if entity.isCompositeEntity ]
+                $[ return ]
+            $[/ if ]
+            $[ if entity.hasPrimaryParentRelationship ]
+                $[ foreach relationship in entity.relationships if relationship.to.isOne ]
+                    $[ let toPrimaryKeyName = relationship.to.entity.primaryKeyAttribute.name ]
+                    $[ if relationship.isParent && !relationship.isOptional ]
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public ${modelName} create${modelName}With${relationship.name|capitalize}(${relationship.to.entity.pkType|language} ${toPrimaryKeyName}, ${modelName} object) throws ServiceException {
-                        $[if entity.hasPrimaryKey && entity.pkType.isUUIDType]
+                        $[ if entity.hasPrimaryKey && entity.pkType.isUUIDType ]
         object.setId(UUID.randomUUID());
-                        $[/if]
-                        $[call setCreatedByUserFields()]
+                        $[/ if ]
+                        $[ call setCreatedByUserFields() ]
         object.set${relationship.name|capitalize}Id(${toPrimaryKeyName});
         ${modelName} savedObject = this.save${entity.name}(object);
-$[outlet saved
-  D "The object, in variable `savedObject`, has just be created and saved to persistent storage"
-  D "by the create object by parent service method."
+$[ outlet saved
+   D "The object, in variable `savedObject`, has just be created and saved to persistent storage"
+   D "by the create object by parent service method."
 ]
-$[/outlet]
+$[/ outlet ]
         return savedObject;
     }
 
-                    $[/if]
-                $[/foreach]
-            $[/if]
-        $[/author]
-    $[/author]
-$[/publisher]
+                    $[/ if ]
+                $[/ foreach ]
+            $[/ if ]
+        $[/ author ]
+    $[/ author ]
+$[/ publisher ]

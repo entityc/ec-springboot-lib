@@ -7,7 +7,7 @@ $[ author to org.entityc.springboot.controller ]
     ]
     $[let defaultStart = 0]
     $[let defaultLimit = 10]
-    $[let defaultLevels = 1]
+    $[let defaultLevels = 5]
 $[ send imports ]
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
@@ -38,6 +38,9 @@ $[/ outlet ]
             $[/ if ]
         $[/ publisher ]
 
+        $[**********************************
+          * GET (full) LIST
+          **********************************]
         $[ publisher org.entityc.springboot.controller.getList
            D "Get List endpoint"
         ]
@@ -101,6 +104,51 @@ $[/ outlet ]
     }
 
         $[/ publisher ]
+        $[**********************************
+          * GET LIST BY ATTRIBUTE
+          **********************************]
+        $[ publisher org.entityc.springboot.controller.getListByAttribute
+           D "Get List by Attribute Endpoint"
+        ]
+            $[ foreach attribute in entity.attributes ]
+                $[ if attribute.isParent && !attribute.isSequential ]
+                    $[ if attribute.type.isEnumType ]
+$[ send imports ]
+import ${attribute.type|domain:Model|fullname};
+$[/ send ]
+                    $[/ if ]
+    // [Template] ${__template.name}:${__outlet.name} < ${__author.template.name}
+    @RequestMapping(
+        path = "/${attribute|domain:APIPath|name}/{value}",
+        method = RequestMethod.GET,
+        produces = "application/json"
+    )
+$[ outlet annotation
+   D "Resides just above the method declaration in the annocation area."
+]
+$[/ outlet ]
+    public ResponseEntity<List<${dtoClassName}>> get${modelName}ListBy${attribute.name|capitalize}(
+        @PathVariable("value") ${attribute.type|language} value,
+        @RequestParam(value = "start", required = false) Integer start,
+        @RequestParam(value = "limit", required = false) Integer limit,
+        @RequestParam(value = "levels", required = false) Integer levels)
+        throws ServiceException {
+        final int queryStart = ResourceUtils.defaultTo(start, ${defaultStart});
+        final int queryLimit = ResourceUtils.defaultTo(limit, ${defaultLimit});
+        final int queryLevels = ResourceUtils.defaultTo(levels, ${defaultLevels});
+        List<${dtoClassName}> results = ${service}.get${entity|domain:JSONDTO|name|capitalize}ListBy${attribute.name|capitalize}(value, queryStart, queryLimit, queryLevels);
+        HttpHeaders headers = new HttpHeaders();
+        headers.add("X-Total-Count", "" + results.size());
+        headers.add("Access-Control-Expose-Headers", "X-Total-Count");
+        return new ResponseEntity(results, headers, HttpStatus.OK);
+    }
+
+                $[/ if ]
+            $[/ foreach ]
+        $[/ publisher ]
+        $[**********************************
+          * GET LIST BY RELATIONSHIP
+          **********************************]
         $[ publisher org.entityc.springboot.controller.getListByRelationship
            D "Get List by Relationship Endpoint"
         ]

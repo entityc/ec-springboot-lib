@@ -14,14 +14,15 @@ $[ function SubObjectHeadingAndAddButton
     entityDtoClassName,
     includeCanAdd
    ) ]
-	    <div class="container g-0" th:if="${$}{!#lists.isEmpty(${relationship.name}List)$[ if includeCanAdd && toEntity.hasPrimaryParentRelationship ] || canAdd${toEntity|name}$[/ if ]}">
+    $[ let validRelationship = toEntity.hasPrimaryParentRelationship && toEntity.entity.primaryParentEntity.name == entity.name ]
+	    <div class="container g-0" th:if="${$}{!#lists.isEmpty(${relationship.name}List)$[ if includeCanAdd && validRelationship ] || canAdd${toEntity|name}$[/ if ]}">
             <div class="row">
                 <div class="col-md-auto">
      	            <h3>${toEntity.entity|name|plural|title}</h3>
                 </div>
-    $[ if includeCanAdd && toEntity.hasPrimaryParentRelationship ]
+    $[ if includeCanAdd && validRelationship ]
         $[ let actionUrl = (toEntity|domain:APIPath|name) + "/add" + "/{id}(id=${" + entityDtoClassName + ".id})" ]
-        	    <!-- Button for adding a sub-object -->
+        	    <!-- Button for adding a sub-object for relationship ${relationship.name} -->
                 <div class="col-md-auto ms-auto">
                     <form th:if="${$}{canAdd${toEntity|name}}" th:action="@{${adminUrlPrefix}/${actionUrl}}" method="post">
                         <input type="submit" name="${toEntity.name}add" id="${toEntity.name}-add"
@@ -137,8 +138,13 @@ $[ author to org.entityc.springboot.web.admin.controller.detail ]
             $[ if relationship.isOneToMany ]
                 $[ call AutoWireEntity(entity: toEntity) ]
 
+                $[ if relationship.reverseRelationship == null ]
+                    $[ log warning ]Cannot find reverse relationship for ${entity.name}.${relationship.name}. Will not include child objects for that relationship.$[/ log ]
+                    $[continue]
+                $[/ if ]
         // For relationship `${relationship.name}` add the list of possible ${toEntity.name} values, this will support
         // a UI element that allows the user to select a value to assign to the `${relationship.name}` field.
+        // [Template] ${__template.name}:${__outlet.name} < ${__author.template.name}
         {
             List<${toEntity|domain:JSONDTO|name}> list = ${toEntity|domain:Service|name|uncapitalize}.get${toEntity|domain:JSONDTO|name}ListBy${relationship.reverseRelationship|domain:Model|name|capitalize}(id, 0, 1000, 1 /*levels*/);
             model.addAttribute("${relationship.name}List", list);

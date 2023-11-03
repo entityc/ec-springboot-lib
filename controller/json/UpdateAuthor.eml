@@ -3,6 +3,10 @@ $[ author to org.entityc.springboot.controller ]
     $[ author to outlet methods
        D "Adds update endpoints to the controller class for its entity."
     ]
+$[* Composite entities can't be updated. *]
+        $[ if entity.isCompositeEntity ]
+            $[ return ]
+        $[/ if ]
 $[ send imports ]
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;

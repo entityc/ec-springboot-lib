@@ -13,6 +13,7 @@ $[ send imports ]
 import ${protobufNamespace}.${entity.module.name|capitalize};
 $[/ send ]
     public ${fullProtobufClassName} protobufFromModel(${responseModelName} modelObject, int levels) throws ServiceException {
+        System.out.println("[protobufFromModel] ${entity.name} levels: " + levels);
             $[ let _mapperDomainEntity = entity|domain:DTOMapper ]
             $[ call addAutoWired(domainEntity: _mapperDomainEntity) ]
             $[ let _mapperVariableName = _mapperDomainEntity|name|uncapitalize ]
@@ -47,13 +48,11 @@ $[/ send ]
 $[*                builder.set${relationship|domain:Model|name|capitalize}(${_toEntityMapperVariableName}.toProtobufFromModel(fieldObject.get()), levels); *]
             }
                 $[ elseif relationship.to.isMany && relationship.withViewName != "Reference" ]
-                    $[ capture bySomething ]With${entity|domain:Model|name|capitalize}$[/ capture ]
+                    $[ capture bySomething ]By${entity|domain:Model|name|capitalize}$[/ capture ]
                     $[ capture byArgument ]modelObject.get${entity.primaryKeyAttribute|domain:Model|name|capitalize}(), $[/ capture ]
 $[ send imports ]
 import java.util.HashSet;
 $[/ send ]
-            // TODO: This is not currently supported
-            $[* Get this working someday...
                     $[ if relationship.relationship.isImplicit ]
             List<${_toEntityModelClassName}> items = ${_toEntityRepository|name|uncapitalize}.get${_toEntity|domain:Model|name|capitalize}ListAssociated${bySomething}(${byArgument}0, 10000);
             for( ${_toEntityModelClassName} item : items ) {
@@ -62,7 +61,6 @@ $[/ send ]
                     $[ else ]
             builder.addAll${relationship|domain:Model|name|capitalize}($[ if toSelf ]this$[ else ]${_toEntity|domain:Service|name|uncapitalize}$[/ if ].get${_toEntity|domain:ProtobufDTO|name|capitalize}PBList${bySomething}(${byArgument}0, 10000, levels).getItemList());
                     $[/ if ]
-                    *]
                 $[/ if ]
             $[/ foreach ]
         }

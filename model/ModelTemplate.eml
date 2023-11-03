@@ -17,7 +17,7 @@ $[ function buildOverrides
    D "columns. These can be a bit complicated when secondary entities are involved as the"
    D "hierarchy in the model class can be different than at the database level. This function helps"
    D "in the synthesis of these model variable to column name mappings. This includes both"
-   D "attributes and relationships." 
+   D "attributes and relationships."
    (modelNamePrefix,
     databaseNamePrefix,
     attribute
@@ -117,7 +117,7 @@ Template: `${__template.name}`
 
 $[/ file ]
 $[ foreach module in space.modules if !module.isIncluded ]
-    $[ foreach entity in space.entities if !(entity.isImplicit || entity.isExtern || entity.isTransient) ]
+    $[ foreach entity in module.entities if !(entity.isImplicit || entity.isExtern || entity.isTransient) ]
         $[ file domain.namespace|path entity|domain|name "java" ]
             $[ publisher springboot.model ]
                 $[ call entityHeader(title: "This is the Model class for following entity.") ]
@@ -299,12 +299,15 @@ $[/ send ]
                     $[/ if ]
                 $[/ foreach ]
 $[*  RELATIONSHIPS *]
-                $[ foreach relationship in (entity|domain|view:Default).relationships ]
-                    $[ if !relationship.to.isAsPrimaryKey ]$[ continue ]$[/ if ]
+                $[ foreach d_relationship in (entity|domain|view:Default).relationships if d_relationship.to.isAsPrimaryKey]
+                    $[let relationship = d_relationship.relationship]
                     $[ if !entity.isSecondary ]
-    @Column(name = "${relationship.relationship|domain:Database|name}_id") // relationship
+    @Column(name = "${relationship|domain:Database|name}_id") // relationship
                     $[/ if ]
-    ${relationship.relationship.to.entity.primaryKey.type|language nullable} ${relationship|name}Id;
+                    $[ if relationship.to.entity.primaryKeyAttribute == null ]
+                        $[ log fatal ]Relationship ${entity.name}.${relationship.name} TO entity ${relationship.to.entity.name} is missing a primary key attribute!$[/ log ]
+                    $[/ if ]
+    ${relationship.to.entity.primaryKey.type|language nullable} ${d_relationship|name}Id;
 
                 $[/ foreach ]
 }

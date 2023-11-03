@@ -26,6 +26,10 @@ $[ author to org.entityc.springboot.controller ]
                 $[ let toPKMethName = toMMEntity.primaryKeyAttribute|domain:Model|name|capitalize ]
                 $[ call addAutoWired(domainEntity: toMMEntity|domain:DTOMapper) ]
 $[ send imports ]
+import org.springframework.web.bind.annotation.ResponseStatus;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RequestMethod;
 import ${toMMEntity|domain:Model|fullname};
 import ${toMMEntity|domain:JSONDTO|fullname};
 $[/ send ]
@@ -50,7 +54,7 @@ $[/ outlet ]
             ) throws ServiceException {
         final int queryStart = ResourceUtils.defaultTo(start, 0);
         final int queryLimit = ResourceUtils.defaultTo(limit, 10);
-        final int queryLevels = ResourceUtils.defaultTo(levels, 1);
+        final int queryLevels = ResourceUtils.defaultTo(levels, 5);
         List<${fromDtoName}> results = ${fromService}.get${fromDtoName}ListAssociatedWith${toModelName}(id, queryStart, queryLimit, queryLevels);
         HttpHeaders headers = new HttpHeaders();
         headers.add("X-Total-Count", "" + results.size());
@@ -58,6 +62,10 @@ $[/ outlet ]
         return new ResponseEntity(results, headers, HttpStatus.OK);
     }
 
+$[* Composite entities can't be associated. *]
+        $[ if entity.isCompositeEntity ]
+            $[ continue ]
+        $[/ if ]
     // [Template] ${__template.name}:${__outlet.name} < ${__author.template.name}
     @RequestMapping(
             path = "{id}/${toMMEntity|domain:APIPath|name}/{to_id}",

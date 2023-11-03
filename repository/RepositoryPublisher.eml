@@ -31,6 +31,8 @@ $[/outlet]
 //   Tags:        [${entity.tagsSeparatedBy("][")}]
                 $[/if]
 //
+//   Template:    ${__template.name}
+//
 // THIS FILE IS GENERATED. DO NOT EDIT!!
 //
 package ${domain.namespace};

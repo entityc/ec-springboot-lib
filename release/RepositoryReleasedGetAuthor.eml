@@ -1,14 +1,22 @@
 $[ D summary, main "This template contains the authors that are responsible for generating the get object" ]
-$[ D summary, main "repository methods." ]
+$[ D summary, main "repository methods for composite entities in the Released realm." ]
 $[ publisher org.entityc.springboot.repository.get ]
     $[ author to org.entityc.springboot.repository ]
         $[ author to outlet methods
            D "Adds many get methods from get by ID to getting lists by parent relationships."
         ]
-            $[* Don't process composite entities here, a different author will do that *]
-            $[ if entity.isCompositeEntity]
+            $[* Only process composite entities here. *]
+            $[ if !entity.isInRealm("Released") || !entity.isCompositeEntity]
                 $[return]
             $[/ if ]
+            $[let binderEntity = entity.getConstituentEntity("binder")]
+            $[let objectEntity = entity.getConstituentEntity("object")]
+            $[let versionEntity = entity.getConstituentEntity("version")]
+            $[let releaseEntity = entity.getConstituentEntity("release")]
+            $[ let objectPKColumnName = objectEntity.primaryKeyAttribute|domain:Database|name ]
+            $[ let versionPKColumnName = versionEntity.primaryKeyAttribute|domain:Database|name ]
+            $[ let releasePKColumnName = releaseEntity.primaryKeyAttribute|domain:Database|name ]
+
             $[ let hasCreationDate = false ]
             $[ foreach attribute in entity.effectiveAttributes|type single ]
                 $[ if attribute.isCreation ]
@@ -36,20 +44,13 @@ $[ publisher org.entityc.springboot.repository.get ]
             $[ let responseModelName = responseEntity|domain:Model|name ]
             $[ let responseDatabaseName = responseEntity|domain:Database|name ]
             $[ if responseEntity.hasPrimaryKey ]
-    default Optional<${responseModelName}> getById(${responseEntity.pkType|language} id) {
-$[ outlet preGet
-   D "This is right **before** the object is fetched from the repository by its ID (in variable"
-   D "`id`)."
-]
-$[/ outlet ]
-        Optional<${responseModelName}> object = findById(id);
-$[ outlet postGet
-   D "This is right **after** the object was fetched from the repository by its ID (object in"
-   D "variable `object`)."
-]
-$[/ outlet ]
-        return object;
-    }
+    @Query(value =
+        "SELECT * " +
+          "FROM ${binderEntity|domain:Database|name} r " +
+          "JOIN ${objectEntity|domain:Database|name} o ON r.${objectPKColumnName} = o.${objectPKColumnName} " +
+          "JOIN ${versionEntity|domain:Database|name} v ON r.${versionPKColumnName} = v.${versionPKColumnName} " +
+         "WHERE r.${releasePKColumnName} = ?1 AND o.${objectPKColumnName} = ?2", nativeQuery = true)
+    Optional<${responseModelName}> getById(${responseEntity.pkType|language} id, ${releaseEntity.primaryKeyAttribute.type|language} ${releaseEntity.primaryKeyAttribute.name});
             $[/ if ]
 $[ send imports ]
 import ${responseEntity|domain:Model|fullname};

@@ -1,44 +1,49 @@
-$[D summary, main "This contains an author that generates delete endpoint methods for a controller class."]
-$[author to org.entityc.springboot.controller]
-    $[author to outlet methods
-    D "Adds delete endpoints to the controller class for its entity."]
-$[send imports]
+$[ D summary, main "This contains an author that generates delete endpoint methods for a controller class." ]
+$[ author to org.entityc.springboot.controller ]
+    $[ author to outlet methods
+       D "Adds delete endpoints to the controller class for its entity."
+    ]
+$[* Composite entities can't be deleted. *]
+        $[ if entity.isCompositeEntity ]
+            $[ return ]
+        $[/ if ]
+$[ send imports ]
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.PathVariable;
-$[/send]
-        $[publisher org.entityc.springboot.controller.deleteByRelationship
-          D "Delete by Relationship endpoint"
+$[/ send ]
+        $[ publisher org.entityc.springboot.controller.deleteByRelationship
+           D "Delete by Relationship endpoint"
         ]
-            $[if entity.hasParentRelationship]
-                $[foreach relationship in entity.relationships if relationship.isParent && !relationship.isOptional]
+            $[ if entity.hasParentRelationship ]
+                $[ foreach relationship in entity.relationships if relationship.isParent && !relationship.isOptional ]
     // [Template] ${__template.name}:${__outlet.name} < ${__author.template.name}
     @DeleteMapping("/${relationship|domain:APIPath|name}/{id}")
-$[outlet annotation
-  D "Resides just above the method declaration in the annocation area."
+$[ outlet annotation
+   D "Resides just above the method declaration in the annocation area."
 ]
-$[/outlet]
+$[/ outlet ]
     public void delete${modelName}By${relationship.name|capitalize}Id(@PathVariable("id") ${relationship.to.entity.primaryKey.type|language} id) throws ServiceException {
         ${service}.delete${modelName}By${relationship.name|capitalize}Id(id);
     }
-                $[/foreach]
-            $[/if]
-        $[/publisher]
-        $[publisher org.entityc.springboot.controller.deleteById
-          D "Delete by ID endpoint"
+                $[/ foreach ]
+            $[/ if ]
+        $[/ publisher ]
+        $[ publisher org.entityc.springboot.controller.deleteById
+           D "Delete by ID endpoint"
         ]
-            $[if entity.hasPrimaryKey]
-                $[let pkidtype = entity.pkType|language]
+            $[ if entity.hasPrimaryKey ]
+                $[ let pkidtype = entity.pkType|language ]
     // [Template] ${__template.name}:${__outlet.name} < ${__author.template.name}
     @DeleteMapping("/{id}")
-$[outlet annotation
-  D "Resides just above the method declaration in the annocation area."
+$[ outlet annotation
+   D "Resides just above the method declaration in the annocation area."
 ]
 // something should go here
-$[/outlet]
+$[/ outlet ]
     public void delete${modelName}ById(@PathVariable("id") ${pkidtype} id) throws ServiceException {
         ${service}.delete${modelName}ById(id);
     }
-            $[/if]
-        $[/publisher]
-    $[/author]
-$[/author]
+            $[/ if ]
+        $[/ publisher ]
+    $[/ author ]
+$[/ author ]

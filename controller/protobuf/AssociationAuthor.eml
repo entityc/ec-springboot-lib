@@ -5,6 +5,10 @@ $[ author to org.entityc.springboot.controller.protobuf ]
     $[ author to outlet methods
        D "Adds an associatedTo... endpoint to the controller for protobuf objects."
     ]
+$[* Composite entities can't be associated. *]
+        $[ if entity.isCompositeEntity ]
+            $[ return ]
+        $[/ if ]
         $[ let protobufNamespace = (space|domain:ProtobufDTO).domain.namespace ]
         $[ foreach relationship in entity.implicitRelationships ]
             $[ if relationship.to.entity.hasTag("internal:many-to-many") ]

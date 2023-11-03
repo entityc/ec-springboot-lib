@@ -8,7 +8,7 @@ $[ author to org.entityc.springboot.controller.protobuf ]
     ]
         $[ let defaultStart = 0 ]
         $[ let defaultLimit = 10 ]
-        $[ let defaultLevels = 1 ]
+        $[ let defaultLevels = 5 ]
         $[ let protobufNamespace = (space|domain:ProtobufDTO).domain.namespace ]
         $[ capture fullProtobufClassName ]${module.name|capitalize}.${entity|domain:ProtobufDTO|name}$[/ capture ]
 $[ send imports ]
@@ -102,6 +102,51 @@ $[/ outlet ]
     }
 
         $[/ publisher ]
+        $[**********************************
+          * GET LIST BY ATTRIBUTE
+          **********************************]
+        $[ publisher org.entityc.springboot.controller.getListByAttribute
+           D "Get List by Attribute Endpoint"
+        ]
+            $[ foreach attribute in entity.attributes ]
+                $[ if attribute.isParent && !attribute.isSequential ]
+                    $[ if attribute.type.isEnumType ]
+$[ send imports ]
+import ${attribute.type|domain:Model|fullname};
+$[/ send ]
+                    $[/ if ]
+    // [Template] ${__template.name}:${__outlet.name} < ${__author.template.name}
+    @RequestMapping(
+        path = "/${attribute|domain:APIPath|name}/{value}",
+        method = RequestMethod.GET,
+        produces = "application/x-protobuf-lite"
+    )
+$[ outlet annotation
+   D "Resides just above the method declaration in the annocation area."
+]
+$[/ outlet ]
+    public ResponseEntity<${fullProtobufClassName}List> get${entity|domain:Model|name}PBListBy${attribute.name|capitalize}(
+        @PathVariable("value") ${attribute.type|language} value,
+        @RequestParam(value = "start", required = false) Integer start,
+        @RequestParam(value = "limit", required = false) Integer limit,
+        @RequestParam(value = "levels", required = false) Integer levels)
+        throws ServiceException {
+        final int queryStart = ResourceUtils.defaultTo(start, 0);
+        final int queryLimit = ResourceUtils.defaultTo(limit, 10);
+        final int queryLevels = ResourceUtils.defaultTo(levels, ${defaultLevels});
+        ${fullProtobufClassName}List results = ${service}.get${entity|domain:Model|name|capitalize}PBListBy${attribute.name|capitalize}(value, queryStart, queryLimit, queryLevels);
+        HttpHeaders headers = new HttpHeaders();
+        headers.add("X-Total-Count", "" + results.getItemCount());
+        headers.add("Access-Control-Expose-Headers", "X-Total-Count");
+        return new ResponseEntity(results, headers, HttpStatus.OK);
+    }
+
+                $[/ if ]
+            $[/ foreach ]
+        $[/ publisher ]
+        $[**********************************
+          * GET LIST BY RELATIONSHIP
+          **********************************]
         $[ publisher org.entityc.springboot.controller.getListByRelationship
            D "Get List by Relationship Endpoint"
         ]

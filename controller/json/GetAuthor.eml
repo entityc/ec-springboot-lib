@@ -1,13 +1,14 @@
 $[ language java ]
 $[ D summary, main "This contains an author that generates various get endpoint methods for a controller class." ]
+$[ import "release/ReleaseFunctions" ]
 
 $[ author to org.entityc.springboot.controller ]
     $[ author to outlet methods
        D "Adds get endpoints to the controller class for its entity."
     ]
-    $[let defaultStart = 0]
-    $[let defaultLimit = 10]
-    $[let defaultLevels = 5]
+        $[ let defaultStart = 0 ]
+        $[ let defaultLimit = 10 ]
+        $[ let defaultLevels = 5 ]
 $[ send imports ]
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
@@ -21,6 +22,7 @@ $[/ send ]
            D "Get by ID endpoint"
         ]
             $[ if entity.hasPrimaryKey ]
+                $[ call CheckIfReleasedEntity(entity: entity)->(isReleasedEntity: isReleasedEntity, releaseEntityPKAttribute: releaseEntityPKAttribute) ]
     // [Template] ${__template.name}:${__outlet.name} < ${__author.template.name}
     @RequestMapping(
         path = "/{id}",
@@ -31,14 +33,20 @@ $[ outlet annotation
    D "Resides just above the method declaration in the annocation area."
 ]
 $[/ outlet ]
-    public ${dtoClassName} get${modelName}ById(@PathVariable("id") ${entity.pkType|language} id, @RequestParam(value = "levels", required = false) Integer levels) throws ServiceException {
-        return ${service}.get${entity|domain:JSONDTO|name|capitalize}ById(id, ResourceUtils.defaultTo(levels, ${defaultLevels}));
+    public ${dtoClassName} get${modelName}ById(
+                $[ if isReleasedEntity ]
+        @RequestParam(value = "releaseId", required = true) ${releaseEntityPKAttribute.type|language} releaseId,
+                $[/ if ]
+        @PathVariable("id") ${entity.pkType|language} id,
+        @RequestParam(value = "levels", required = false) Integer levels
+    ) throws ServiceException {
+        return ${service}.get${entity|domain:JSONDTO|name|capitalize}ById($[ if isReleasedEntity ]releaseId, $[/ if ]id,  ResourceUtils.defaultTo(levels, ${defaultLevels}));
     }
 
             $[/ if ]
         $[/ publisher ]
 
-        $[**********************************
+$[**********************************
           * GET (full) LIST
           **********************************]
         $[ publisher org.entityc.springboot.controller.getList
@@ -104,7 +112,7 @@ $[/ outlet ]
     }
 
         $[/ publisher ]
-        $[**********************************
+$[**********************************
           * GET LIST BY ATTRIBUTE
           **********************************]
         $[ publisher org.entityc.springboot.controller.getListByAttribute
@@ -146,7 +154,7 @@ $[/ outlet ]
                 $[/ if ]
             $[/ foreach ]
         $[/ publisher ]
-        $[**********************************
+$[**********************************
           * GET LIST BY RELATIONSHIP
           **********************************]
         $[ publisher org.entityc.springboot.controller.getListByRelationship

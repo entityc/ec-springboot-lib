@@ -1,6 +1,7 @@
 $[ language java ]
 $[ D summary, main "This contains an author that generates various get endpoint methods for a controller class" ]
 $[ D summary, main "based on protobuf requests and responses." ]
+$[ import "release/ReleaseFunctions" ]
 
 $[ author to org.entityc.springboot.controller.protobuf ]
     $[ author to outlet methods
@@ -26,6 +27,7 @@ $[/ send ]
            D "Get by ID endpoint"
         ]
             $[ if entity.hasPrimaryKey ]
+                $[ call CheckIfReleasedEntity(entity: entity)->(isReleasedEntity: isReleasedEntity, releaseEntityPKAttribute: releaseEntityPKAttribute) ]
     // [Template] ${__template.name}:${__outlet.name} < ${__author.template.name}
     @RequestMapping(
         path = "/{id}",
@@ -36,8 +38,14 @@ $[ outlet annotation
    D "Resides just above the method declaration in the annocation area."
 ]
 $[/ outlet ]
-    public ${fullProtobufClassName} get${entity|domain:Model|name}PBById(@PathVariable("id") ${entity.pkType|language} id, @RequestParam(value = "levels", required = false) Integer levels) throws ServiceException {
-        return ${service}.get${entity|domain:Model|name|capitalize}PBById(id, ResourceUtils.defaultTo(levels, ${defaultLevels}));
+    public ${fullProtobufClassName} get${entity|domain:Model|name}PBById(
+                $[ if isReleasedEntity ]
+        @RequestParam(value = "releaseId", required = true) ${releaseEntityPKAttribute.type|language} releaseId,
+                $[/ if ]
+        @PathVariable("id") ${entity.pkType|language} id,
+        @RequestParam(value = "levels", required = false) Integer levels
+    ) throws ServiceException {
+        return ${service}.get${entity|domain:Model|name|capitalize}PBById($[ if isReleasedEntity ]releaseId, $[/ if ]id, ResourceUtils.defaultTo(levels, ${defaultLevels}));
     }
 
             $[/ if ]

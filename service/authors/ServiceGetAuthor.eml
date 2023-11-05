@@ -3,21 +3,22 @@ $[ D summary, main "service methods." ]
 $[ D "This includes methods for getting not just a single object but lists of objects." ]
 $[ publisher org.entityc.springboot.service.get ]
     $[ import "util/AutoWired" ]
+    $[ import "release/ReleaseFunctions" ]
     $[ author to org.entityc.springboot.service ]
         $[ author to outlet methods ]
             $[ function GetResponseVarsForDomain
                D "This is used by many of the other functions in this template to create variables based on a"
-               D "response domain." 
+               D "response domain."
                (entity
-                D "The entity the variables are based on." ,
+                D "The entity the variables are based on.",
                 responseDomain
-                D "The response domain. Currently Model, JSONDTO and ProtobufDTO are supported." 
+                D "The response domain. Currently Model, JSONDTO and ProtobufDTO are supported."
                )->
                (responseClassName
-                D "The Java class name corresponding to the response object." ,
+                D "The Java class name corresponding to the response object.",
                 responseInMethodName
                 D "When creating method names that correspond to the response domain, this value should be"
-                D "used." ,
+                D "used.",
                 cacheVariableName
                 D "If a cache is defined, this would be the name of the cache."
                )
@@ -67,12 +68,22 @@ $[*************]
                 useCache,
                 useSingleCache
                ) ]
+                $[ let isReleasedEntity = entity.isCompositeEntity && entity.isInRealm("Released") ]
+                $[ if isReleasedEntity ]
+                    $[ let releaseEntityPK = (entity.getConstituentEntity("release")).primaryKeyAttribute ]
+                $[/ if ]
                 $[ call GetResponseVarsForDomain(entity: entity, responseDomain: responseDomain)->(responseClassName: responseClassName, responseInMethodName: responseInMethodName, cacheVariableName: cacheVariableName) ]
                 $[ let responseModelName = entity|domain:Model|name ]
                 $[ let repositoryVariableName = entity|domain:Repository|name|uncapitalize ]
                 $[ let pkidtype = entity.pkType|language ]
                 $[ let pkidname = entity.primaryKeyAttribute|domain:Service|name ]
-    public ${responseClassName} get${responseInMethodName}ById(${pkidtype} id, int levels) throws ServiceException {
+    public ${responseClassName} get${responseInMethodName}ById(
+                $[ if isReleasedEntity ]
+            ${releaseEntityPK.type|language} releaseId,
+                $[/ if ]
+            ${pkidtype} id,
+            int levels
+        ) throws ServiceException {
         try {
             ${responseClassName} responseObject = null;
                 $[ let indent = "" ]
@@ -84,7 +95,7 @@ $[*************]
                     $[ let indent = "    " ]
                 $[/ if ]
 
-            ${indent}Optional<${responseModelName}> modelObjectOptional = ${repositoryVariableName}.findById(id);
+            ${indent}Optional<${responseModelName}> modelObjectOptional = ${repositoryVariableName}.getById($[ if isReleasedEntity ]releaseId, $[/ if ]id);
             ${indent}if (!modelObjectOptional.isPresent()) {
             ${indent}    throw new EntityNotFoundException("${responseModelName} not found.");
             ${indent}}
@@ -181,13 +192,13 @@ $[* GET LIST BY (attributes) *]
 $[****************************]
             $[ function makeGetListByAttributeMethod
                D "This function generates a method to get a list of objects relative to some specified"
-               D "attribute." 
+               D "attribute."
                (responseDomain
-                D "The domain associated with the response object (e.g, Model, JSONDTO, etc.)." ,
+                D "The domain associated with the response object (e.g, Model, JSONDTO, etc.).",
                 entity
-                D "The entity to which this method is synthesized." ,
+                D "The entity to which this method is synthesized.",
                 attribute
-                D "The attribute to which the results are relative." 
+                D "The attribute to which the results are relative."
                )
             ]
                 $[ call GetResponseVarsForDomain(entity: entity, responseDomain: responseDomain)->(responseClassName: responseClassName, responseInMethodName: responseInMethodName, cacheVariableName: cacheVariableName) ]
@@ -215,7 +226,7 @@ $[****************************]
             List<${responseClassName}> dtoList = new ArrayList<>();
                     $[/ if ]
                 $[/ if ]
-            List<${responseModelName}> list = ${repositoryVariableName}.get${responseModelName}ListBy${attribute.name|capitalize}(${attribute.name}$[if attribute.type.isEnumType()].getNumberValue()$[/if], start, limit);
+            List<${responseModelName}> list = ${repositoryVariableName}.get${responseModelName}ListBy${attribute.name|capitalize}(${attribute.name}$[ if attribute.type.isEnumType() ].getNumberValue()$[/ if ], start, limit);
                 $[ if isDtoVariant ]
             for(${responseModelName} modelObject : list) {
                 ${listName}.add(dtoFromModel(modelObject, levels));
@@ -251,15 +262,15 @@ $[* GET LIST BY (relationships) *]
 $[*******************************]
             $[ function makeGetListByRelationshipMethod
                D "This function generates a method to get a list of objects relative to some specified"
-               D "relationship." 
+               D "relationship."
                (responseDomain
-                D "The domain associated with the response object (e.g, Model, JSONDTO, etc.)." ,
+                D "The domain associated with the response object (e.g, Model, JSONDTO, etc.).",
                 entity
-                D "The entity to which this method is synthesized." ,
+                D "The entity to which this method is synthesized.",
                 relationship
-                D "The relationship to which the results are relative." ,
+                D "The relationship to which the results are relative.",
                 getFlavor
-                D "The repository get method can have a flavor such as Locked so this can be set to use that flavor." 
+                D "The repository get method can have a flavor such as Locked so this can be set to use that flavor."
                )
             ]
                 $[ call GetResponseVarsForDomain(entity: entity, responseDomain: responseDomain)->(responseClassName: responseClassName, responseInMethodName: responseInMethodName, cacheVariableName: cacheVariableName) ]
@@ -321,11 +332,11 @@ $[*******************************]
                D "This function generates a method to get a list of objects relative to some specified"
                D "relationship."
                (responseDomain
-                D "The domain associated with the response object (e.g, Model, JSONDTO, etc.)." ,
+                D "The domain associated with the response object (e.g, Model, JSONDTO, etc.).",
                 entity
-                D "The entity to which this method is synthesized." ,
+                D "The entity to which this method is synthesized.",
                 relationship
-                D "The relationship to which the results are relative." ,
+                D "The relationship to which the results are relative.",
                 getFlavor
                 D "The repository get method can have a flavor such as Locked so this can be set to use that flavor."
                )
@@ -339,7 +350,7 @@ $[*******************************]
                 $[ let responseDtoName = entity|domain:JSONDTO|name ]
                 $[ let toPrimaryKeyName = relationship.to.entity.primaryKeyAttribute.name ]
                 $[ capture fullResponseName ]$[ if isPBVariant ]${responseClassName}List$[ else ]List<${responseClassName}>$[/ if ]$[/ capture ]
-                $[ if relationship.to.entity.pkType == null ]$[return]$[/if]
+                $[ if relationship.to.entity.pkType == null ]$[ return ]$[/ if ]
     public ${fullResponseName} get${getFlavor}${responseInMethodName}ListBy${relationship.to.entity.name|capitalize}(
         ${relationship.to.entity.pkType|language} ${toPrimaryKeyName},
         long start,
@@ -399,13 +410,14 @@ $[/ outlet ]
                 $[ if space.hasDomain("ProtobufDTO") && !(entity.module|domain:ProtobufDTO).hasTag("noproto") ]
                     $[ call makeGetListByMMRelationshipMethod(responseDomain: space.domain("ProtobufDTO"), relationship: relationship, entity: entity, getFlavor: getFlavor) ]
                 $[/ if ]
-            $[/foreach]
+            $[/ foreach ]
             $[ if entity.hasPrimaryParentRelationship ]
                 $[ let primaryParentEntity = entity.primaryParentRelationship.to.entity ]
                 $[ let pkType = entity.pkType|language ]
                 $[ let parentPkType = primaryParentEntity.pkType|language ]
-    public ${parentPkType} getParentId(${pkType} objId) {
-        Optional<${modelName}> objOptional = ${repositoryVariableName}.getById(objId);
+                $[ call CheckIfReleasedEntity(entity: entity)->(isReleasedEntity: isReleasedEntity, releaseEntityPKAttribute: releaseEntityPKAttribute) ]
+    public ${parentPkType} getParentId($[ if isReleasedEntity ]${releaseEntityPKAttribute.type|language} releaseId, $[/ if ]${pkType} objId) {
+        Optional<${modelName}> objOptional = ${repositoryVariableName}.getById($[ if isReleasedEntity ]releaseId, $[/ if ]objId);
         if (objOptional.isPresent()) {
             ${modelName} obj = objOptional.get();
             ${parentPkType} parentId = obj.get${entity.primaryParentRelationship|domain:Model|name|capitalize}Id();

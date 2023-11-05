@@ -50,7 +50,7 @@ $[ publisher org.entityc.springboot.repository.get ]
           "JOIN ${objectEntity|domain:Database|name} o ON r.${objectPKColumnName} = o.${objectPKColumnName} " +
           "JOIN ${versionEntity|domain:Database|name} v ON r.${versionPKColumnName} = v.${versionPKColumnName} " +
          "WHERE r.${releasePKColumnName} = ?1 AND o.${objectPKColumnName} = ?2", nativeQuery = true)
-    Optional<${responseModelName}> getById(${responseEntity.pkType|language} id, ${releaseEntity.primaryKeyAttribute.type|language} ${releaseEntity.primaryKeyAttribute.name});
+    Optional<${responseModelName}> getById(${releaseEntity.primaryKeyAttribute.type|language} ${releaseEntity.primaryKeyAttribute.name}, ${responseEntity.pkType|language} id);
             $[/ if ]
 $[ send imports ]
 import ${responseEntity|domain:Model|fullname};

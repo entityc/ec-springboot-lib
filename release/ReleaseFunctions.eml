@@ -29,12 +29,12 @@ These functions help support the detection of this pattern not just in terms of 
 " ]
 $[ function lookForVersionReleaseStructure
    D "Given a version release (VR) entity, this will try to locate the version (V) and object (O)"
-   D "entities of the structure." 
+   D "entities of the structure."
    (versionReleaseEntity
-    D "The version release (VR) where it starts its search." 
+    D "The version release (VR) where it starts its search."
    )->
    (results
-    D "It returns an array with [VR, O, V] if it finds the O and V, otherwise just returns [VR]." 
+    D "It returns an array with [VR, O, V] if it finds the O and V, otherwise just returns [VR]."
    )
 ]
     $[ if versionReleaseEntity.hasTag("release:binder") ]
@@ -57,16 +57,15 @@ $[ function lookForVersionReleaseStructure
         $[/ if ]
     $[/ if ]
 $[/ function ]
-
 $[ function getReleaseBinderRelationships
    D "Given a version release (VR) entity, this locates and returns the release (R), object (O) and"
-   D "version (V) entities." 
+   D "version (V) entities."
    (versionReleaseEntity
-    D "The version release (VR) entity." 
+    D "The version release (VR) entity."
    )->
    (results
     D "Returns an array with [R, O, V] if it finds them, otherwise it returns an empty array and logs"
-    D "messages about what it couldn't find." 
+    D "messages about what it couldn't find."
    )
 ]
     $[ if versionReleaseEntity.hasTag("release:binder") ]
@@ -105,17 +104,16 @@ $[ function getReleaseBinderRelationships
         $[/ if ]
     $[/ if ]
 $[/ function ]
-
 $[ function lookForReleaseStructure
    D "Given the top release (R) entity, it attempts to locate all the version release (VR) entities"
    D "- with their associated O and V entities - and gathers these in an array. So what is returned"
-   D "will be an array of [VR,O,V] arrays." 
+   D "will be an array of [VR,O,V] arrays."
    (topReleaseEntity
-    D "The top release (R) entity." 
+    D "The top release (R) entity."
    )->
    (results
     D "Returns an array for each [VR, O, V] set it finds that have a relationship with the specified R"
-    D "entity." 
+    D "entity."
    )
 ]
     $[ if topReleaseEntity.hasTag("release:top") ]
@@ -137,18 +135,17 @@ $[* if topReleaseEntity.hasPrimaryParentRelationship ]
         $[/ if ]
     $[/ if ]
 $[/ function ]
-
 $[ function hasRelationshipWithEntityTagged
    D "Given an entity, this looks for all other entities that the provided entity has a"
    D "relationship and if at least one is found to be tagged with the provided tag it returns true. If"
-   D "none are found it returns false." 
+   D "none are found it returns false."
    (fromEntity
-    D "The entity from which the tagged entity has a relationship." ,
+    D "The entity from which the tagged entity has a relationship.",
     tag
-    D "The tag." 
+    D "The tag."
    )->
    (result
-    D "Returns true if any entities tagged with provided tag are found. Otherwise returns false." 
+    D "Returns true if any entities tagged with provided tag are found. Otherwise returns false."
    )
 ]
     $[ let result = false ]
@@ -159,14 +156,13 @@ $[ function hasRelationshipWithEntityTagged
         $[/ if ]
     $[/ foreach ]
 $[/ function ]
-
 $[ function getReleaseEntityForVersionEntity
-   D "" 
+   D ""
    (versionEntity
-    D "The version entity (V) contained in the returned release entity." 
+    D "The version entity (V) contained in the returned release entity."
    )->
    (releaseEntity
-    D "The release entity (R) that represents releases of the specified object entities." 
+    D "The release entity (R) that represents releases of the specified object entities."
    )
 ]
     $[ let releaseEntity = null ]
@@ -182,4 +178,15 @@ $[ function getReleaseEntityForVersionEntity
         $[/ if ]
     $[/ if ]
 
+$[/ function ]
+$[ function CheckIfReleasedEntity
+   (entity
+   )->
+   (isReleasedEntity,
+    releaseEntityPKAttribute
+   ) ]
+    $[ let isReleasedEntity = entity.isCompositeEntity && entity.isInRealm("Released") ]
+    $[ if isReleasedEntity ]
+        $[ let releaseEntityPKAttribute = (entity.getConstituentEntity("release")).primaryKeyAttribute ]
+    $[/ if ]
 $[/ function ]

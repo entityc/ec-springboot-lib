@@ -6,10 +6,11 @@ $[ author to org.entityc.springboot.repository ]
        D "Adds methods for adding and removing a single association, checking a specific association"
        D "and getting all associations."
     ]
-        $[* Don't process composite entities here, a different author will do that *]
-        $[* if entity.isCompositeEntity ]
+$[* Don't process composite entities here, a different author will do that *]
+        $[ call CheckIfReleasedEntity(entity: entity)->(isReleasedEntity: isReleasedEntity, releaseEntityPKAttribute: releaseEntityPKAttribute) ]
+        $[ if isReleasedEntity ]
             $[ return ]
-        $[/ if *]
+        $[/ if ]
         $[ foreach relationship in entity.implicitRelationships ]
             $[ if relationship.to.entity.hasTag("internal:many-to-many") ]
                 $[ let destMMEntity = relationship.implicitToEntity ]
@@ -29,10 +30,6 @@ $[ author to org.entityc.springboot.repository ]
                  "WHERE ${destPKDBName} = ?1) " +
              "ORDER BY pt.created_on DESC LIMIT ?3 OFFSET ?2", nativeQuery = true)
     List<${modelName}> get${modelName}ListAssociatedWith${destMMEntity|domain:Model|name}(${destPKType} ${destPKVarName}, long start, int limit);
-
-        $[ if entity.isCompositeEntity ]
-            $[ continue ]
-        $[/ if ]
 
     @Query(value =
             "SELECT COUNT(pt.*) " +

@@ -5,6 +5,7 @@ $[ author to org.entityc.springboot.controller ]
     $[ author to outlet methods
        D "Adds an associatedTo... endpoint to the controller."
     ]
+        $[ call CheckIfReleasedEntity(entity: entity)->(isReleasedEntity: isReleasedEntity, releaseEntityPKAttribute: releaseEntityPKAttribute) ]
         $[ foreach relationship in entity.implicitRelationships ]
             $[ if relationship.to.entity.hasTag("internal:many-to-many") ]
                 $[ let manyToManyEntity = relationship.to.entity ]
@@ -48,6 +49,9 @@ $[ outlet annotation
 ]
 $[/ outlet ]
     public ResponseEntity<List<${fromDtoName}>> get${fromModelName}ListAssociatedWith${toModelName}(@PathVariable("id") UUID id,
+                $[ if isReleasedEntity ]
+            @RequestParam(value = "releaseId", required = true) ${releaseEntityPKAttribute.type|language} releaseId,
+                $[/ if ]
             @RequestParam(value = "start", required = false) Integer start,
             @RequestParam(value = "limit", required = false) Integer limit,
             @RequestParam(value = "levels", required = false) Integer levels
@@ -55,7 +59,7 @@ $[/ outlet ]
         final int queryStart = ResourceUtils.defaultTo(start, 0);
         final int queryLimit = ResourceUtils.defaultTo(limit, 10);
         final int queryLevels = ResourceUtils.defaultTo(levels, 5);
-        List<${fromDtoName}> results = ${fromService}.get${fromDtoName}ListAssociatedWith${toModelName}(id, queryStart, queryLimit, queryLevels);
+        List<${fromDtoName}> results = ${fromService}.get${fromDtoName}ListAssociatedWith${toModelName}($[ if isReleasedEntity ]releaseId, $[/ if ]id, queryStart, queryLimit, queryLevels);
         HttpHeaders headers = new HttpHeaders();
         headers.add("X-Total-Count", "" + results.size());
         headers.add("Access-Control-Expose-Headers", "X-Total-Count");
@@ -63,7 +67,7 @@ $[/ outlet ]
     }
 
 $[* Composite entities can't be associated. *]
-        $[ if entity.isCompositeEntity ]
+        $[ if isReleasedEntity ]
             $[ continue ]
         $[/ if ]
     // [Template] ${__template.name}:${__outlet.name} < ${__author.template.name}

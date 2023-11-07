@@ -12,6 +12,7 @@ $[ author to org.entityc.springboot.controller.protobuf ]
         $[ let defaultLevels = 5 ]
         $[ let protobufNamespace = (space|domain:ProtobufDTO).domain.namespace ]
         $[ capture fullProtobufClassName ]${module.name|capitalize}.${entity|domain:ProtobufDTO|name}$[/ capture ]
+        $[ call CheckIfReleasedEntity(entity: entity)->(isReleasedEntity: isReleasedEntity, releaseEntityPKAttribute: releaseEntityPKAttribute) ]
 $[ send imports ]
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
@@ -27,7 +28,6 @@ $[/ send ]
            D "Get by ID endpoint"
         ]
             $[ if entity.hasPrimaryKey ]
-                $[ call CheckIfReleasedEntity(entity: entity)->(isReleasedEntity: isReleasedEntity, releaseEntityPKAttribute: releaseEntityPKAttribute) ]
     // [Template] ${__template.name}:${__outlet.name} < ${__author.template.name}
     @RequestMapping(
         path = "/{id}",
@@ -64,6 +64,9 @@ $[ outlet annotation
 ]
 $[/ outlet ]
     public ResponseEntity<${fullProtobufClassName}List> get${entity|domain:Model|name}PBList(
+            $[ if isReleasedEntity ]
+        @RequestParam(value = "releaseId", required = true) ${releaseEntityPKAttribute.type|language} releaseId,
+            $[/ if ]
             $[ let hasParentId = entity.hasPrimaryParentRelationship ]
             $[ if hasParentId ]
                 $[ let relationship = entity.primaryParentRelationship ]
@@ -96,10 +99,10 @@ $[/ outlet ]
             $[ let indent = hasParentId ? "    ":"" ]
             $[ if hasParentId ]
         if (${parentId} != ${isNativeId ? "0":"null"}) {
-            results = ${service}.get${modelName|capitalize}PBListBy${parentName}(${parentIdArg}, queryStart, queryLimit, queryLevels);
+            results = ${service}.get${modelName|capitalize}PBListBy${parentName}($[ if isReleasedEntity ]releaseId, $[/ if ]${parentIdArg}, queryStart, queryLimit, queryLevels);
         } else {
             $[/ if ]
-        ${indent}results = ${service}.get${modelName|capitalize}PBList(queryStart, queryLimit, queryLevels);
+        ${indent}results = ${service}.get${modelName|capitalize}PBList($[ if isReleasedEntity ]releaseId, $[/ if ]queryStart, queryLimit, queryLevels);
             $[ if hasParentId ]
         }
             $[/ if ]
@@ -110,7 +113,7 @@ $[/ outlet ]
     }
 
         $[/ publisher ]
-        $[**********************************
+$[**********************************
           * GET LIST BY ATTRIBUTE
           **********************************]
         $[ publisher org.entityc.springboot.controller.getListByAttribute
@@ -134,15 +137,18 @@ $[ outlet annotation
 ]
 $[/ outlet ]
     public ResponseEntity<${fullProtobufClassName}List> get${entity|domain:Model|name}PBListBy${attribute.name|capitalize}(
-        @PathVariable("value") ${attribute.type|language} value,
-        @RequestParam(value = "start", required = false) Integer start,
-        @RequestParam(value = "limit", required = false) Integer limit,
-        @RequestParam(value = "levels", required = false) Integer levels)
+                $[ if isReleasedEntity ]
+            @RequestParam(value = "releaseId", required = true) ${releaseEntityPKAttribute.type|language} releaseId,
+                $[/ if ]
+            @PathVariable("value") ${attribute.type|language} value,
+            @RequestParam(value = "start", required = false) Integer start,
+            @RequestParam(value = "limit", required = false) Integer limit,
+            @RequestParam(value = "levels", required = false) Integer levels)
         throws ServiceException {
         final int queryStart = ResourceUtils.defaultTo(start, 0);
         final int queryLimit = ResourceUtils.defaultTo(limit, 10);
         final int queryLevels = ResourceUtils.defaultTo(levels, ${defaultLevels});
-        ${fullProtobufClassName}List results = ${service}.get${entity|domain:Model|name|capitalize}PBListBy${attribute.name|capitalize}(value, queryStart, queryLimit, queryLevels);
+        ${fullProtobufClassName}List results = ${service}.get${entity|domain:Model|name|capitalize}PBListBy${attribute.name|capitalize}($[ if isReleasedEntity ]releaseId, $[/ if ]value, queryStart, queryLimit, queryLevels);
         HttpHeaders headers = new HttpHeaders();
         headers.add("X-Total-Count", "" + results.getItemCount());
         headers.add("Access-Control-Expose-Headers", "X-Total-Count");
@@ -152,7 +158,7 @@ $[/ outlet ]
                 $[/ if ]
             $[/ foreach ]
         $[/ publisher ]
-        $[**********************************
+$[**********************************
           * GET LIST BY RELATIONSHIP
           **********************************]
         $[ publisher org.entityc.springboot.controller.getListByRelationship
@@ -171,6 +177,9 @@ $[ outlet annotation
 ]
 $[/ outlet ]
     public ResponseEntity<${fullProtobufClassName}List> get${entity|domain:Model|name}PBListBy${relationship.name|capitalize}(
+                $[ if isReleasedEntity ]
+        @RequestParam(value = "releaseId", required = true) ${releaseEntityPKAttribute.type|language} releaseId,
+                $[/ if ]
         @PathVariable("id") ${relationship.to.entity.primaryKey.type|language} ${relationship.name}Id,
         @RequestParam(value = "start", required = false) Integer start,
         @RequestParam(value = "limit", required = false) Integer limit,
@@ -179,7 +188,7 @@ $[/ outlet ]
         final int queryStart = ResourceUtils.defaultTo(start, 0);
         final int queryLimit = ResourceUtils.defaultTo(limit, 10);
         final int queryLevels = ResourceUtils.defaultTo(levels, ${defaultLevels});
-        ${fullProtobufClassName}List results = ${service}.get${entity|domain:Model|name|capitalize}PBListBy${relationship.name|capitalize}(${relationship.name}Id, queryStart, queryLimit, queryLevels);
+        ${fullProtobufClassName}List results = ${service}.get${entity|domain:Model|name|capitalize}PBListBy${relationship.name|capitalize}($[ if isReleasedEntity ]releaseId, $[/ if ]${relationship.name}Id, queryStart, queryLimit, queryLevels);
         HttpHeaders headers = new HttpHeaders();
         headers.add("X-Total-Count", "" + results.getItemCount());
         headers.add("Access-Control-Expose-Headers", "X-Total-Count");

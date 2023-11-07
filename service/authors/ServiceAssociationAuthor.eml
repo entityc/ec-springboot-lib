@@ -1,8 +1,10 @@
+$[ import "release/ReleaseFunctions" ]
 $[ author to org.entityc.springboot.service ]
     $[ author to outlet methods
        D "**Associate To** This method allows the association between two entities that have a"
        D "many-to-many relationship to be created."
     ]
+        $[ call CheckIfReleasedEntity(entity: entity)->(isReleasedEntity: isReleasedEntity, releaseEntityPKAttribute: releaseEntityPKAttribute) ]
         $[ foreach relationship in entity.implicitRelationships ]
             $[ if relationship.to.entity.hasTag("internal:many-to-many") ]
                 $[ let manyToManyEntity = relationship.to.entity ]
@@ -29,7 +31,7 @@ import ${toMMEntity|domain:Model|fullname};
 import ${toMMEntity|domain:JSONDTO|fullname};
 $[/ send ]
                 $[ call addAutoWired(domainEntity: toMMEntity|domain:Repository) ]
-    public List<${fromDtoName}> get${fromDtoName}ListAssociatedWith${toModelName}(${toPKType} ${toPKVarName}, long start, int limit, int levels) throws ServiceException {
+    public List<${fromDtoName}> get${fromDtoName}ListAssociatedWith${toModelName}($[ if isReleasedEntity ]${releaseEntityPKAttribute.type|language} releaseId, $[/ if ]${toPKType} ${toPKVarName}, long start, int limit, int levels) throws ServiceException {
         Optional<${toModelName}> otherModelObjectOptional = ${toRepoVarName}.findById(${toPKVarName});
         if (!otherModelObjectOptional.isPresent()) {
             throw new EntityNotFoundException("${toModelName} not found.");
@@ -37,7 +39,7 @@ $[/ send ]
 
         try {
             List<${fromDtoName}> dtoList = new ArrayList<>();
-            List<${fromModelName}> list = ${fromRepoVarName}.get${fromModelName}ListAssociatedWith${toModelName}(${toPKVarName}, start, limit);
+            List<${fromModelName}> list = ${fromRepoVarName}.get${fromModelName}ListAssociatedWith${toModelName}($[ if isReleasedEntity ]releaseId, $[/ if ]${toPKVarName}, start, limit);
             for(${fromModelName} modelObject : list) {
                 dtoList.add(dtoFromModel(modelObject, levels));
             }
@@ -47,7 +49,7 @@ $[/ send ]
         }
     }
 
-                $[ if entity.isCompositeEntity ]
+                $[ if isReleasedEntity ]
                     $[ continue ]
                 $[/ if ]
 

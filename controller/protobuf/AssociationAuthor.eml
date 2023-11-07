@@ -5,8 +5,8 @@ $[ author to org.entityc.springboot.controller.protobuf ]
     $[ author to outlet methods
        D "Adds an associatedTo... endpoint to the controller for protobuf objects."
     ]
-$[* Composite entities can't be associated. *]
-        $[ if entity.isCompositeEntity ]
+        $[ call CheckIfReleasedEntity(entity: entity)->(isReleasedEntity: isReleasedEntity, releaseEntityPKAttribute: releaseEntityPKAttribute) ]
+        $[ if isReleasedEntity ]
             $[ return ]
         $[/ if ]
         $[ let protobufNamespace = (space|domain:ProtobufDTO).domain.namespace ]

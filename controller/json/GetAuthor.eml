@@ -62,6 +62,9 @@ $[ outlet annotation
 ]
 $[/ outlet ]
     public ResponseEntity<List<${dtoClassName}>> get${modelName}List(
+                $[ if isReleasedEntity ]
+        @RequestParam(value = "releaseId", required = true) ${releaseEntityPKAttribute.type|language} releaseId,
+                $[/ if ]
             $[ let hasParentId = entity.hasPrimaryParentRelationship ]
             $[ if hasParentId ]
                 $[ let relationship = entity.primaryParentRelationship ]
@@ -95,12 +98,12 @@ $[/ outlet ]
             $[ if hasParentId ]
         if (${parentId} != ${isNativeId ? "0":"null"}) {
 $[ outlet parentGet ]
-            results = ${service}.get${entity|domain:JSONDTO|name|capitalize}ListBy${parentName}(${parentIdArg}, queryStart, queryLimit, queryLevels);
+            results = ${service}.get${entity|domain:JSONDTO|name|capitalize}ListBy${parentName}($[ if isReleasedEntity ]releaseId, $[/ if ]${parentIdArg}, queryStart, queryLimit, queryLevels);
 $[/ outlet ]
         } else {
             $[/ if ]
 $[ outlet noParentGet ]
-        ${indent}results = ${service}.get${entity|domain:JSONDTO|name|capitalize}List(queryStart, queryLimit, ResourceUtils.defaultTo(levels, ${defaultLevels}));
+        ${indent}results = ${service}.get${entity|domain:JSONDTO|name|capitalize}List($[ if isReleasedEntity ]releaseId, $[/ if ]queryStart, queryLimit, ResourceUtils.defaultTo(levels, ${defaultLevels}));
 $[/ outlet ]
             $[ if hasParentId ]
         }
@@ -136,6 +139,9 @@ $[ outlet annotation
 ]
 $[/ outlet ]
     public ResponseEntity<List<${dtoClassName}>> get${modelName}ListBy${attribute.name|capitalize}(
+                $[ if isReleasedEntity ]
+        @RequestParam(value = "releaseId", required = true) ${releaseEntityPKAttribute.type|language} releaseId,
+                $[/ if ]
         @PathVariable("value") ${attribute.type|language} value,
         @RequestParam(value = "start", required = false) Integer start,
         @RequestParam(value = "limit", required = false) Integer limit,
@@ -144,7 +150,7 @@ $[/ outlet ]
         final int queryStart = ResourceUtils.defaultTo(start, ${defaultStart});
         final int queryLimit = ResourceUtils.defaultTo(limit, ${defaultLimit});
         final int queryLevels = ResourceUtils.defaultTo(levels, ${defaultLevels});
-        List<${dtoClassName}> results = ${service}.get${entity|domain:JSONDTO|name|capitalize}ListBy${attribute.name|capitalize}(value, queryStart, queryLimit, queryLevels);
+        List<${dtoClassName}> results = ${service}.get${entity|domain:JSONDTO|name|capitalize}ListBy${attribute.name|capitalize}($[ if isReleasedEntity ]releaseId, $[/ if ]value, queryStart, queryLimit, queryLevels);
         HttpHeaders headers = new HttpHeaders();
         headers.add("X-Total-Count", "" + results.size());
         headers.add("Access-Control-Expose-Headers", "X-Total-Count");
@@ -173,6 +179,9 @@ $[ outlet annotation
 ]
 $[/ outlet ]
     public ResponseEntity<List<${dtoClassName}>> get${modelName}ListBy${relationship.name|capitalize}(
+                $[ if isReleasedEntity ]
+        @RequestParam(value = "releaseId", required = true) ${releaseEntityPKAttribute.type|language} releaseId,
+                $[/ if ]
         @PathVariable("id") ${relationship.to.entity.primaryKey.type|language} ${relationship.name}Id,
         @RequestParam(value = "start", required = false) Integer start,
         @RequestParam(value = "limit", required = false) Integer limit,
@@ -181,7 +190,7 @@ $[/ outlet ]
         final int queryStart = ResourceUtils.defaultTo(start, ${defaultStart});
         final int queryLimit = ResourceUtils.defaultTo(limit, ${defaultLimit});
         final int queryLevels = ResourceUtils.defaultTo(levels, ${defaultLevels});
-        List<${dtoClassName}> results = ${service}.get${entity|domain:JSONDTO|name|capitalize}ListBy${relationship.name|capitalize}(${relationship.name}Id, queryStart, queryLimit, queryLevels);
+        List<${dtoClassName}> results = ${service}.get${entity|domain:JSONDTO|name|capitalize}ListBy${relationship.name|capitalize}($[ if isReleasedEntity ]releaseId, $[/ if ]${relationship.name}Id, queryStart, queryLimit, queryLevels);
         HttpHeaders headers = new HttpHeaders();
         headers.add("X-Total-Count", "" + results.size());
         headers.add("Access-Control-Expose-Headers", "X-Total-Count");

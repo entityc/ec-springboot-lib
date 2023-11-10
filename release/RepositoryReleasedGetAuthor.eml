@@ -17,7 +17,6 @@ $[* Only process composite entities here. *]
             $[ let objectPKColumnName = objectEntity.primaryKeyAttribute|domain:Database|name ]
             $[ let versionPKColumnName = versionEntity.primaryKeyAttribute|domain:Database|name ]
             $[ let releasePKColumnName = releaseEntity.primaryKeyAttribute|domain:Database|name ]
-
             $[ let hasCreationDate = false ]
             $[ foreach attribute in entity.effectiveAttributes|type single ]
                 $[ if attribute.isCreation ]
@@ -48,6 +47,13 @@ $[* Only process composite entities here. *]
             $[ let responseModelName = responseEntity|domain:Model|name ]
             $[ let responseDatabaseName = responseEntity|domain:Database|name ]
             $[ if responseEntity.hasPrimaryKey ]
+                $[ if versionEntity == null ]
+    @Query(value =
+        "SELECT * " +
+          "FROM ${objectEntity|domain:Database|name} " +
+         "WHERE ${objectPKColumnName} = ?2", nativeQuery = true)
+    Optional<${responseModelName}> getById(${releaseEntityPKAttribute.type|language} unused, ${responseEntity.pkType|language} id);
+                $[ else ]
     @Query(value =
         "SELECT * " +
           "FROM ${binderEntity|domain:Database|name} r " +
@@ -55,6 +61,7 @@ $[* Only process composite entities here. *]
           "JOIN ${versionEntity|domain:Database|name} v ON r.${versionPKColumnName} = v.${versionPKColumnName} " +
          "WHERE r.${releasePKColumnName} = ?1 AND o.${objectPKColumnName} = ?2", nativeQuery = true)
     Optional<${responseModelName}> getById(${releaseEntityPKAttribute.type|language} ${releaseEntityPKAttribute.name}, ${responseEntity.pkType|language} id);
+                $[/ if ]
             $[/ if ]
 $[ send imports ]
 import ${responseEntity|domain:Model|fullname};
@@ -65,22 +72,39 @@ $[/ send ]
      * @param limit The maximum number or results to return.
      * @return List of ${responseModelName} objects fetched.
      */
+            $[ if versionEntity == null ]
+    @Query(value =
+        "SELECT * " +
+          "FROM ${objectEntity|domain:Database|name} " +
+                $[ if sortByAttribute != null ]
+      "ORDER BY ${sortByAttribute|domain:Database|name} ${ascending ? "ASC":"DESC"} " +
+                $[/ if ]
+      "LIMIT ?3 OFFSET ?2", nativeQuery = true)
+    List<${responseModelName}> get${responseModelName}List(${releaseEntityPKAttribute.type|language} unused, long start, int limit);
+            $[ else ]
     @Query(value =
         "SELECT * " +
           "FROM ${binderEntity|domain:Database|name} r " +
           "JOIN ${objectEntity|domain:Database|name} o ON r.${objectPKColumnName} = o.${objectPKColumnName} " +
           "JOIN ${versionEntity|domain:Database|name} v ON r.${versionPKColumnName} = v.${versionPKColumnName} " +
          "WHERE r.${releasePKColumnName} = ?1 " +
-            $[ if sortByAttribute != null ]
+                $[ if sortByAttribute != null ]
       "ORDER BY ${sortTableAlias}.${sortByAttribute|domain:Database|name} ${ascending ? "ASC":"DESC"} " +
-            $[/ if ]
+                $[/ if ]
       "LIMIT ?2 OFFSET ?1", nativeQuery = true)
     List<${responseModelName}> get${responseModelName}List(${releaseEntityPKAttribute.type|language} ${releaseEntityPKAttribute.name}, long start, int limit);
+            $[/ if ]
 
     /**
      * Gets the count of ${entity.name} objects for a release.
      * @return Count of ${entity.name} objects for a release.
      */
+            $[ if versionEntity == null ]
+    @Query(value =
+        "SELECT COUNT(*) " +
+          "FROM ${objectEntity|domain:Database|name} ", nativeQuery = true)
+    Long count(${releaseEntityPKAttribute.type|language} unused);
+            $[ else ]
     @Query(value =
         "SELECT COUNT(*) " +
           "FROM ${binderEntity|domain:Database|name} r " +
@@ -88,6 +112,7 @@ $[/ send ]
           "JOIN ${versionEntity|domain:Database|name} v ON r.${versionPKColumnName} = v.${versionPKColumnName} " +
          "WHERE r.${releasePKColumnName} = ?1 ", nativeQuery = true)
     Long count(${releaseEntityPKAttribute.type|language} ${releaseEntityPKAttribute.name});
+            $[/ if ]
 
 $[ outlet methods
    D "A good place to add additional repository get methods."
@@ -95,7 +120,18 @@ $[ outlet methods
 $[/ outlet ]
             $[ foreach entity.attributes ]
                 $[ if attribute.isParent ]
-                    $[ let tableAlias = versionEntity.hasAttributeNamed(attribute.name) ? "v":"o" ]
+                    $[ if versionEntity == null ]
+    @Query(value =
+        "SELECT * " +
+          "FROM ${objectEntity|domain:Database|name} " +
+         "WHERE ${attribute|domain:Database|name} = ?2 " +
+                        $[ if sortByAttribute != null ]
+      "ORDER BY ${sortTableAlias}.${sortByAttribute|domain:Database|name} ${ascending ? "ASC":"DESC"} " +
+                        $[/ if ]
+      "LIMIT ?4 OFFSET ?3", nativeQuery = true)
+    List<${responseModelName}> get${responseModelName}ListBy${attribute.name|capitalize}(${releaseEntityPKAttribute.type|language} unused, $[ if attribute.type.isEnumType() ]int$[ else ]${attribute.type|language}$[/ if ] ${attribute|domain|name}, long start, int limit);
+                    $[ else ]
+                        $[ let tableAlias = versionEntity.hasAttributeNamed(attribute.name) ? "v":"o" ]
     /**
      * Gets the list of ${responseModelName} objects that all share the same value for attribute ${attribute.name}.
      * @param ${attribute|domain|name} The value for ${attribute.name}.
@@ -110,17 +146,17 @@ $[/ outlet ]
           "JOIN ${versionEntity|domain:Database|name} v ON r.${versionPKColumnName} = v.${versionPKColumnName} " +
          "WHERE r.${releasePKColumnName} = ?1 " +
            "AND ${tableAlias}.${attribute|domain:Database|name} = ?2 " +
-                    $[ if sortByAttribute != null ]
+                        $[ if sortByAttribute != null ]
       "ORDER BY ${sortTableAlias}.${sortByAttribute|domain:Database|name} ${ascending ? "ASC":"DESC"} " +
-                    $[/ if ]
+                        $[/ if ]
       "LIMIT ?4 OFFSET ?3", nativeQuery = true)
     List<${responseModelName}> get${responseModelName}ListBy${attribute.name|capitalize}(${releaseEntityPKAttribute.type|language} ${releaseEntityPKAttribute.name}, $[ if attribute.type.isEnumType() ]int$[ else ]${attribute.type|language}$[/ if ] ${attribute|domain|name}, long start, int limit);
 
+                    $[/ if ]
                 $[/ if ]
             $[/ foreach ]
             $[ foreach entity.relationships ]
                 $[ if relationship.to.isOne ]
-                    $[ let tableAlias = versionEntity.hasRelationshipNamed(relationship.name) ? "v":"o" ]
     /**
      * Gets the list of ${responseModelName} objects that all share the same reference to an object of ${relationship.to.entity.name}.
      * @param ${relationship|domain|name}Id The ID of the ${relationship.to.entity.name} object to which all results will share.
@@ -128,6 +164,18 @@ $[/ outlet ]
      * @param limit The maximum number or results to return.
      * @return List of ${responseModelName} objects fetched.
      */
+                    $[ if versionEntity == null ]
+    @Query(value =
+        "SELECT * " +
+          "FROM ${objectEntity|domain:Database|name} " +
+         "WHERE ${relationship|domain:Database|name}_id = ?2 " +
+                        $[ if sortByAttribute != null ]
+      "ORDER BY ${sortTableAlias}.${sortByAttribute|domain:Database|name} ${ascending ? "ASC":"DESC"} " +
+                        $[/ if ]
+      "LIMIT ?4 OFFSET ?3", nativeQuery = true)
+    List<${responseModelName}> get${responseModelName}ListBy${relationship.name|capitalize}(${releaseEntityPKAttribute.type|language} unused, ${relationship.to.entity.primaryKey.type|language} ${relationship|domain|name}Id, long start, int limit);
+                    $[ else ]
+                        $[ let tableAlias = versionEntity.hasRelationshipNamed(relationship.name) ? "v":"o" ]
     @Query(value =
             "SELECT * " +
           "FROM ${binderEntity|domain:Database|name} r " +
@@ -135,17 +183,25 @@ $[/ outlet ]
           "JOIN ${versionEntity|domain:Database|name} v ON r.${versionPKColumnName} = v.${versionPKColumnName} " +
          "WHERE r.${releasePKColumnName} = ?1 " +
            "AND ${tableAlias}.${relationship|domain:Database|name}_id = ?2 " +
-                    $[ if sortByAttribute != null ]
+                        $[ if sortByAttribute != null ]
             "ORDER BY ${sortTableAlias}.${sortByAttribute|domain:Database|name} ${ascending ? "ASC":"DESC"} " +
-                    $[/ if ]
+                        $[/ if ]
             "LIMIT ?4 OFFSET ?3", nativeQuery = true)
     List<${responseModelName}> get${responseModelName}ListBy${relationship.name|capitalize}(${releaseEntityPKAttribute.type|language} ${releaseEntityPKAttribute.name}, ${relationship.to.entity.primaryKey.type|language} ${relationship|domain|name}Id, long start, int limit);
+                    $[/ if ]
 
     /**
      * Gets the count of ${responseModelName} objects that all share the same reference to an object of ${relationship.to.entity.name}.
      * @param ${relationship|domain|name}Id The ID of the ${relationship.to.entity.name} object to which all results will share.
      * @return Count of ${responseModelName} objects that exist.
      */
+                    $[ if versionEntity == null ]
+    @Query(value =
+        "SELECT count(*) " +
+          "FROM ${objectEntity|domain:Database|name} " +
+         "WHERE ${relationship|domain:Database|name}_id = ?2 ", nativeQuery = true)
+    Long count${responseModelName}By${relationship.name|capitalize}Id(${releaseEntityPKAttribute.type|language} unused, ${relationship.to.entity.primaryKey.type|language} ${relationship|domain|name}Id);
+                    $[ else ]
     @Query(value =
         "SELECT count(*) " +
           "FROM ${binderEntity|domain:Database|name} r " +
@@ -155,21 +211,29 @@ $[/ outlet ]
            "AND ${tableAlias}.${relationship|domain:Database|name}_id = ?2 ", nativeQuery = true)
     Long count${responseModelName}By${relationship.name|capitalize}Id(${releaseEntityPKAttribute.type|language} ${releaseEntityPKAttribute.name}, ${relationship.to.entity.primaryKey.type|language} ${relationship|domain|name}Id);
 
+                    $[/ if ]
                 $[/ if ]
             $[/ foreach ]
-            $[ foreach relationship in entity.implicitRelationships ]
+            $[ let entityForQuery = entity ]
+            $[ if versionEntity == null ]
+                $[ if entity.hasConstituentEntity("object") ]
+                    $[ let entityForQuery = entity.getConstituentEntity("object") ]
+                $[/ if ]
+    // USE table name ${entityForQuery|domain:Database|name}
+            $[/ if ]
+            $[ foreach relationship in entityForQuery.implicitRelationships ]
                 $[ if relationship.to.entity.hasTag("internal:many-to-many") ]
                     $[ let destMMEntity = relationship.implicitToEntity ]
                     $[ let manyToManyEntity = relationship.to.entity ]
-                    $[ let sourcePKType = entity.pkType|language ]
-                    $[ let sourcePKVarName = entity.primaryKeyAttribute|domain|name ]
-                    $[ let sourcePKDBName = entity.primaryKeyAttribute|domain:Database|name ]
+                    $[ let sourcePKType = entityForQuery.pkType|language ]
+                    $[ let sourcePKVarName = entityForQuery.primaryKeyAttribute|domain|name ]
+                    $[ let sourcePKDBName = entityForQuery.primaryKeyAttribute|domain:Database|name ]
                     $[ let destPKType = destMMEntity.pkType|language ]
                     $[ let destPKVarName = destMMEntity.primaryKeyAttribute|domain|name ]
                     $[ let destPKDBName = destMMEntity.primaryKeyAttribute|domain:Database|name ]
     @Query(value =
             "SELECT pt.* " +
-            "FROM ${entity|domain:Database|name} pt " +
+            "FROM ${entityForQuery|domain:Database|name} pt " +
             "WHERE pt.${sourcePKDBName} IN " +
               "(SELECT ${sourcePKDBName} " +
                  "FROM ${manyToManyEntity|domain:Database|name} " +

@@ -187,6 +187,6 @@ $[ function CheckIfReleasedEntity
    ) ]
     $[ let isReleasedEntity = entity.isCompositeEntity && entity.isInRealm("Released") ]
     $[ if isReleasedEntity ]
-        $[ let releaseEntityPKAttribute = (entity.getConstituentEntity("release")).primaryKeyAttribute ]
+        $[ let releaseEntityPKAttribute = (entity.getAnyConstituentEntity("release")).primaryKeyAttribute ]
     $[/ if ]
 $[/ function ]

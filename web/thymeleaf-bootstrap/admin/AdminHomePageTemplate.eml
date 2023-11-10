@@ -19,6 +19,7 @@ $[ D detail "the entity are included by tagging the fields with the tag `summary
 
 $[ import "web/thymeleaf-bootstrap/WebPageFunctions" ]
 $[ import "security/SecurityFunctions" ]
+$[ import "release/ReleaseFunctions" ]
 
 $[ let projectBaseApiPath = space.getMetadataValue("appBaseUrlPath") ]
 $[ if adminUrlPrefix == null || adminUrlPrefix == "" ]
@@ -109,7 +110,7 @@ $[/ outlet ]
 	<div class="container" th:unless="${$}{#lists.isEmpty(${topEntityListName})}">
             $[ if topEntity.hasTag("paging:size") ]
                 $[ let pageSize = topEntity.tagValue("paging:size") ]
-                $[ capture pageUrl]${adminUrlPrefix}/${topEntity|domain:APIPath|name}$[/capture]
+                $[ capture pageUrl ]${adminUrlPrefix}/${topEntity|domain:APIPath|name}$[/ capture ]
     <!-- PAGING -->
     <nav aria-label="...">
       <ul th:unless="${$}{lastPage==0}" class="pagination justify-content-end">
@@ -252,6 +253,7 @@ $[ receive distinct serviceDeclarations ]
 
     $[ call findRoleEnum()->(roleEnum: roleEnum, defaultEnumItem: defaultEnumItem) ]
     $[ foreach topEntity in (space|domain).entitiesTagged("home")|sort ]
+        $[ call CheckIfReleasedEntity(entity: topEntity.entity)->(isReleasedEntity: isReleasedEntity, releaseEntityPKAttribute: releaseEntityPKAttribute) ]
         $[ let hasPaging = topEntity.hasTag("paging:size") ]
     @GetMapping(value = {"/${topEntity|domain:APIPath|name}"})
     public String ${topEntity.name|uncapitalize}Home(Model model$[ if hasPaging ], @Param("page") Long page$[/ if ]) throws ServiceException {
@@ -273,7 +275,7 @@ $[/ send ]
             page = 0L;
         }
         $[/ if ]
-        long totalItemCount = ${serviceClassName|uncapitalize}.get${topEntity|domain:Model|name}Count();
+        long totalItemCount = ${serviceClassName|uncapitalize}.get${topEntity|domain:Model|name}Count($[ if isReleasedEntity ]null$[/ if ]);
         $[ let objectLevelAccess = (topEntity|domain:Security).hasTag("access:object:level") ]
         $[ if objectLevelAccess ]
         model.addAttribute("${topEntityListName}", ${serviceClassName|uncapitalize}.get${topEntity|domain:JSONDTO|name}ListFor${userEntity|domain:Model|name}(${pageArgs}, 1 /*levels*/));

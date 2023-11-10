@@ -21,7 +21,8 @@ $[/ send ]
                 $[ let parentServiceName = parentEntity|domain:Service|name ]
                 $[ call CheckIfReleasedEntity(entity: entity)->(isReleasedEntity: isReleasedEntity, releaseEntityPKAttribute: releaseEntityPKAttribute) ]
         ${parentPkTypeName} ${nextEntity|name|uncapitalize}ParentId = ${nextEntity|domain:Service|name|uncapitalize}.getParentId($[ if isReleasedEntity ]releaseId, $[/ if ]${prevParentIdName});
-        parentDtos.insertElementAt(${parentServiceName|uncapitalize}.get${parentEntity|domain:JSONDTO|name}ById(${nextEntity|name|uncapitalize}ParentId, 0 /*levels*/),0);
+                $[ call CheckIfReleasedEntity(entity: parentEntity)->(isReleasedEntity: isReleasedEntity, releaseEntityPKAttribute: releaseEntityPKAttribute) ]
+        parentDtos.insertElementAt(${parentServiceName|uncapitalize}.get${parentEntity|domain:JSONDTO|name}ById($[ if isReleasedEntity ]releaseId, $[/ if ]${nextEntity|name|uncapitalize}ParentId, 0 /*levels*/),0);
                 $[ let prevParentIdName = (nextEntity|name|uncapitalize) + "ParentId" ]
                 $[ let nextEntity = parentEntity ]
             $[/ foreach ]

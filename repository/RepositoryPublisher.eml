@@ -54,6 +54,9 @@ import ${attribute.type|domain:Model|fullname};
 
 $[receive imports]
 
+$[send imports]
+import ${entity|domain:Model|fullname};
+$[/send]
 @Repository
 public interface ${className} extends CrudRepository<${modelName}, ${entity.pkType.isUUIDType ? "UUID":"Long"}> {
 

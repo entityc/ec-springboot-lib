@@ -297,7 +297,7 @@ $[/ send ]
                 $[ call rolesContains(accessType: "read", rolesArrayName: "roles", entity: topEntity)->(hasRoles: hasRoles, rolesExpr: rolesExpr) ]
                 $[ if hasRoles ]
         if (${rolesExpr}) {
-            model.addAttribute("${topEntityListName}", ${serviceClassName|uncapitalize}.get${topEntity|domain:JSONDTO|name}List(${pageArgs}, 1 /*levels*/));
+            model.addAttribute("${topEntityListName}", ${serviceClassName|uncapitalize}.get${topEntity|domain:JSONDTO|name}List($[if isReleasedEntity]null, $[/if]${pageArgs}, 1 /*levels*/));
                     $[ if hasPaging ]
             model.addAttribute("${topEntity|name|uncapitalize}Count", totalItemCount);
             model.addAttribute("lastPage", (totalItemCount-1) / ${pageSize});

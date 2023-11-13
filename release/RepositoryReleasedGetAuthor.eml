@@ -47,15 +47,18 @@ $[* Only process composite entities here. *]
             $[ let responseModelName = responseEntity|domain:Model|name ]
             $[ let responseDatabaseName = responseEntity|domain:Database|name ]
             $[ if responseEntity.hasPrimaryKey ]
+    /**
+     * Gets a ${responseModelName} object from its ID.
+     */
                 $[ if versionEntity == null ]
     @Query(value =
-        "SELECT * " +
+        "SELECT *, :releaseId AS ${releaseEntityPKAttribute|domain:Database|name} " +
           "FROM ${objectEntity|domain:Database|name} " +
-         "WHERE ${objectPKColumnName} = ?2", nativeQuery = true)
-    Optional<${responseModelName}> getById(${releaseEntityPKAttribute.type|language} unused, ${responseEntity.pkType|language} id);
+         "WHERE ${objectPKColumnName} = :id", nativeQuery = true)
+    Optional<${responseModelName}> getById(@Param("releaseId") ${releaseEntityPKAttribute.type|language} releaseId, @Param("id") ${responseEntity.pkType|language} id);
                 $[ else ]
     @Query(value =
-        "SELECT * " +
+        "SELECT *, r.${releasePKColumnName} " +
           "FROM ${binderEntity|domain:Database|name} r " +
           "JOIN ${objectEntity|domain:Database|name} o ON r.${objectPKColumnName} = o.${objectPKColumnName} " +
           "JOIN ${versionEntity|domain:Database|name} v ON r.${versionPKColumnName} = v.${versionPKColumnName} " +
@@ -65,6 +68,7 @@ $[* Only process composite entities here. *]
             $[/ if ]
 $[ send imports ]
 import ${responseEntity|domain:Model|fullname};
+import org.springframework.data.repository.query.Param;
 $[/ send ]
     /**
      * Gets the full list of ${responseModelName} objects with paging.
@@ -74,16 +78,16 @@ $[/ send ]
      */
             $[ if versionEntity == null ]
     @Query(value =
-        "SELECT * " +
+        "SELECT *, :releaseId AS ${releaseEntityPKAttribute|domain:Database|name} " +
           "FROM ${objectEntity|domain:Database|name} " +
                 $[ if sortByAttribute != null ]
       "ORDER BY ${sortByAttribute|domain:Database|name} ${ascending ? "ASC":"DESC"} " +
                 $[/ if ]
-      "LIMIT ?3 OFFSET ?2", nativeQuery = true)
-    List<${responseModelName}> get${responseModelName}List(${releaseEntityPKAttribute.type|language} unused, long start, int limit);
+      "LIMIT :limit OFFSET :start", nativeQuery = true)
+    List<${responseModelName}> get${responseModelName}List(@Param("releaseId") ${releaseEntityPKAttribute.type|language} releaseId, @Param("start") long start, @Param("limit") int limit);
             $[ else ]
     @Query(value =
-        "SELECT * " +
+        "SELECT *, r.${releasePKColumnName} " +
           "FROM ${binderEntity|domain:Database|name} r " +
           "JOIN ${objectEntity|domain:Database|name} o ON r.${objectPKColumnName} = o.${objectPKColumnName} " +
           "JOIN ${versionEntity|domain:Database|name} v ON r.${versionPKColumnName} = v.${versionPKColumnName} " +
@@ -103,15 +107,18 @@ $[/ send ]
     @Query(value =
         "SELECT COUNT(*) " +
           "FROM ${objectEntity|domain:Database|name} ", nativeQuery = true)
-    Long count(${releaseEntityPKAttribute.type|language} unused);
+    Long count_internal();
+    default Long count(${releaseEntityPKAttribute.type|language} unused) {
+        return count_internal();
+    }
             $[ else ]
     @Query(value =
         "SELECT COUNT(*) " +
           "FROM ${binderEntity|domain:Database|name} r " +
           "JOIN ${objectEntity|domain:Database|name} o ON r.${objectPKColumnName} = o.${objectPKColumnName} " +
           "JOIN ${versionEntity|domain:Database|name} v ON r.${versionPKColumnName} = v.${versionPKColumnName} " +
-         "WHERE r.${releasePKColumnName} = ?1 ", nativeQuery = true)
-    Long count(${releaseEntityPKAttribute.type|language} ${releaseEntityPKAttribute.name});
+         "WHERE r.${releasePKColumnName} = :releaseId ", nativeQuery = true)
+    Long count(@Param("releaseId") ${releaseEntityPKAttribute.type|language} ${releaseEntityPKAttribute.name});
             $[/ if ]
 
 $[ outlet methods
@@ -122,14 +129,14 @@ $[/ outlet ]
                 $[ if attribute.isParent ]
                     $[ if versionEntity == null ]
     @Query(value =
-        "SELECT * " +
+        "SELECT *, :releaseId AS ${releaseEntityPKAttribute|domain:Database|name} " +
           "FROM ${objectEntity|domain:Database|name} " +
-         "WHERE ${attribute|domain:Database|name} = ?2 " +
+         "WHERE ${attribute|domain:Database|name} = :attrValue " +
                         $[ if sortByAttribute != null ]
       "ORDER BY ${sortTableAlias}.${sortByAttribute|domain:Database|name} ${ascending ? "ASC":"DESC"} " +
                         $[/ if ]
-      "LIMIT ?4 OFFSET ?3", nativeQuery = true)
-    List<${responseModelName}> get${responseModelName}ListBy${attribute.name|capitalize}(${releaseEntityPKAttribute.type|language} unused, $[ if attribute.type.isEnumType() ]int$[ else ]${attribute.type|language}$[/ if ] ${attribute|domain|name}, long start, int limit);
+      "LIMIT :limit OFFSET :start", nativeQuery = true)
+    List<${responseModelName}> get${responseModelName}ListBy${attribute.name|capitalize}(@Param("releaseId") ${releaseEntityPKAttribute.type|language} releaseId, @Param("attrValue") $[ if attribute.type.isEnumType() ]int$[ else ]${attribute.type|language}$[/ if ] ${attribute|domain|name}, @Param("start") long start, @Param("limit") int limit);
                     $[ else ]
                         $[ let tableAlias = versionEntity.hasAttributeNamed(attribute.name) ? "v":"o" ]
     /**
@@ -140,17 +147,17 @@ $[/ outlet ]
      * @return List of ${responseModelName} objects fetched.
      */
     @Query(value =
-        "SELECT * " +
+        "SELECT *, r.${releasePKColumnName} " +
           "FROM ${binderEntity|domain:Database|name} r " +
           "JOIN ${objectEntity|domain:Database|name} o ON r.${objectPKColumnName} = o.${objectPKColumnName} " +
           "JOIN ${versionEntity|domain:Database|name} v ON r.${versionPKColumnName} = v.${versionPKColumnName} " +
-         "WHERE r.${releasePKColumnName} = ?1 " +
-           "AND ${tableAlias}.${attribute|domain:Database|name} = ?2 " +
+         "WHERE r.${releasePKColumnName} = :releaseId " +
+           "AND ${tableAlias}.${attribute|domain:Database|name} = :attrValue " +
                         $[ if sortByAttribute != null ]
       "ORDER BY ${sortTableAlias}.${sortByAttribute|domain:Database|name} ${ascending ? "ASC":"DESC"} " +
                         $[/ if ]
-      "LIMIT ?4 OFFSET ?3", nativeQuery = true)
-    List<${responseModelName}> get${responseModelName}ListBy${attribute.name|capitalize}(${releaseEntityPKAttribute.type|language} ${releaseEntityPKAttribute.name}, $[ if attribute.type.isEnumType() ]int$[ else ]${attribute.type|language}$[/ if ] ${attribute|domain|name}, long start, int limit);
+      "LIMIT :limit OFFSET :start", nativeQuery = true)
+    List<${responseModelName}> get${responseModelName}ListBy${attribute.name|capitalize}(@Param("releaseId") ${releaseEntityPKAttribute.type|language} ${releaseEntityPKAttribute.name}, @Param("attrValue") $[ if attribute.type.isEnumType() ]int$[ else ]${attribute.type|language}$[/ if ] ${attribute|domain|name}, @Param("start") long start, @Param("limit") int limit);
 
                     $[/ if ]
                 $[/ if ]
@@ -166,28 +173,28 @@ $[/ outlet ]
      */
                     $[ if versionEntity == null ]
     @Query(value =
-        "SELECT * " +
+        "SELECT *, :releaseId AS ${releaseEntityPKAttribute|domain:Database|name} " +
           "FROM ${objectEntity|domain:Database|name} " +
-         "WHERE ${relationship|domain:Database|name}_id = ?2 " +
+         "WHERE ${relationship|domain:Database|name}_id = :relationshipId " +
                         $[ if sortByAttribute != null ]
       "ORDER BY ${sortTableAlias}.${sortByAttribute|domain:Database|name} ${ascending ? "ASC":"DESC"} " +
                         $[/ if ]
-      "LIMIT ?4 OFFSET ?3", nativeQuery = true)
-    List<${responseModelName}> get${responseModelName}ListBy${relationship.name|capitalize}(${releaseEntityPKAttribute.type|language} unused, ${relationship.to.entity.primaryKey.type|language} ${relationship|domain|name}Id, long start, int limit);
+         "LIMIT :limit OFFSET :start", nativeQuery = true)
+    List<${responseModelName}> get${responseModelName}ListBy${relationship.name|capitalize}(@Param("releaseId") ${releaseEntityPKAttribute.type|language} releaseId, @Param("relationshipId") ${relationship.to.entity.primaryKey.type|language} ${relationship|domain|name}Id, @Param("start") long start, @Param("limit") int limit);
                     $[ else ]
                         $[ let tableAlias = versionEntity.hasRelationshipNamed(relationship.name) ? "v":"o" ]
     @Query(value =
-            "SELECT * " +
+        "SELECT *, r.${releasePKColumnName} " +
           "FROM ${binderEntity|domain:Database|name} r " +
           "JOIN ${objectEntity|domain:Database|name} o ON r.${objectPKColumnName} = o.${objectPKColumnName} " +
           "JOIN ${versionEntity|domain:Database|name} v ON r.${versionPKColumnName} = v.${versionPKColumnName} " +
-         "WHERE r.${releasePKColumnName} = ?1 " +
-           "AND ${tableAlias}.${relationship|domain:Database|name}_id = ?2 " +
+         "WHERE r.${releasePKColumnName} = :releaseId " +
+           "AND ${tableAlias}.${relationship|domain:Database|name}_id = :relationshipId " +
                         $[ if sortByAttribute != null ]
             "ORDER BY ${sortTableAlias}.${sortByAttribute|domain:Database|name} ${ascending ? "ASC":"DESC"} " +
                         $[/ if ]
-            "LIMIT ?4 OFFSET ?3", nativeQuery = true)
-    List<${responseModelName}> get${responseModelName}ListBy${relationship.name|capitalize}(${releaseEntityPKAttribute.type|language} ${releaseEntityPKAttribute.name}, ${relationship.to.entity.primaryKey.type|language} ${relationship|domain|name}Id, long start, int limit);
+         "LIMIT :limit OFFSET :start", nativeQuery = true)
+    List<${responseModelName}> get${responseModelName}ListBy${relationship.name|capitalize}(@Param("releaseId") ${releaseEntityPKAttribute.type|language} ${releaseEntityPKAttribute.name}, @Param("relationshipId") ${relationship.to.entity.primaryKey.type|language} ${relationship|domain|name}Id, @Param("start") long start, @Param("limit") int limit);
                     $[/ if ]
 
     /**
@@ -199,17 +206,20 @@ $[/ outlet ]
     @Query(value =
         "SELECT count(*) " +
           "FROM ${objectEntity|domain:Database|name} " +
-         "WHERE ${relationship|domain:Database|name}_id = ?2 ", nativeQuery = true)
-    Long count${responseModelName}By${relationship.name|capitalize}Id(${releaseEntityPKAttribute.type|language} unused, ${relationship.to.entity.primaryKey.type|language} ${relationship|domain|name}Id);
+         "WHERE ${relationship|domain:Database|name}_id = :relationshipId ", nativeQuery = true)
+    Long count${responseModelName}By${relationship.name|capitalize}Id_internal(@Param("relationshipId") ${relationship.to.entity.primaryKey.type|language} ${relationship|domain|name}Id);
+    default Long count${responseModelName}By${relationship.name|capitalize}Id(${releaseEntityPKAttribute.type|language} releaseId, ${relationship.to.entity.primaryKey.type|language} ${relationship|domain|name}Id) {
+        return count${responseModelName}By${relationship.name|capitalize}Id_internal(${relationship|domain|name}Id);
+    }
                     $[ else ]
     @Query(value =
         "SELECT count(*) " +
           "FROM ${binderEntity|domain:Database|name} r " +
           "JOIN ${objectEntity|domain:Database|name} o ON r.${objectPKColumnName} = o.${objectPKColumnName} " +
           "JOIN ${versionEntity|domain:Database|name} v ON r.${versionPKColumnName} = v.${versionPKColumnName} " +
-         "WHERE r.${releasePKColumnName} = ?1 " +
-           "AND ${tableAlias}.${relationship|domain:Database|name}_id = ?2 ", nativeQuery = true)
-    Long count${responseModelName}By${relationship.name|capitalize}Id(${releaseEntityPKAttribute.type|language} ${releaseEntityPKAttribute.name}, ${relationship.to.entity.primaryKey.type|language} ${relationship|domain|name}Id);
+         "WHERE r.${releasePKColumnName} = :releaseId " +
+           "AND ${tableAlias}.${relationship|domain:Database|name}_id = :relationshipId ", nativeQuery = true)
+    Long count${responseModelName}By${relationship.name|capitalize}Id(@Param("releaseId") ${releaseEntityPKAttribute.type|language} ${releaseEntityPKAttribute.name}, @Param("relationshipId") ${relationship.to.entity.primaryKey.type|language} ${relationship|domain|name}Id);
 
                     $[/ if ]
                 $[/ if ]
@@ -232,14 +242,14 @@ $[/ outlet ]
                     $[ let destPKVarName = destMMEntity.primaryKeyAttribute|domain|name ]
                     $[ let destPKDBName = destMMEntity.primaryKeyAttribute|domain:Database|name ]
     @Query(value =
-            "SELECT pt.* " +
+            "SELECT pt.*, :releaseId AS ${releaseEntityPKAttribute|domain:Database|name} " +
             "FROM ${entityForQuery|domain:Database|name} pt " +
             "WHERE pt.${sourcePKDBName} IN " +
               "(SELECT ${sourcePKDBName} " +
                  "FROM ${manyToManyEntity|domain:Database|name} " +
-                 "WHERE ${destPKDBName} = ?1) " +
-             "ORDER BY pt.created_on DESC LIMIT ?3 OFFSET ?2", nativeQuery = true)
-    List<${modelName}> get${modelName}ListAssociatedWith${destMMEntity|domain:Model|name}(${releaseEntityPKAttribute.type|language} ${releaseEntityPKAttribute.name}, ${destPKType} ${destPKVarName}, long start, int limit);
+                 "WHERE ${destPKDBName} = :withId) " +
+             "ORDER BY pt.created_on DESC LIMIT :limit OFFSET :start", nativeQuery = true)
+    List<${modelName}> get${modelName}ListAssociatedWith${destMMEntity|domain:Model|name}(@Param("releaseId") ${releaseEntityPKAttribute.type|language} ${releaseEntityPKAttribute.name}, @Param("withId") ${destPKType} ${destPKVarName}, @Param("start") long start, @Param("limit") int limit);
 
     @Query(value =
             "SELECT COUNT(pt.*) " +
@@ -247,8 +257,11 @@ $[/ outlet ]
             "WHERE pt.${sourcePKDBName} IN " +
               "(SELECT ${sourcePKDBName} " +
                  "FROM ${manyToManyEntity|domain:Database|name} " +
-                 "WHERE ${destPKDBName} = ?1) ", nativeQuery = true)
-    Long count${modelName}By${destMMEntity|domain:Model|name}Id(${releaseEntityPKAttribute.type|language} ${releaseEntityPKAttribute.name}, ${destPKType} ${destPKVarName});
+                 "WHERE ${destPKDBName} = :withId) ", nativeQuery = true)
+    Long count${modelName}By${destMMEntity|domain:Model|name}Id_internal(@Param("withId") ${destPKType} ${destPKVarName});
+    default Long count${modelName}By${destMMEntity|domain:Model|name}Id(${releaseEntityPKAttribute.type|language} unused, ${destPKType} ${destPKVarName}) {
+        return count${modelName}By${destMMEntity|domain:Model|name}Id_internal(${destPKVarName});
+    }
                 $[/ if ]
             $[/ foreach ]
         $[/ author ]

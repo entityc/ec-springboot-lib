@@ -1,8 +1,8 @@
 package ${domain.namespace};
 
 import ${(space.domain("Utils")).namespace}.FieldMatch;
-import javax.validation.constraints.Email;
-import javax.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotEmpty;
 
 @FieldMatch.List({
         @FieldMatch(first = "password", second = "confirmPassword", message = "The password fields must match")

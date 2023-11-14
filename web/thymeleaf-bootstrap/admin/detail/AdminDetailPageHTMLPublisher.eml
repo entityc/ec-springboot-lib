@@ -60,8 +60,8 @@ $[ D detail "want to edit the field." ]
 $[ D detail "" ]
 $[ D detail "### Child Objects" ]
 $[ D detail "" ]
-$[ D detail "For each one-to-many relationship this entity has with other entites it can render a table for" ]
-$[ D detail "each in this bottom section. Only the relationships that are tagged with `detail` will be" ]
+$[ D detail "For each one-to-many relationship this entity has with other entites it can render a table" ]
+$[ D detail "for each in this bottom section. Only the relationships that are tagged with `detail` will be" ]
 $[ D detail "included. The fields of the child entity that are included in the generated table are those" ]
 $[ D detail "attributes that are tagged with `summary`." ]
 $[ D detail "" ]
@@ -110,15 +110,19 @@ $[ outlet BodyMainSection ]
 $[/ outlet ]
 
 $[*-----------------------------------------------------------------------------------------------------------------*]
+            $[ call CheckIfReleasedEntity(entity: entity)->(isReleasedEntity: isReleasedEntity, releaseEntityPKAttribute: releaseEntityPKAttribute) ]
+            $[ if !isReleasedEntity ]
     <br/>
     <!-- DELETE BUTTON -->
     <div>
         <button th:if="${$}{canEdit${entity|name}}" type="button" class="btn btn-danger"
         data-bs-toggle="modal" data-bs-target="#confirm-delete">Delete ${entity|title}</button>
     </div>
+            $[/ if ]
     <br/>
   </div>
 </div>
+            $[ if !isReleasedEntity ]
 <div class="modal fade" id="confirm-delete" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
     <div class="modal-dialog">
         <form th:action="@{${adminUrlPrefix}/${entity|domain:APIPath|name}/{id}/delete(id=${$}{${entity|domain:JSONDTO|name|uncapitalize}.id})}" method="POST">
@@ -139,36 +143,37 @@ $[*-----------------------------------------------------------------------------
 </div>
 <script>
 </script>
-            $[ call insertDateEditModalScript() ]
-            $[ call insertStringEditModalScript() ]
-            $[ call insertBooleanEditModalScript() ]
-            $[ let singleEnumsInserted = @[]@ ]
-            $[ let manyEnumsInserted = @[]@ ]
-            $[ foreach domainAttribute in domainEntity.getFlatDeclaredAttributeList(@["enum","entity"]@) ]
-                $[ if domainAttribute.type.isEnumType ]
-                    $[ if domainAttribute.attribute.isArray ]
-                        $[ if !manyEnumsInserted.contains(domainAttribute.type) ]
-                            $[ call insertManyEnumEditModalScript(attribute: domainAttribute.attribute) ]
-                            $[ do manyEnumsInserted.add(domainAttribute.type) ]
+                $[ call insertDateEditModalScript() ]
+                $[ call insertStringEditModalScript() ]
+                $[ call insertBooleanEditModalScript() ]
+                $[ let singleEnumsInserted = @[]@ ]
+                $[ let manyEnumsInserted = @[]@ ]
+                $[ foreach domainAttribute in domainEntity.getFlatDeclaredAttributeList(@["enum","entity"]@) ]
+                    $[ if domainAttribute.type.isEnumType ]
+                        $[ if domainAttribute.attribute.isArray ]
+                            $[ if !manyEnumsInserted.contains(domainAttribute.type) ]
+                                $[ call insertManyEnumEditModalScript(attribute: domainAttribute.attribute) ]
+                                $[ do manyEnumsInserted.add(domainAttribute.type) ]
+                            $[/ if ]
+                        $[ else ]
+                            $[ if !singleEnumsInserted.contains(domainAttribute.type) ]
+                                $[ call insertEnumEditModalScript(attribute: domainAttribute.attribute) ]
+                                $[ do singleEnumsInserted.add(domainAttribute.type) ]
+                            $[/ if ]
                         $[/ if ]
-                    $[ else ]
-                        $[ if !singleEnumsInserted.contains(domainAttribute.type) ]
-                            $[ call insertEnumEditModalScript(attribute: domainAttribute.attribute) ]
-                            $[ do singleEnumsInserted.add(domainAttribute.type) ]
+                    $[ elseif domainAttribute.type.isEntityType ]
+                        $[ let secondaryEntity = domainAttribute.attribute.typeEntity ]
+                        $[ if secondaryEntity.hasTag("asset:file") ]
+                            $[ call insertFileUploadModalScript() ]
                         $[/ if ]
                     $[/ if ]
-                $[ elseif domainAttribute.type.isEntityType ]
-                    $[ let secondaryEntity = domainAttribute.attribute.typeEntity ]
-                    $[ if secondaryEntity.hasTag("asset:file") ]
-                        $[ call insertFileUploadModalScript() ]
+                $[/ foreach ]
+                $[ foreach domainRelationship in domainEntity.declaredDomainRelationships ]
+                    $[ if domainRelationship.to.isOne ]
+                        $[ call insertEntitySelectModalScript(relationship: domainRelationship.relationship) ]
                     $[/ if ]
-                $[/ if ]
-            $[/ foreach ]
-            $[ foreach domainRelationship in domainEntity.declaredDomainRelationships ]
-                $[ if domainRelationship.to.isOne ]
-                    $[ call insertEntitySelectModalScript(relationship: domainRelationship.relationship) ]
-                $[/ if ]
-            $[/ foreach ]
+                $[/ foreach ]
+            $[/ if ]
 </body>
 </html>
         $[/ file ]

@@ -248,6 +248,31 @@ $[ author to org.entityc.springboot.web.admin.html.detail ]
     ]
         $[ call TableForEntity(dtoVariable: entity|domain:JSONDTO|name|uncapitalize, optShowMarkdownIcon: optShowMarkdownIcon, entity: entity, secondaryAttributeStack: null, adminUrlPrefix: adminUrlPrefix) ]
         $[ call CheckIfReleasedEntity(entity: entity)->(isReleasedEntity: isReleasedEntity, releaseEntityPKAttribute: releaseEntityPKAttribute) ]
+        $[ if entity.hasTag("release:top") ]
+            $[ let buttonClass = "btn btn-success w-100" ]
+            $[ let colClass = "col mb-2" ]
+$[* <div class="container text-center">
+  <div class="row">
+    <div class="${colClass}">
+            <button type="button" class="${buttonClass}">Accessories</button>
+    </div>
+    <div class="${colClass}">
+            <button type="button" class="${buttonClass}">Bikes</button>
+    </div>
+    <div class="${colClass}">
+            <button type="button" class="${buttonClass}">Paint Jobs</button>
+    </div>
+  </div>
+  <div class="row">
+    <div class="${colClass}">
+            <button type="button" class="${buttonClass}">Bike Categories</button>
+    </div>
+    <div class="${colClass}">
+            <button type="button" class="${buttonClass}">Placements</button>
+    </div>
+  </div>
+</div> *]
+        $[/ if ]
         $[ if !isReleasedEntity ]
             $[ call insertDateEditModalHTML() ]
             $[ call insertStringEditModalHTML() ]

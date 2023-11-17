@@ -62,9 +62,9 @@ $[ outlet annotation
 ]
 $[/ outlet ]
     public ResponseEntity<List<${dtoClassName}>> get${modelName}List(
-                $[ if isReleasedEntity ]
+            $[ if isReleasedEntity ]
         @RequestParam(value = "releaseId", required = true) ${releaseEntityPKAttribute.type|language} releaseId,
-                $[/ if ]
+            $[/ if ]
             $[ let hasParentId = entity.hasPrimaryParentRelationship ]
             $[ if hasParentId ]
                 $[ let relationship = entity.primaryParentRelationship ]
@@ -139,9 +139,9 @@ $[ outlet annotation
 ]
 $[/ outlet ]
     public ResponseEntity<List<${dtoClassName}>> get${modelName}ListBy${attribute.name|capitalize}(
-                $[ if isReleasedEntity ]
+                    $[ if isReleasedEntity ]
         @RequestParam(value = "releaseId", required = true) ${releaseEntityPKAttribute.type|language} releaseId,
-                $[/ if ]
+                    $[/ if ]
         @PathVariable("value") ${attribute.type|language} value,
         @RequestParam(value = "start", required = false) Integer start,
         @RequestParam(value = "limit", required = false) Integer limit,
@@ -167,6 +167,9 @@ $[**********************************
            D "Get List by Relationship Endpoint"
         ]
             $[ foreach relationship in entity.relationships ]
+                $[ let toEntity = relationship.to.entity ]
+                $[ if toEntity == null ]$[ continue ]$[/ if ]
+                $[ if toEntity == null || toEntity.hasTag("release:top") ]$[ continue ]$[/ if ]
                 $[ if relationship.isParent ]
     // [Template] ${__template.name}:${__outlet.name} < ${__author.template.name}
     @RequestMapping(
@@ -179,9 +182,9 @@ $[ outlet annotation
 ]
 $[/ outlet ]
     public ResponseEntity<List<${dtoClassName}>> get${modelName}ListBy${relationship.name|capitalize}(
-                $[ if isReleasedEntity ]
+                    $[ if isReleasedEntity ]
         @RequestParam(value = "releaseId", required = true) ${releaseEntityPKAttribute.type|language} releaseId,
-                $[/ if ]
+                    $[/ if ]
         @PathVariable("id") ${relationship.to.entity.primaryKey.type|language} ${relationship.name}Id,
         @RequestParam(value = "start", required = false) Integer start,
         @RequestParam(value = "limit", required = false) Integer limit,

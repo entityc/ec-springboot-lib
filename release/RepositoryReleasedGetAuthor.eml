@@ -91,12 +91,12 @@ $[/ send ]
           "FROM ${binderEntity|domain:Database|name} r " +
           "JOIN ${objectEntity|domain:Database|name} o ON r.${objectPKColumnName} = o.${objectPKColumnName} " +
           "JOIN ${versionEntity|domain:Database|name} v ON r.${versionPKColumnName} = v.${versionPKColumnName} " +
-         "WHERE r.${releasePKColumnName} = ?1 " +
+         "WHERE r.${releasePKColumnName} = :releaseId " +
                 $[ if sortByAttribute != null ]
       "ORDER BY ${sortTableAlias}.${sortByAttribute|domain:Database|name} ${ascending ? "ASC":"DESC"} " +
                 $[/ if ]
-      "LIMIT ?2 OFFSET ?1", nativeQuery = true)
-    List<${responseModelName}> get${responseModelName}List(${releaseEntityPKAttribute.type|language} ${releaseEntityPKAttribute.name}, long start, int limit);
+      "LIMIT :limit OFFSET :start", nativeQuery = true)
+    List<${responseModelName}> get${responseModelName}List(@Param("releaseId") ${releaseEntityPKAttribute.type|language} ${releaseEntityPKAttribute.name}, @Param("start") long start, @Param("limit") int limit);
             $[/ if ]
 
     /**
@@ -162,7 +162,9 @@ $[/ outlet ]
                     $[/ if ]
                 $[/ if ]
             $[/ foreach ]
-            $[ foreach entity.relationships ]
+            $[ foreach relationship in entity.relationships ]
+                $[ let toEntity = relationship.to.entity ]
+                $[ if toEntity == null || toEntity.name == releaseEntity.name ]$[ continue ]$[/ if ]
                 $[ if relationship.to.isOne ]
     /**
      * Gets the list of ${responseModelName} objects that all share the same reference to an object of ${relationship.to.entity.name}.

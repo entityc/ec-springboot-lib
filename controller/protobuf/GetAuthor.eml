@@ -165,6 +165,9 @@ $[**********************************
            D "Get List by Relationship Endpoint"
         ]
             $[ foreach relationship in entity.relationships ]
+                $[ let toEntity = relationship.to.entity ]
+                $[ if toEntity == null ]$[ continue ]$[/ if ]
+                $[ if toEntity == null || toEntity.hasTag("release:top") ]$[ continue ]$[/ if ]
                 $[ if relationship.isParent ]
     // [Template] ${__template.name}:${__outlet.name} < ${__author.template.name}
     @RequestMapping(

@@ -2,6 +2,7 @@ $[ language java ]
 $[ domain Service ]
 $[ import "service/ServiceFunctions" ]
 $[ import "util/AutoWired" ]
+$[ import "release/ReleaseFunctions" ]
 $[ publisher org.entityc.springboot.service.mapping ]
     $[ author to org.entityc.springboot.service ]
         $[ author to outlet methods
@@ -31,6 +32,7 @@ $[/ outlet ]
                 $[ if !includeChildEntities ]$[ continue ]$[/ if ]
                 $[ let _toEntityDtoClassName = _toEntity|name ]
                 $[ let _toEntityModelClassName = _toEntity|domain:Model|name ]
+                $[ call CheckIfReleasedEntity(entity: _toEntity.entity)->(isReleasedEntity: isReleasedToEntity, releaseEntityPKAttribute: releaseEntityPKAttribute) ]
 $[ send imports ]
 import ${_toEntity|domain:Model|fullname};
 import ${_toEntity|domain:JSONDTO|fullname};
@@ -52,7 +54,11 @@ $[/ send ]
                 dtoObject.set${relationship|domain:Model|name|capitalize}($[ if toSelf ]this$[ else ]${_toEntity|domain:Service|name|uncapitalize}$[/ if ].dtoFromModel(fieldObjectOptional.get(), levels-1));
             }
                 $[ elseif relationship.isOneToMany && relationship.withViewName != "Reference" ]
-                    $[ capture bySomething ]By${entity|domain:Model|name|capitalize}$[/ capture ]
+                    $[ if isReleasedToEntity ]
+                        $[ let bySomething = "" ]
+                    $[ else ]
+                        $[ capture bySomething ]By${entity|domain:Model|name|capitalize}$[/ capture ]
+                    $[/ if ]
                     $[ capture byArgument ]modelObject.get${entity.primaryKeyAttribute|domain:Model|name|capitalize}(), $[/ capture ]
 $[ send imports ]
 import java.util.HashSet;

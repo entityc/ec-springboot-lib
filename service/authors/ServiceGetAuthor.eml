@@ -7,10 +7,10 @@ $[ publisher org.entityc.springboot.service.get ]
     $[ author to org.entityc.springboot.service ]
         $[ author to outlet methods ]
             $[ call CheckIfReleasedEntity(entity: entity)->(isReleasedEntity: isReleasedEntity, releaseEntityPKAttribute: releaseEntityPKAttribute) ]
-                $[ if isReleasedEntity ]
-                    $[ assert releaseEntityPKAttribute != null error ]Release entity ${entity.name} does not have a "release" constituent entity!$[/ assert ]
-                    $[ if releaseEntityPKAttribute == null ]$[ return ]$[/ if ]
-                $[/ if ]
+            $[ if isReleasedEntity ]
+                $[ assert releaseEntityPKAttribute != null error ]Release entity ${entity.name} does not have a "release" constituent entity!$[/ assert ]
+                $[ if releaseEntityPKAttribute == null ]$[ return ]$[/ if ]
+            $[/ if ]
             $[ function GetResponseVarsForDomain
                D "This is used by many of the other functions in this template to create variables based on a"
                D "response domain."
@@ -429,7 +429,11 @@ $[*******************************]
     }
 
             $[/ function ]
+            $[ call CheckIfReleasedEntity(entity: entity)->(isReleasedEntity: isReleasedEntity, releaseEntityPKAttribute: releaseEntityPKAttribute) ]
             $[ foreach relationship in entity.relationships if relationship.to.isOne ]
+                $[ let toEntity = relationship.to.entity ]
+                $[ if toEntity == null ]$[ continue ]$[/ if ]
+                $[ if isReleasedEntity && toEntity.hasTag("release:top") ]$[ continue ]$[/ if ]
                 $[ let getFlavor = null ]
                 $[ call makeGetListByRelationshipMethod(responseDomain: space.domain("Model"), relationship: relationship, entity: entity, getFlavor: getFlavor) ]
                 $[ call makeGetListByRelationshipMethod(responseDomain: space.domain("JSONDTO"), relationship: relationship, entity: entity, getFlavor: getFlavor) ]
@@ -447,7 +451,6 @@ $[/ outlet ]
                 $[/ if ]
             $[/ foreach ]
             $[ foreach relationship in entity.relationships if relationship.isManyToMany ]
-            // TODO: Need to add support for ${entity.name} to ${relationship.to.entity.name}
                 $[ let getFlavor = null ]
                 $[ if space.hasDomain("ProtobufDTO") && !(entity.module|domain:ProtobufDTO).hasTag("noproto") ]
                     $[ call makeGetListByMMRelationshipMethod(responseDomain: space.domain("ProtobufDTO"), relationship: relationship, entity: entity, getFlavor: getFlavor) ]
@@ -457,7 +460,6 @@ $[/ outlet ]
                 $[ let primaryParentEntity = entity.primaryParentRelationship.to.entity ]
                 $[ let pkType = entity.pkType|language ]
                 $[ let parentPkType = primaryParentEntity.pkType|language ]
-                $[ call CheckIfReleasedEntity(entity: entity)->(isReleasedEntity: isReleasedEntity, releaseEntityPKAttribute: releaseEntityPKAttribute) ]
     public ${parentPkType} getParentId($[ if isReleasedEntity ]${releaseEntityPKAttribute.type|language} releaseId, $[/ if ]${pkType} objId) {
         Optional<${modelName}> objOptional = ${repositoryVariableName}.getById($[ if isReleasedEntity ]releaseId, $[/ if ]objId);
         if (objOptional.isPresent()) {

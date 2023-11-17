@@ -12,8 +12,8 @@ $[ author to org.entityc.springboot.service ]
 $[ send imports ]
 import ${protobufNamespace}.${entity.module.name|capitalize};
 $[/ send ]
+    // [Template] ${__template.name}:${__outlet.name} < ${__author.template.name}
     public ${fullProtobufClassName} protobufFromModel(${responseModelName} modelObject, int levels) throws ServiceException {
-        System.out.println("[protobufFromModel] ${entity.name} levels: " + levels);
             $[ let _mapperDomainEntity = entity|domain:DTOMapper ]
             $[ call addAutoWired(domainEntity: _mapperDomainEntity) ]
             $[ let _mapperVariableName = _mapperDomainEntity|name|uncapitalize ]
@@ -28,6 +28,7 @@ $[/ send ]
                 $[ if !includeChildEntities ]$[ continue ]$[/ if ]
                 $[ let _toEntityDtoClassName = _toEntity|name ]
                 $[ let _toEntityModelClassName = _toEntity|domain:Model|name ]
+                $[ call CheckIfReleasedEntity(entity: _toEntity.entity)->(isReleasedEntity: isReleasedToEntity, releaseEntityPKAttribute: releaseEntityPKAttribute) ]
 $[ send imports ]
 import ${_toEntity|domain:Model|fullname};
 $[/ send ]
@@ -48,7 +49,11 @@ $[/ send ]
 $[*                builder.set${relationship|domain:Model|name|capitalize}(${_toEntityMapperVariableName}.toProtobufFromModel(fieldObject.get()), levels); *]
             }
                 $[ elseif relationship.to.isMany && relationship.withViewName != "Reference" ]
-                    $[ capture bySomething ]By${entity|domain:Model|name|capitalize}$[/ capture ]
+                    $[ if isReleasedToEntity ]
+                        $[ let bySomething = "" ]
+                    $[ else ]
+                        $[ capture bySomething ]By${entity|domain:Model|name|capitalize}$[/ capture ]
+                    $[/ if ]
                     $[ capture byArgument ]modelObject.get${entity.primaryKeyAttribute|domain:Model|name|capitalize}(), $[/ capture ]
 $[ send imports ]
 import java.util.HashSet;

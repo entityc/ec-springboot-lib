@@ -28,7 +28,7 @@ $[/ send ]
                 $[ if !includeChildEntities ]$[ continue ]$[/ if ]
                 $[ let _toEntityDtoClassName = _toEntity|name ]
                 $[ let _toEntityModelClassName = _toEntity|domain:Model|name ]
-                $[ call CheckIfReleasedEntity(entity: _toEntity.entity)->(isReleasedEntity: isReleasedToEntity, releaseEntityPKAttribute: releaseEntityPKAttribute) ]
+                $[ call CheckIfReleasedEntity(entity: _toEntity.entity)->(isReleasedEntity: isReleasedToEntity) ]
 $[ send imports ]
 import ${_toEntity|domain:Model|fullname};
 $[/ send ]

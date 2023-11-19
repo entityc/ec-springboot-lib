@@ -156,8 +156,7 @@ $[********************************************************************
 
             $[/ if ]
             $[ let showAttributeComment = true ]
-            $[ foreach attribute in entity.attributes if
-!attribute.isVirtual && !(attribute|domain:DTOMapper).hasTag("exclude") ]
+            $[ foreach attribute in entity.attributes if !attribute.isVirtual && !(attribute|domain:DTOMapper).hasTag("exclude") ]
                 $[ let nullable = attribute.type|language hasNullable ]
                 $[ let attributeType = attribute.type ]
                 $[ if attribute.isSecondaryEntityType ]
@@ -221,7 +220,7 @@ $[* we need to consider the data type here *]
             $[/ foreach ]$[* attribute *]
 $[** RELATIONSHIPS **]
             $[ let showRelationshipComment = true ]
-            $[ call CheckIfReleasedEntity(entity: entity)->(isReleasedEntity: isReleasedEntity, releaseEntityPKAttribute: releaseEntityPKAttribute) ]
+            $[ call CheckIfReleasedEntity(entity: entity)->(isReleasedEntity: isReleasedEntity) ]
             $[ foreach relationship in entity.relationships ]
                 $[ let toEntity = relationship.to.entity ]
                 $[ if toEntity == null ]$[ continue ]$[/ if ]

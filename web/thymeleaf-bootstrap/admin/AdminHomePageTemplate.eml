@@ -253,7 +253,7 @@ $[ receive distinct serviceDeclarations ]
 
     $[ call findRoleEnum()->(roleEnum: roleEnum, defaultEnumItem: defaultEnumItem) ]
     $[ foreach topEntity in (space|domain).entitiesTagged("home")|sort ]
-        $[ call CheckIfReleasedEntity(entity: topEntity.entity)->(isReleasedEntity: isReleasedEntity, releaseEntityPKAttribute: releaseEntityPKAttribute) ]
+        $[ call CheckIfReleasedEntity(entity: topEntity.entity)->(isReleasedEntity: isReleasedEntity) ]
         $[ let hasPaging = topEntity.hasTag("paging:size") ]
     @GetMapping(value = {"/${topEntity|domain:APIPath|name}"})
     public String ${topEntity.name|uncapitalize}Home(Model model$[ if hasPaging ], @Param("page") Long page$[/ if ]) throws ServiceException {

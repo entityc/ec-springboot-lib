@@ -7,7 +7,7 @@ $[ author to org.entityc.springboot.repository ]
        D "and getting all associations."
     ]
 $[* Don't process composite entities here, a different author will do that *]
-        $[ call CheckIfReleasedEntity(entity: entity)->(isReleasedEntity: isReleasedEntity, releaseEntityPKAttribute: releaseEntityPKAttribute) ]
+        $[ call CheckIfReleasedEntity(entity: entity)->(isReleasedEntity: isReleasedEntity) ]
         $[ if isReleasedEntity ]
             $[ return ]
         $[/ if ]

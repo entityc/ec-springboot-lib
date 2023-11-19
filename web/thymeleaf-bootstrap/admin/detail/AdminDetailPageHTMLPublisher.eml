@@ -110,7 +110,7 @@ $[ outlet BodyMainSection ]
 $[/ outlet ]
 
 $[*-----------------------------------------------------------------------------------------------------------------*]
-            $[ call CheckIfReleasedEntity(entity: entity)->(isReleasedEntity: isReleasedEntity, releaseEntityPKAttribute: releaseEntityPKAttribute) ]
+            $[ call CheckIfReleasedEntity(entity: entity)->(isReleasedEntity: isReleasedEntity) ]
             $[ if !isReleasedEntity ]
     <br/>
     <!-- DELETE BUTTON -->

@@ -74,6 +74,17 @@ $[ function MainTable
             $[/ switch ]
         $[/ if ]
     $[/ foreach ]
+    $[ let releaseParam = "" ]
+    $[ call CheckIfReleasedEntity(entity: toEntity.entity)->(isReleasedEntity: isReleasedEntity) ]
+    $[ call GetReleaseEntityPKAttribute(entity: toEntity.entity)->(releaseEntityPKAttribute: releaseEntityPKAttribute) ]
+    $[ call GetRelationshipToReleaseEntity(entity: toEntity.entity)->(relationship: relationshipToReleaseEntity) ]
+    $[ if isReleasedEntity ]
+        $[ if relationshipToReleaseEntity == null ]
+            $[ log fatal ]Not able to find parent relationship to release entity ${releaseEntityPKAttribute.entity.name} from entity ${entity.name}$[/ log ]
+        $[/ if ]
+        $[ capture releaseParam ]+ '?releaseId=' + ${$}{item.get${relationshipToReleaseEntity|domain:JSONDTO|name|capitalize}().get${releaseEntityPKAttribute|domain:JSONDTO|name|capitalize}()}
+        $[/ capture ]
+    $[/ if ]
     $[ foreach toEntityRelationship in toEntity.declaredDomainRelationships ]
         $[ if toEntityRelationship.hasTag("summary") && (toEntityRelationship|domain:AdminUI).hasTag("display:attribute") ]
             $[ capture relItemExpr ]item.${toEntityRelationship.name}.${(toEntityRelationship|domain:AdminUI).tagValue("display:attribute")}$[/ capture ]
@@ -92,7 +103,7 @@ $[ function MainTable
             $[/ foreach ]
         $[/ if ]
     $[/ foreach ]
-            <td style="width:1%"><a class="btn btn-secondary active" role="button" aria-pressed="true" th:href="@{'${adminUrlPrefix}/${toEntity|domain:APIPath|name}/' + ${$}{item.id} + '/detail'}">Open</a></td>
+            <td style="width:1%"><a class="btn btn-secondary active" role="button" aria-pressed="true" th:href="@{'${adminUrlPrefix}/${toEntity|domain:APIPath|name}/' + ${$}{item.id} + '/detail'${releaseParam}}">Open</a></td>
 		</tr>
 		</tbody>
 		</table>
@@ -104,7 +115,7 @@ $[ author to org.entityc.springboot.web.admin.html.detail ]
             $[ let toEntity = relationship.to.entity ]
             $[ if !relationship.isOneToMany ]
                 $[ if toEntity == null ]$[ continue ]$[/ if ]
-                $[ call CheckIfReleasedEntity(entity: toEntity.entity)->(isReleasedEntity: isReleasedEntity, releaseEntityPKAttribute: releaseEntityPKAttribute) ]
+                $[ call CheckIfReleasedEntity(entity: toEntity.entity)->(isReleasedEntity: isReleasedEntity) ]
                 $[ if !isReleasedEntity ]$[ continue ]$[/ if ]
             $[/ if ]
             $[ call RelationshipHeader(relationship: relationship) ]
@@ -145,10 +156,7 @@ $[ author to org.entityc.springboot.web.admin.controller.detail ]
     $[ author to outlet getBody
        D "This author deals with relationships from this entity to others."
     ]
-        $[ call CheckIfReleasedEntity(entity: entity)->(isReleasedEntity: isReleasedEntity, releaseEntityPKAttribute: releaseEntityPKAttribute) ]
-        $[ if isReleasedEntity ]
-            $[ return ]
-        $[/ if ]
+        $[ call CheckIfReleasedEntity(entity: entity)->(isReleasedEntity: isReleasedEntity) ]
         $[ let filterAttributeMap = @{}@ ]
         $[ let toOneEntities = @[]@ ]
         $[ foreach d_relationship in (entity|domain:AdminUI).declaredDomainRelationships ]
@@ -156,7 +164,7 @@ $[ author to org.entityc.springboot.web.admin.controller.detail ]
             $[ let d_toEntity = d_relationship.to.entity ]
             $[ if d_toEntity == null ]$[ continue ]$[/ if ]
             $[ let toEntity = d_toEntity.entity ]
-            $[ call CheckIfReleasedEntity(entity: toEntity)->(isReleasedEntity: isReleasedToEntity, releaseEntityPKAttribute: releaseEntityPKAttribute) ]
+            $[ call CheckIfReleasedEntity(entity: toEntity)->(isReleasedEntity: isReleasedToEntity) ]
             $[ if relationship.isOneToMany ]
                 $[ call AutoWireEntity(entity: toEntity) ]
 
@@ -168,12 +176,12 @@ $[ author to org.entityc.springboot.web.admin.controller.detail ]
         // a UI element that allows the user to select a value to assign to the `${relationship.name}` field.
         // [Template] ${__template.name}:${__outlet.name} < ${__author.template.name}
         {
-                $[ if isReleasedToEntity ]
+                $[ if entity.hasTag("release:top") ]
                     $[ let byClause = "" ]
                 $[ else ]
                     $[ capture byClause ]By${relationship.reverseRelationship|domain:Model|name|capitalize}$[/ capture ]
                 $[/ if ]
-            List<${toEntity|domain:JSONDTO|name}> list = ${toEntity|domain:Service|name|uncapitalize}.get${toEntity|domain:JSONDTO|name}List${byClause}(id, 0, 1000, 1 /*levels*/);
+            List<${toEntity|domain:JSONDTO|name}> list = ${toEntity|domain:Service|name|uncapitalize}.get${toEntity|domain:JSONDTO|name}List${byClause}($[ if isReleasedEntity ]releaseId, $[/ if ]id, 0, 1000, 1 /*levels*/);
             model.addAttribute("${relationship.name}List", list);
             boolean canAdd = ${toEntity|domain:Service|name|uncapitalize}.canCreate();
             model.addAttribute("canAdd${toEntity|name}", canAdd);
@@ -227,7 +235,7 @@ $[/ send ]
 $[ send imports ]
 import ${toEntity|domain:JSONDTO|fullname};
 $[/ send ]
-            List<${toEntity|domain:JSONDTO|name}> list = ${toEntity|domain:Service|name|uncapitalize}.get${toEntity|domain:JSONDTO|name}ListBy${filterToEntity|domain:Model|name|capitalize}(dto.get${filterRelationship|domain:JSONDTO|name|capitalize}().get${filterToEntityPK|domain:JSONDTO|name|capitalize}(), 0, 1000, 1 /*levels*/);
+            List<${toEntity|domain:JSONDTO|name}> list = ${toEntity|domain:Service|name|uncapitalize}.get${toEntity|domain:JSONDTO|name}ListBy${filterToEntity|domain:Model|name|capitalize}($[ if isReleasedEntity ]releaseId, $[/ if ]dto.get${filterRelationship|domain:JSONDTO|name|capitalize}().get${filterToEntityPK|domain:JSONDTO|name|capitalize}(), 0, 1000, 1 /*levels*/);
             model.addAttribute("${toEntity|domain:JSONDTO|name|uncapitalize}List", list);
         }
                 $[ else ]
@@ -241,7 +249,7 @@ $[* UNIQUE FULL LISTS *]
         $[/ foreach ]
         $[ foreach relationship in entity.implicitRelationships ]
             $[ let toEntity = relationship.implicitToEntity ]
-            $[ call CheckIfReleasedEntity(entity: toEntity)->(isReleasedEntity: isReleasedToEntity, releaseEntityPKAttribute: releaseEntityPKAttribute) ]
+            $[ call CheckIfReleasedEntity(entity: toEntity)->(isReleasedEntity: isReleasedToEntity) ]
             $[ if isReleasedToEntity ]
                 $[ continue ]
             $[/ if ]
@@ -253,18 +261,19 @@ $[/ send ]
         // Many-to-Many Relationship: ${relationship.name}
         // This will allow this detail page show the ${toEntity.name} objects associated with this ${entity.name} object.
         {
-            List<${toEntity|domain:JSONDTO|name}> list = ${toEntity|domain:Service|name|uncapitalize}.get${toEntity|domain:JSONDTO|name}ListAssociatedWith${entity|domain:Model|name}(id,0,10000, 1 /*levels*/);
+            List<${toEntity|domain:JSONDTO|name}> list = ${toEntity|domain:Service|name|uncapitalize}.get${toEntity|domain:JSONDTO|name}ListAssociatedWith${entity|domain:Model|name}($[ if isReleasedEntity ]releaseId, $[/ if ]id,0,10000, 1 /*levels*/);
             model.addAttribute("${relationship|domain:JSONDTO|name|uncapitalize}List", list);
         }
         $[/ foreach ]
 $[* FULL LISTS *]
         $[ foreach toEntity in toOneEntities ]
             $[ call AutoWireEntity(entity: toEntity) ]
+        // Full Lists
         {
             $[ if toEntity.hasParentRelationshipToEntity(entity) ]
-            List<${toEntity|domain:JSONDTO|name}> list = ${toEntity|domain:Service|name|uncapitalize}.get${toEntity|domain:JSONDTO|name}ListBy${entity|domain:Model|name}(id, 0, 1000, 1 /*levels*/);
+            List<${toEntity|domain:JSONDTO|name}> list = ${toEntity|domain:Service|name|uncapitalize}.get${toEntity|domain:JSONDTO|name}ListBy${entity|domain:Model|name}($[ if isReleasedEntity ]releaseId, $[/ if ]id, 0, 1000, 1 /*levels*/);
             $[ else ]
-            List<${toEntity|domain:JSONDTO|name}> list = ${toEntity|domain:Service|name|uncapitalize}.get${toEntity|domain:JSONDTO|name}List(0, 1000, 1 /*levels*/);
+            List<${toEntity|domain:JSONDTO|name}> list = ${toEntity|domain:Service|name|uncapitalize}.get${toEntity|domain:JSONDTO|name}List($[ if isReleasedEntity ]releaseId, $[/ if ]0, 1000, 1 /*levels*/);
             $[/ if ]
             model.addAttribute("${toEntity|domain:JSONDTO|name|uncapitalize}List", list);
         }

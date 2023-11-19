@@ -182,11 +182,38 @@ $[/ function ]
 $[ function CheckIfReleasedEntity
    (entity
    )->
-   (isReleasedEntity,
-    releaseEntityPKAttribute
+   (isReleasedEntity
    ) ]
     $[ let isReleasedEntity = entity.isCompositeEntity && entity.isInRealm("Released") ]
-    $[ if isReleasedEntity ]
-        $[ let releaseEntityPKAttribute = (entity.getAnyConstituentEntity("release")).primaryKeyAttribute ]
+$[/ function ]
+$[ function GetReleaseEntityPKAttribute
+   (entity
+   )->
+   (releaseEntityPKAttribute
+   ) ]
+    $[ let isReleasedEntity = entity.isCompositeEntity && entity.isInRealm("Released") ]
+    $[ if !isReleasedEntity ]
+        $[ return ]
+    $[/ if ]
+    $[ let releaseEntity = entity.getAnyConstituentEntity("release") ]
+    $[ if releaseEntity != null ]
+        $[ let releaseEntityPKAttribute = releaseEntity.primaryKeyAttribute ]
+    $[/ if ]
+$[/ function ]
+$[ function GetRelationshipToReleaseEntity
+   (entity
+   )->
+   (relationship
+   ) ]
+    $[ let isReleasedEntity = entity.isCompositeEntity && entity.isInRealm("Released") ]
+    $[ if !isReleasedEntity ]
+        $[ return ]
+    $[/ if ]
+    $[ let releaseEntity = entity.getAnyConstituentEntity("release") ]
+    $[ let relationship = null ]
+    $[ if releaseEntity != null ]
+        $[ if entity.hasRelationshipToEntityNamed(releaseEntity.name) ]
+            $[ let relationship = entity.getRelationshipWithToEntity(releaseEntity) ]
+        $[/ if ]
     $[/ if ]
 $[/ function ]

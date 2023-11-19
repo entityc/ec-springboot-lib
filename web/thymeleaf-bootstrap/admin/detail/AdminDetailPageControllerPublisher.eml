@@ -21,7 +21,8 @@ $[ publisher org.entityc.springboot.web.admin.controller.detail
         $[ let htmlFilename = "admin/" + domainEntity.name + "_detail" ]
         $[ let entityDtoClassName = entity|domain:JSONDTO|name ]
         $[ let className = entity.name + "DetailController" ]
-        $[ call CheckIfReleasedEntity(entity: entity)->(isReleasedEntity: isReleasedEntity, releaseEntityPKAttribute: releaseEntityPKAttribute) ]
+        $[ call CheckIfReleasedEntity(entity: entity)->(isReleasedEntity: isReleasedEntity) ]
+        $[ call GetReleaseEntityPKAttribute(entity: entity)->(releaseEntityPKAttribute: releaseEntityPKAttribute) ]
 $[******************************************]
         $[ file filedir className "java" ]
 $[******************************************]
@@ -109,9 +110,9 @@ $[ outlet securityReadAnnotation
 $[/ outlet ]
     public String get${domainEntity.name}Detail(
             Model model,
-$[ if isReleasedEntity]
+            $[ if isReleasedEntity ]
             @RequestParam("releaseId") ${releaseEntityPKAttribute.type|language} releaseId,
-$[/if]
+            $[/ if ]
             @PathVariable("id") ${pkTypeName} id
     ) throws ServiceException {
 $[ outlet securityReadMethod
@@ -120,7 +121,7 @@ $[ outlet securityReadMethod
 $[/ outlet ]
 
         // Get the DTO object by its ID and add it in the page model
-        ${entityDtoClassName} dto = ${serviceName|uncapitalize}.get${entityDtoClassName}ById($[if isReleasedEntity]releaseId, $[/if]id, 1 /*levels*/);
+        ${entityDtoClassName} dto = ${serviceName|uncapitalize}.get${entityDtoClassName}ById($[ if isReleasedEntity ]releaseId, $[/ if ]id, 1 /*levels*/);
         model.addAttribute("${entityDtoClassName|uncapitalize}", dto);
 $[ outlet getBody
    D "The author can include anything here in the body of the get method."

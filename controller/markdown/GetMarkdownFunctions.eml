@@ -2,11 +2,11 @@ $[ language java ]
 $[ D summary, main "Functions that generate markdown documentation about GET endpoints." ]
 
 $[ function getByIdMarkdown
-   D "Generates markdown documentation for the get by ID endpoint." 
+   D "Generates markdown documentation for the get by ID endpoint."
    (entity
-    D "The entity corresponding to the get endpoint documentation to generate." ,
+    D "The entity corresponding to the get endpoint documentation to generate.",
     apiUrlPrefix
-    D "The start of all admin URLs." 
+    D "The start of all admin URLs."
    )
 ]
 ## Get ${entity|title} by ID
@@ -40,6 +40,9 @@ The body of the response is JSON containing the following fields:
         $[/ foreach ]
         $[ if relationshipList#count > 0 ]
             $[ foreach relationship in relationshipList ]
+                $[ if relationship.to.entity == null ]
+                    $[ log error ]In domain: ${relationship.domain.name}: Relationship ${relationship.relationship|fullname} (${relationship.relationship.to.entityName}) does not have a to entity!$[/ log ]
+                $[/ if ]
                 $[ if relationship.to.isOne ]
                     $[ if relationship.to.entity.entity.hasPrimaryKey && relationship.withViewName == "Reference" ]
 |`${relationship.name}.${relationship.to.view.primaryKeyAttribute.name}`|Primary key of contextual `${relationship.to.entity.entity.name}` object.|
@@ -59,7 +62,7 @@ The body of the response is JSON containing the following fields:
 $[/ function ]
 
 $[ function getListByParentMarkdown
-   D "Generates markdown documentation for the get list by parent endpoint." 
+   D "Generates markdown documentation for the get list by parent endpoint."
    (entity
     D "The entity corresponding to the get endpoint documentation to generate.",
     apiUrlPrefix

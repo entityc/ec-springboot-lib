@@ -247,7 +247,7 @@ $[ author to org.entityc.springboot.web.admin.html.detail ]
        D "This author provides the main body of the detail page."
     ]
         $[ call TableForEntity(dtoVariable: entity|domain:JSONDTO|name|uncapitalize, optShowMarkdownIcon: optShowMarkdownIcon, entity: entity, secondaryAttributeStack: null, adminUrlPrefix: adminUrlPrefix) ]
-        $[ call CheckIfReleasedEntity(entity: entity)->(isReleasedEntity: isReleasedEntity, releaseEntityPKAttribute: releaseEntityPKAttribute) ]
+        $[ call CheckIfReleasedEntity(entity: entity)->(isReleasedEntity: isReleasedEntity) ]
         $[ if entity.hasTag("release:top") ]
             $[ let buttonClass = "btn btn-success w-100" ]
             $[ let colClass = "col mb-2" ]

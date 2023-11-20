@@ -46,8 +46,10 @@ $[/ send ]
                     $[ if !toSelf ]
                         $[ call addAutoWired(domainEntity: _toEntity|domain:Service) ]
                     $[/ if ]
+                    $[ call GetRelationshipToReleaseEntity(entity: _toEntity.entity)->(relationship: relationshipToReleaseEntity) ]
+            // Relationship to one ${_toEntity.name}, filling in the whole ${_toEntity.name} object
             if (modelObject.get${relationship|domain:Model|name|capitalize}Id() != ${relationship.to.entity.pkType.isUUIDType ? "null":"0"}) {
-                Optional<${_toEntityModelClassName}> fieldObjectOptional = ${_toEntityRepository|name|uncapitalize}.getById(modelObject.get${relationship|domain:Model|name|capitalize}Id());
+                Optional<${_toEntityModelClassName}> fieldObjectOptional = ${_toEntityRepository|name|uncapitalize}.getById($[ if isReleasedToEntity ]modelObject.get${relationshipToReleaseEntity|name|capitalize}Id(), $[/ if ]modelObject.get${relationship|domain:Model|name|capitalize}Id());
                 if (!fieldObjectOptional.isPresent()) {
                     throw new EntityNotFoundException("${_toEntityModelClassName} not found.");
                 }

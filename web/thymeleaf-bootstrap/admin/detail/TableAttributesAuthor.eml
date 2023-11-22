@@ -163,6 +163,12 @@ $[ function RowForToOneRelationship
     $[ let displayAttributeName = domainRelationship.tagValue("display:attribute") ]
     $[ let valueVariableField = dtoVariable + "." + domainRelationship.name ]
     $[ let valueVariableName = valueVariableField + "." + displayAttributeName ]
+    $[ let releaseParam = "" ]
+    $[ call CheckIfReleasedEntity(entity: toEntity.entity)->(isReleasedEntity: isReleasedEntity) ]
+    $[ call GetRelationshipToReleaseEntity(entity: toEntity.entity)->(relationship: relationshipToReleasedEntity) ]
+    $[ if isReleasedEntity ]
+        $[ capture releaseParam ]+ '?releaseId=' + ${$}{${dtoVariable}.get${relationshipToReleasedEntity.name|capitalize}().getId()}$[/ capture ]
+    $[/ if ]
     $[ capture canEditVariable ]canEdit${entity|name}$[/ capture ]
 		<tr>
 			<th th:text="#{${entity|domain:StaticLocalization|name}.${domainRelationship|domain:StaticLocalization|name}}" scope="col" style="width:${fieldWidthStyle}">${domainRelationship|title}</th>
@@ -170,7 +176,7 @@ $[ function RowForToOneRelationship
             <td></td>
     $[/ if ]
 			<td $[ if domainRelationship#first ] scope="row"$[/ if ] style="width:auto">
-			<a th:if="${$}{${valueVariableField}!=null}" th:text="${$}{${valueVariableField}==null?'':${valueVariableName}}" th:href="@{'${adminUrlPrefix}/${toEntity|domain:APIPath|name}/' + ${$}{${valueVariableField}.id} + '/detail'}"></a>
+			<a th:if="${$}{${valueVariableField}!=null}" th:text="${$}{${valueVariableField}==null?'':${valueVariableName}}" th:href="@{'${adminUrlPrefix}/${toEntity|domain:APIPath|name}/' + ${$}{${valueVariableField}.id} + '/detail'${releaseParam}}"></a>
 			</td>
 			<td style="width:auto">
             <button th:if="${$}{${canEditVariable}}" type="button" class="btn btn-primary"

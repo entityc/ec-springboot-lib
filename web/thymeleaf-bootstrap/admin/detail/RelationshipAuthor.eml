@@ -4,7 +4,6 @@ $[ function RelationshipHeader
     <!-- -->
 	<!-- Table for Relationship: ${relationship|name} -->
     <!-- -->
-    <hr/>
 $[/ function ]
 
 $[ function SubObjectHeadingAndAddButton
@@ -17,7 +16,7 @@ $[ function SubObjectHeadingAndAddButton
 	    <div class="container g-0" th:if="${$}{!#lists.isEmpty(${relationship.name}List)$[ if includeCanAdd ] || canAdd${toEntity|name}$[/ if ]}">
             <div class="row">
                 <div class="col-md-auto">
-     	            <h3>${toEntity.entity|name|plural|title}</h3>
+     	            <h4>${toEntity.entity|name|plural|title}</h4>
                 </div>
     $[ if includeCanAdd ]
         $[ let actionUrl = (toEntity|domain:APIPath|name) + "/add" + "/{id}(id=${" + entityDtoClassName + ".id})" ]
@@ -122,11 +121,11 @@ $[ author to org.entityc.springboot.web.admin.html.detail ]
             $[ let validRelationship = toEntity.hasPrimaryParentRelationship && toEntity.entity.primaryParentEntity.name == entity.name ]
         <div class="accordion" th:if="${$}{!#lists.isEmpty(${relationship.name}List)$[ if validRelationship ] || canAdd${toEntity|name}$[/ if ]}" id="accordion_${relationship.name}">
           <div class="accordion-item">
-            <h2 class="accordion-header">
+            <h3 class="accordion-header">
               <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapse_${relationship.name}" aria-expanded="true" aria-controls="collapse_${relationship.name}">
             $[ call SubObjectHeadingAndAddButton(relationship: relationship, adminUrlPrefix: adminUrlPrefix, entityDtoClassName: entityDtoClassName, toEntity: toEntity, includeCanAdd: validRelationship) ]
               </button>
-            </h2>
+            </h3>
             <div id="collapse_${relationship.name}" class="accordion-collapse collapse" data-bs-parent="#accordion_${relationship.name}">
               <div class="accordion-body">
             $[ call MainTable(relationship: relationship, toEntity: toEntity, adminUrlPrefix: adminUrlPrefix) ]

@@ -42,7 +42,7 @@ $[/ send ]
             List<${fromDtoName}> dtoList = new ArrayList<>();
             List<${fromModelName}> list = ${fromRepoVarName}.get${fromModelName}ListAssociatedWith${toModelName}($[ if isReleasedEntity ]releaseId, $[/ if ]${toPKVarName}, start, limit);
             for(${fromModelName} modelObject : list) {
-                dtoList.add(dtoFromModel(modelObject, levels));
+                dtoList.add(dtoFromModel(modelObject, levels-1));
             }
             return dtoList;
         } catch (DataAccessException ex) {

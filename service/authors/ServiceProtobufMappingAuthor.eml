@@ -45,7 +45,7 @@ $[/ send ]
                 if (!fieldObject.isPresent()) {
                     throw new EntityNotFoundException("${_toEntityModelClassName} not found.");
                 }
-                builder.set${relationship|domain:Model|name|capitalize}($[ if toSelf ]this$[ else ]${_toEntity|domain:Service|name|uncapitalize}$[/ if ].protobufFromModel(fieldObject.get(), levels));
+                builder.set${relationship|domain:Model|name|capitalize}($[ if toSelf ]this$[ else ]${_toEntity|domain:Service|name|uncapitalize}$[/ if ].protobufFromModel(fieldObject.get(), levels-1));
 $[*                builder.set${relationship|domain:Model|name|capitalize}(${_toEntityMapperVariableName}.toProtobufFromModel(fieldObject.get()), levels); *]
             }
                 $[ elseif relationship.to.isMany && relationship.withViewName != "Reference" ]
@@ -61,10 +61,10 @@ $[/ send ]
                     $[ if relationship.relationship.isImplicit ]
             List<${_toEntityModelClassName}> items = ${_toEntityRepository|name|uncapitalize}.get${_toEntity|domain:Model|name|capitalize}ListAssociated${bySomething}(${byArgument}0, 10000);
             for( ${_toEntityModelClassName} item : items ) {
-                builder.add${relationship|domain:Model|name|capitalize}(${_toEntityMapperVariableName}.toProtobufFromModel(item, levels));
+                builder.add${relationship|domain:Model|name|capitalize}(${_toEntityMapperVariableName}.toProtobufFromModel(item, levels-1));
             }
                     $[ else ]
-            builder.addAll${relationship|domain:Model|name|capitalize}($[ if toSelf ]this$[ else ]${_toEntity|domain:Service|name|uncapitalize}$[/ if ].get${_toEntity|domain:ProtobufDTO|name|capitalize}PBList${bySomething}(${byArgument}0, 10000, levels).getItemList());
+            builder.addAll${relationship|domain:Model|name|capitalize}($[ if toSelf ]this$[ else ]${_toEntity|domain:Service|name|uncapitalize}$[/ if ].get${_toEntity|domain:ProtobufDTO|name|capitalize}PBList${bySomething}(${byArgument}0, 10000, levels-1).getItemList());
                     $[/ if ]
                 $[/ if ]
             $[/ foreach ]

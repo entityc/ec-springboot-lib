@@ -8,7 +8,7 @@ $[ author to org.entityc.springboot.controller ]
     ]
         $[ let defaultStart = 0 ]
         $[ let defaultLimit = 10 ]
-        $[ let defaultLevels = 5 ]
+        $[ let defaultLevels = 1 ]
 $[ send imports ]
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;

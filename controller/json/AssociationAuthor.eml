@@ -59,7 +59,7 @@ $[/ outlet ]
             ) throws ServiceException {
         final int queryStart = ResourceUtils.defaultTo(start, 0);
         final int queryLimit = ResourceUtils.defaultTo(limit, 10);
-        final int queryLevels = ResourceUtils.defaultTo(levels, 5);
+        final int queryLevels = ResourceUtils.defaultTo(levels, 1);
         List<${fromDtoName}> results = ${fromService}.get${fromDtoName}ListAssociatedWith${toModelName}($[ if isReleasedEntity ]releaseId, $[/ if ]id, queryStart, queryLimit, queryLevels);
         HttpHeaders headers = new HttpHeaders();
         headers.add("X-Total-Count", "" + results.size());

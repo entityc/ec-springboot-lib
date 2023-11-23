@@ -9,6 +9,7 @@ $[ function RowForAssetAttribute
     $[ let domainUrlAttribute = secondaryEntity.attributeTagged("url") ]
     $[ let attributeName = dtoVariable + "." + domainAttribute.name ]
     $[ let urlAttributeName = attributeName + "." + domainUrlAttribute.name ]
+    $[ call CheckIfReleasedEntity(entity: entity)->(isReleasedEntity: isReleasedEntity) ]
     $[ capture canEditVariable ]canEdit${entity|name}$[/ capture ]
         <tr>
 			<th th:text="#{${entity|domain:StaticLocalization|name}.${domainAttribute|domain:StaticLocalization|name}}" scope="col" style="width:${fieldWidthStyle}">${domainAttribute|title}</th>
@@ -21,11 +22,13 @@ $[ function RowForAssetAttribute
     $[/ if ]
                 </div>
             </td>
+    $[ if !isReleasedEntity ]
             <td style="width:1%">
             <button th:if="${$}{${canEditVariable}}" type="button" class="btn btn-primary"
                 data-bs-toggle="modal" data-bs-target="#${editModalType}UploadModal" data-bs-field-name="${domainAttribute|name}"
                 data-bs-field-title="${domainAttribute|title}">Edit</button>
             </td>
+    $[/ if ]
         </tr>
 $[/ function ]
 
@@ -38,6 +41,7 @@ $[ function RowForAttribute
     dtoVariable,
     entityVariablePrefix
    ) ]
+    $[ call CheckIfReleasedEntity(entity: entity)->(isReleasedEntity: isReleasedEntity) ]
 		<tr>
 			<th th:text="#{${entity|domain:StaticLocalization|name}.${domainAttribute|domain:StaticLocalization|name}}" scope="col" style="width:${fieldWidthStyle}">${domainAttribute|title}</th>
     $[ if domainAttribute.hasTag("markdown") ]
@@ -138,10 +142,12 @@ $[ function RowForAttribute
             $[/ foreach ]
             $[ let fieldName = fieldNamePrefix + "." + fieldName ]
         $[/ if ]
+        $[ if !isReleasedEntity ]
             <button th:if="${$}{${canEditVariable}}" type="button" class="btn btn-primary"
                 data-bs-toggle="modal" data-bs-target="#${editModalType}EditModal" data-bs-field-name="${fieldName}"
                 data-bs-field-title="${domainAttribute|title}"
                 th:attr="data-bs-field-value=${$}{${valueVariableName}}">Edit</button>
+        $[/ if ]
     $[/ if ]
             </td>
 		</tr>
@@ -201,6 +207,7 @@ $[ function TableForEntity
     $[ let domainEntity = entity|domain:AdminUI ]
     $[ let entityVariablePrefix = entity|name|uncapitalize ]
 	    <!-- Table for Entity: ${domainEntity|name} -->
+	    <!-- [Template] ${__template.name}:${__outlet.name} < ${__author.template.name} -->
 		<table class="table">
     $[ if entity.isSecondary && secondaryAttributeStack != null && secondaryAttributeStack.count > 0 ]
         $[ let secondaryAttribute = secondaryAttributeStack.last() ]

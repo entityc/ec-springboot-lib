@@ -180,7 +180,7 @@ $[ author to org.entityc.springboot.web.admin.controller.detail ]
                 $[ else ]
                     $[ capture byClause ]By${relationship.reverseRelationship|domain:Model|name|capitalize}$[/ capture ]
                 $[/ if ]
-            List<${toEntity|domain:JSONDTO|name}> list = ${toEntity|domain:Service|name|uncapitalize}.get${toEntity|domain:JSONDTO|name}List${byClause}($[ if isReleasedEntity ]releaseId, $[/ if ]id, 0, 1000, 1 /*levels*/);
+            List<${toEntity|domain:JSONDTO|name}> list = ${toEntity|domain:Service|name|uncapitalize}.get${toEntity|domain:JSONDTO|name}List${byClause}($[ if isReleasedEntity ]releaseId, $[/ if ]id, 0, 1000, 0 /*levels*/);
             model.addAttribute("${relationship.name}List", list);
             boolean canAdd = ${toEntity|domain:Service|name|uncapitalize}.canCreate();
             model.addAttribute("canAdd${toEntity|name}", canAdd);
@@ -214,7 +214,7 @@ $[* FILTER LISTS *]
 $[ send imports ]
 import ${filterAttribute.type|domain:Model|fullname};
 $[/ send ]
-            List<${filterAttribute.entity|domain:JSONDTO|name}> list = ${filterAttribute.entity|domain:Service|name|uncapitalize}.get${filterAttribute.entity|domain:JSONDTO|name}ListBy${filterAttribute|domain:Model|name|capitalize}(${filterAttributeValue}, 0, 1000, 1 /*levels*/);
+            List<${filterAttribute.entity|domain:JSONDTO|name}> list = ${filterAttribute.entity|domain:Service|name|uncapitalize}.get${filterAttribute.entity|domain:JSONDTO|name}ListBy${filterAttribute|domain:Model|name|capitalize}(${filterAttributeValue}, 0, 1000, 0 /*levels*/);
             model.addAttribute("${relationship|domain:JSONDTO|name|uncapitalize}List", list);
         }
                 $[ elseif adminRelationship.hasTag("filter:relationship") ]
@@ -234,7 +234,7 @@ $[/ send ]
 $[ send imports ]
 import ${toEntity|domain:JSONDTO|fullname};
 $[/ send ]
-            List<${toEntity|domain:JSONDTO|name}> list = ${toEntity|domain:Service|name|uncapitalize}.get${toEntity|domain:JSONDTO|name}ListBy${filterToEntity|domain:Model|name|capitalize}($[ if isReleasedEntity ]releaseId, $[/ if ]dto.get${filterRelationship|domain:JSONDTO|name|capitalize}().get${filterToEntityPK|domain:JSONDTO|name|capitalize}(), 0, 1000, 1 /*levels*/);
+            List<${toEntity|domain:JSONDTO|name}> list = ${toEntity|domain:Service|name|uncapitalize}.get${toEntity|domain:JSONDTO|name}ListBy${filterToEntity|domain:Model|name|capitalize}($[ if isReleasedEntity ]releaseId, $[/ if ]dto.get${filterRelationship|domain:JSONDTO|name|capitalize}().get${filterToEntityPK|domain:JSONDTO|name|capitalize}(), 0, 1000, 0 /*levels*/);
             model.addAttribute("${toEntity|domain:JSONDTO|name|uncapitalize}List", list);
         }
                 $[ else ]
@@ -260,7 +260,7 @@ $[/ send ]
         // Many-to-Many Relationship: ${relationship.name}
         // This will allow this detail page show the ${toEntity.name} objects associated with this ${entity.name} object.
         {
-            List<${toEntity|domain:JSONDTO|name}> list = ${toEntity|domain:Service|name|uncapitalize}.get${toEntity|domain:JSONDTO|name}ListAssociatedWith${entity|domain:Model|name}($[ if isReleasedEntity ]releaseId, $[/ if ]id,0,10000, 1 /*levels*/);
+            List<${toEntity|domain:JSONDTO|name}> list = ${toEntity|domain:Service|name|uncapitalize}.get${toEntity|domain:JSONDTO|name}ListAssociatedWith${entity|domain:Model|name}($[ if isReleasedEntity ]releaseId, $[/ if ]id,0,10000, 0 /*levels*/);
             model.addAttribute("${relationship|domain:JSONDTO|name|uncapitalize}List", list);
         }
         $[/ foreach ]
@@ -270,9 +270,9 @@ $[* FULL LISTS *]
         // Full Lists
         {
             $[ if toEntity.hasParentRelationshipToEntity(entity) ]
-            List<${toEntity|domain:JSONDTO|name}> list = ${toEntity|domain:Service|name|uncapitalize}.get${toEntity|domain:JSONDTO|name}ListBy${entity|domain:Model|name}($[ if isReleasedEntity ]releaseId, $[/ if ]id, 0, 1000, 1 /*levels*/);
+            List<${toEntity|domain:JSONDTO|name}> list = ${toEntity|domain:Service|name|uncapitalize}.get${toEntity|domain:JSONDTO|name}ListBy${entity|domain:Model|name}($[ if isReleasedEntity ]releaseId, $[/ if ]id, 0, 1000, 0 /*levels*/);
             $[ else ]
-            List<${toEntity|domain:JSONDTO|name}> list = ${toEntity|domain:Service|name|uncapitalize}.get${toEntity|domain:JSONDTO|name}List($[ if isReleasedEntity ]releaseId, $[/ if ]0, 1000, 1 /*levels*/);
+            List<${toEntity|domain:JSONDTO|name}> list = ${toEntity|domain:Service|name|uncapitalize}.get${toEntity|domain:JSONDTO|name}List($[ if isReleasedEntity ]releaseId, $[/ if ]0, 1000, 0 /*levels*/);
             $[/ if ]
             model.addAttribute("${toEntity|domain:JSONDTO|name|uncapitalize}List", list);
         }

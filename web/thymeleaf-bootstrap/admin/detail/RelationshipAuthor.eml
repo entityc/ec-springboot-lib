@@ -175,12 +175,14 @@ $[ author to org.entityc.springboot.web.admin.controller.detail ]
         // a UI element that allows the user to select a value to assign to the `${relationship.name}` field.
         // [Template] ${__template.name}:${__outlet.name} < ${__author.template.name}
         {
+                $[ let levels = 0 ]
                 $[ if entity.hasTag("release:top") ]
                     $[ let byClause = "" ]
                 $[ else ]
+                    $[ let levels = 1 ]
                     $[ capture byClause ]By${relationship.reverseRelationship|domain:Model|name|capitalize}$[/ capture ]
                 $[/ if ]
-            List<${toEntity|domain:JSONDTO|name}> list = ${toEntity|domain:Service|name|uncapitalize}.get${toEntity|domain:JSONDTO|name}List${byClause}($[ if isReleasedEntity ]releaseId, $[/ if ]id, 0, 1000, 0 /*levels*/);
+            List<${toEntity|domain:JSONDTO|name}> list = ${toEntity|domain:Service|name|uncapitalize}.get${toEntity|domain:JSONDTO|name}List${byClause}($[ if isReleasedEntity ]releaseId, $[/ if ]id, 0, 1000, ${levels} /*levels*/);
             model.addAttribute("${relationship.name}List", list);
             boolean canAdd = ${toEntity|domain:Service|name|uncapitalize}.canCreate();
             model.addAttribute("canAdd${toEntity|name}", canAdd);

@@ -70,6 +70,7 @@ $[ function buildOverrides
 $[/ function ]
 
 $[ import "doc/SourceHeaders" ]
+$[ import "release/ReleaseFunctions" ]
 $[ file domain.namespace|path "README" "md" ]
 # Model Classes
 
@@ -121,6 +122,7 @@ $[ foreach module in space.modules if !module.isIncluded ]
         $[ file domain.namespace|path entity|domain|name "java" ]
             $[ publisher springboot.model ]
                 $[ call entityHeader(title: "This is the Model class for following entity.") ]
+                $[ call CheckIfReleasedEntity(entity: entity)->(isReleasedEntity: isReleasedEntity) ]
 package ${domain.namespace};
 
 import java.util.Date;
@@ -151,6 +153,12 @@ $[/ send ]
                 $[ else ]
 @Entity
 @Data
+                    $[ if isReleasedEntity ]
+@Immutable
+$[send imports]
+import org.hibernate.annotations.Immutable;
+$[/send]
+                    $[/ if ]
 @NoArgsConstructor
 @AllArgsConstructor
 $[ outlet classAnnotations
@@ -299,8 +307,8 @@ $[/ send ]
                     $[/ if ]
                 $[/ foreach ]
 $[*  RELATIONSHIPS *]
-                $[ foreach d_relationship in (entity|domain|view:Default).relationships if d_relationship.to.isAsPrimaryKey]
-                    $[let relationship = d_relationship.relationship]
+                $[ foreach d_relationship in (entity|domain|view:Default).relationships if d_relationship.to.isAsPrimaryKey ]
+                    $[ let relationship = d_relationship.relationship ]
                     $[ if !entity.isSecondary ]
     @Column(name = "${relationship|domain:Database|name}_id") // relationship
                     $[/ if ]

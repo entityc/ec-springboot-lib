@@ -160,7 +160,7 @@ $[ outlet securityWriteMethod
    D "This is where an author place code that checks for specific access rights."
 ]
 $[/ outlet ]
-        ${entity|domain:Model|name} object = ${serviceName|uncapitalize}.get${entity|domain:Model|name}ById(id, 0 /*levels*/);
+        ${entity|domain:Model|name} object = ${serviceName|uncapitalize}.get${entity|domain:Model|name}ById(id, 0 /*is 0 level since we are just updating this object*/);
                     $[ if isUserEntity ]
 $[ send imports ]
 import ${entity|domain:Model|fullname};

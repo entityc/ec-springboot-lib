@@ -63,7 +63,7 @@ $[let setupRepo = space.getRepository("SetupRepo")]
             output primary Project
         }
 
-        template SecurityTemplate in "security" {
+        template SecurityTemplate in "security/standalone" {
             output primary ServerCode
         }
 

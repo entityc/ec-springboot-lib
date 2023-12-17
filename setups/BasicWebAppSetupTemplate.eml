@@ -6,7 +6,7 @@ $[ D "compiler input files to generate the application." ]
 
 $[ let repoTag = "production" ]
 $[ let stdLibRepoName = "ec-std-lib" ]
-$[ let stdLibRepoTag = "v0.9.9" ]
+$[ let stdLibRepoTag = "v0.10.0" ]
 
 $[* -------------- PROMPTS -------------- *]
 $[ log ]$[/ log ]

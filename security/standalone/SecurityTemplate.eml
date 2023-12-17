@@ -77,7 +77,7 @@ $[/ send ]
             $[/ if ]
         $[/ author ]
     $[/ author ]
-    $[ author to deleteById, associate, createWithParent, update, release, deleteByRelationship, create ]
+    $[ author to deleteById, associate, createWithParent, update, deleteByRelationship, create ]
         $[ author to outlet annotation
            D "Make sure the user has write permission for these methods."
         ]

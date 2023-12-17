@@ -334,7 +334,7 @@ $[author to org.entityc.springboot.service]
         Gets a list of ${entity.name} objects that the logged in user has permission to read.
         [Template] ${__template.name}:${__outlet.name} < ${__author.template.name}
      */
-    public List<${dtoName}> get${dtoName}ListFor${userModelName}(long start, int limit, boolean hierarchical) throws ServiceException {
+    public List<${dtoName}> get${dtoName}ListFor${userModelName}(long start, int limit, int levels) throws ServiceException {
         ${userEntity|domain:Model|name} user = userDetailsService.findBy${usernameAttribute|domain:Model|name|capitalize}(securityService.findLoggedInUsername());
         Set<Role> roles = user.getRoles();
         List<${modelName}> list = null;
@@ -349,7 +349,7 @@ $[author to org.entityc.springboot.service]
         }
         List<${dtoName}> dtoList = new ArrayList<>();
         for(${modelName} modelObject : list) {
-            dtoList.add(dtoFromModel(modelObject, hierarchical));
+            dtoList.add(dtoFromModel(modelObject, levels));
         }
         return dtoList;
     }

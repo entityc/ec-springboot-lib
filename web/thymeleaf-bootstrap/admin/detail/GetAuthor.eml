@@ -1,0 +1,40 @@
+$[ author to org.entityc.springboot.web.admin.controller.detail ]
+    $[ author to outlet getBody
+       D "This author is designed to add code that populates the page model to have enum related"
+       D "information. It also supports multilevel secondary attributes."
+    ]
+        $[ let entityVariablePrefix = entity|name|uncapitalize ]
+        $[ foreach attribute in entity.flatAttributeList ]
+            $[ let getMethod = "" ]
+            $[ let fullAttributeName = "" ]
+            $[ let hasArray = false ]
+            $[ if attribute.isSecondary ]
+                $[ foreach secondaryAttribute in attribute.path ]
+                    $[ if secondaryAttribute.isArray ]
+                        $[ let hasArray = true ]
+                        $[ break ]
+                    $[/ if ]
+                    $[ let getMethod = getMethod + ".get" + (secondaryAttribute|domain:JSONDTO|name|capitalize) + "()" ]
+                    $[ let fullAttributeName = fullAttributeName + "_" + secondaryAttribute.name ]
+                $[/ foreach ]
+            $[ else ]
+                $[ let getMethod = ".get" + (attribute.name|capitalize) + "()" ]
+                $[ let fullAttributeName = "_" + (attribute|name) ]
+            $[/ if ]
+            $[ if hasArray ]$[ continue ]$[/ if ]
+            $[ if attribute.type.isEnumType ]
+
+        // Add values for enum: ${attribute.type.name}
+                $[ if attribute.isArray ]
+        model.addAttribute("${entityVariablePrefix}${fullAttributeName}_text", dto${getMethod}.stream().map(e -> e.getTitle()).collect(Collectors.joining(", ")));
+                    $[ let valueVariableName = entityVariablePrefix + fullAttributeName + "_enum_values" ]
+        model.addAttribute("${valueVariableName}", dto${getMethod}.stream().map(e -> e.getNumberValue()).collect(Collectors.toSet()));
+                $[ else ]
+        model.addAttribute("${entityVariablePrefix}${fullAttributeName}_text", dto${getMethod}.getTitle());
+                    $[ let valueVariableName = entityVariablePrefix + fullAttributeName + "_enum_value" ]
+        model.addAttribute("${valueVariableName}", dto${getMethod}.getNumberValue());
+                $[/ if ]
+            $[/ if ]
+        $[/ foreach ]
+    $[/ author ]
+$[/ author ]

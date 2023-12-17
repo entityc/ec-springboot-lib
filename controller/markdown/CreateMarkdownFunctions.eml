@@ -30,7 +30,7 @@ The body of the POST is JSON containing only the following fields:
 |`${domainAttribute.name}`|${domainAttribute.description}|
         $[/ foreach ]
         $[ if relationshipList#count > 0 ]
-            $[ foreach relationship in relationshipList ]
+            $[ foreach relationship in relationshipList if relationship.to != null && relationship.to.entity != null]
                 $[ if relationship.to.isOne && relationship.to.entity.hasPrimaryKey ]
 |`${relationship.name}.${relationship.to.entity.primaryKeyAttribute.name}`|Primary key of contextual `${relationship.to.entity.entity.name}` object.|
                 $[/ if ]

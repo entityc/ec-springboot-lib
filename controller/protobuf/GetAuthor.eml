@@ -1,13 +1,19 @@
 $[ language java ]
 $[ D summary, main "This contains an author that generates various get endpoint methods for a controller class" ]
 $[ D summary, main "based on protobuf requests and responses." ]
+$[ import "release/ReleaseFunctions" ]
 
 $[ author to org.entityc.springboot.controller.protobuf ]
     $[ author to outlet methods
        D "Adds get endpoints to the controller class for its entity."
     ]
+        $[ let defaultStart = 0 ]
+        $[ let defaultLimit = 10 ]
+        $[ let defaultLevels = 5 ]
         $[ let protobufNamespace = (space|domain:ProtobufDTO).domain.namespace ]
         $[ capture fullProtobufClassName ]${module.name|capitalize}.${entity|domain:ProtobufDTO|name}$[/ capture ]
+        $[ call CheckIfReleasedEntity(entity: entity)->(isReleasedEntity: isReleasedEntity) ]
+        $[ call GetReleaseEntityPKAttribute(entity: entity)->(releaseEntityPKAttribute: releaseEntityPKAttribute) ]
 $[ send imports ]
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
@@ -33,8 +39,14 @@ $[ outlet annotation
    D "Resides just above the method declaration in the annocation area."
 ]
 $[/ outlet ]
-    public ${fullProtobufClassName} get${entity|domain:Model|name}PBById(@PathVariable("id") ${entity.pkType|language} id) throws ServiceException {
-        return ${service}.get${entity|domain:Model|name|capitalize}PBById(id);
+    public ${fullProtobufClassName} get${entity|domain:Model|name}PBById(
+                $[ if isReleasedEntity ]
+        @RequestParam(value = "releaseId", required = true) ${releaseEntityPKAttribute.type|language} releaseId,
+                $[/ if ]
+        @PathVariable("id") ${entity.pkType|language} id,
+        @RequestParam(value = "levels", required = false) Integer levels
+    ) throws ServiceException {
+        return ${service}.get${entity|domain:Model|name|capitalize}PBById($[ if isReleasedEntity ]releaseId, $[/ if ]id, ResourceUtils.defaultTo(levels, ${defaultLevels}));
     }
 
             $[/ if ]
@@ -53,6 +65,9 @@ $[ outlet annotation
 ]
 $[/ outlet ]
     public ResponseEntity<${fullProtobufClassName}List> get${entity|domain:Model|name}PBList(
+            $[ if isReleasedEntity ]
+        @RequestParam(value = "releaseId", required = true) ${releaseEntityPKAttribute.type|language} releaseId,
+            $[/ if ]
             $[ let hasParentId = entity.hasPrimaryParentRelationship ]
             $[ if hasParentId ]
                 $[ let relationship = entity.primaryParentRelationship ]
@@ -71,22 +86,24 @@ $[ outlet parameters
 ]
 $[/ outlet ]
         @RequestParam(value = "start", required = false) Integer start,
-        @RequestParam(value = "limit", required = false) Integer limit)
+        @RequestParam(value = "limit", required = false) Integer limit,
+        @RequestParam(value = "levels", required = false) Integer levels)
         throws ServiceException {
 $[ outlet declarations
    D "This is where you want to include variable declarations."
 ]
 $[/ outlet ]
-        final int queryStart = ResourceUtils.defaultTo(start, 0);
-        final int queryLimit = ResourceUtils.defaultTo(limit, 10);
+        final int queryStart = ResourceUtils.defaultTo(start, ${defaultStart});
+        final int queryLimit = ResourceUtils.defaultTo(limit, ${defaultLimit});
+        final int queryLevels = ResourceUtils.defaultTo(levels, ${defaultLevels});
         ${fullProtobufClassName}List results = null;
             $[ let indent = hasParentId ? "    ":"" ]
             $[ if hasParentId ]
         if (${parentId} != ${isNativeId ? "0":"null"}) {
-            results = ${service}.get${modelName|capitalize}PBListBy${parentName}(${parentIdArg}, queryStart, queryLimit, false);
+            results = ${service}.get${modelName|capitalize}PBListBy${parentName}($[ if isReleasedEntity ]releaseId, $[/ if ]${parentIdArg}, queryStart, queryLimit, queryLevels);
         } else {
             $[/ if ]
-        ${indent}results = ${service}.get${modelName|capitalize}PBList(queryStart, queryLimit, false);
+        ${indent}results = ${service}.get${modelName|capitalize}PBList($[ if isReleasedEntity ]releaseId, $[/ if ]queryStart, queryLimit, queryLevels);
             $[ if hasParentId ]
         }
             $[/ if ]
@@ -97,10 +114,61 @@ $[/ outlet ]
     }
 
         $[/ publisher ]
+$[**********************************
+          * GET LIST BY ATTRIBUTE
+          **********************************]
+        $[ publisher org.entityc.springboot.controller.getListByAttribute
+           D "Get List by Attribute Endpoint"
+        ]
+            $[ foreach attribute in entity.attributes ]
+                $[ if attribute.isParent && !attribute.isSequential ]
+                    $[ if attribute.type.isEnumType ]
+$[ send imports ]
+import ${attribute.type|domain:Model|fullname};
+$[/ send ]
+                    $[/ if ]
+    // [Template] ${__template.name}:${__outlet.name} < ${__author.template.name}
+    @RequestMapping(
+        path = "/${attribute|domain:APIPath|name}/{value}",
+        method = RequestMethod.GET,
+        produces = "application/x-protobuf-lite"
+    )
+$[ outlet annotation
+   D "Resides just above the method declaration in the annocation area."
+]
+$[/ outlet ]
+    public ResponseEntity<${fullProtobufClassName}List> get${entity|domain:Model|name}PBListBy${attribute.name|capitalize}(
+                $[ if isReleasedEntity ]
+            @RequestParam(value = "releaseId", required = true) ${releaseEntityPKAttribute.type|language} releaseId,
+                $[/ if ]
+            @PathVariable("value") ${attribute.type|language} value,
+            @RequestParam(value = "start", required = false) Integer start,
+            @RequestParam(value = "limit", required = false) Integer limit,
+            @RequestParam(value = "levels", required = false) Integer levels)
+        throws ServiceException {
+        final int queryStart = ResourceUtils.defaultTo(start, 0);
+        final int queryLimit = ResourceUtils.defaultTo(limit, 10);
+        final int queryLevels = ResourceUtils.defaultTo(levels, ${defaultLevels});
+        ${fullProtobufClassName}List results = ${service}.get${entity|domain:Model|name|capitalize}PBListBy${attribute.name|capitalize}($[ if isReleasedEntity ]releaseId, $[/ if ]value, queryStart, queryLimit, queryLevels);
+        HttpHeaders headers = new HttpHeaders();
+        headers.add("X-Total-Count", "" + results.getItemCount());
+        headers.add("Access-Control-Expose-Headers", "X-Total-Count");
+        return new ResponseEntity(results, headers, HttpStatus.OK);
+    }
+
+                $[/ if ]
+            $[/ foreach ]
+        $[/ publisher ]
+$[**********************************
+          * GET LIST BY RELATIONSHIP
+          **********************************]
         $[ publisher org.entityc.springboot.controller.getListByRelationship
            D "Get List by Relationship Endpoint"
         ]
             $[ foreach relationship in entity.relationships ]
+                $[ let toEntity = relationship.to.entity ]
+                $[ if toEntity == null ]$[ continue ]$[/ if ]
+                $[ if toEntity == null || toEntity.hasTag("release:top") ]$[ continue ]$[/ if ]
                 $[ if relationship.isParent ]
     // [Template] ${__template.name}:${__outlet.name} < ${__author.template.name}
     @RequestMapping(
@@ -113,13 +181,18 @@ $[ outlet annotation
 ]
 $[/ outlet ]
     public ResponseEntity<${fullProtobufClassName}List> get${entity|domain:Model|name}PBListBy${relationship.name|capitalize}(
+                $[ if isReleasedEntity ]
+        @RequestParam(value = "releaseId", required = true) ${releaseEntityPKAttribute.type|language} releaseId,
+                $[/ if ]
         @PathVariable("id") ${relationship.to.entity.primaryKey.type|language} ${relationship.name}Id,
         @RequestParam(value = "start", required = false) Integer start,
-        @RequestParam(value = "limit", required = false) Integer limit)
+        @RequestParam(value = "limit", required = false) Integer limit,
+        @RequestParam(value = "levels", required = false) Integer levels)
         throws ServiceException {
         final int queryStart = ResourceUtils.defaultTo(start, 0);
         final int queryLimit = ResourceUtils.defaultTo(limit, 10);
-        ${fullProtobufClassName}List results = ${service}.get${entity|domain:Model|name|capitalize}PBListBy${relationship.name|capitalize}(${relationship.name}Id, queryStart, queryLimit, true);
+        final int queryLevels = ResourceUtils.defaultTo(levels, ${defaultLevels});
+        ${fullProtobufClassName}List results = ${service}.get${entity|domain:Model|name|capitalize}PBListBy${relationship.name|capitalize}($[ if isReleasedEntity ]releaseId, $[/ if ]${relationship.name}Id, queryStart, queryLimit, queryLevels);
         HttpHeaders headers = new HttpHeaders();
         headers.add("X-Total-Count", "" + results.getItemCount());
         headers.add("Access-Control-Expose-Headers", "X-Total-Count");

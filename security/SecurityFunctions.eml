@@ -131,7 +131,7 @@ $[function preAuthorizeEntity
 $[send imports]
 import org.springframework.security.access.prepost.PreAuthorize;
 $[/send]
-    @PreAuthorize("hasAnyRole(${hasRoleExpr})") // [Template] ${__template.name}:${__outlet.name} < ${__author.template.name}
+    //@PreAuthorize("hasAnyRole(${hasRoleExpr})") // [Template] ${__template.name}:${__outlet.name} < ${__author.template.name}
         $[/if]
     $[/if]
 $[/function]

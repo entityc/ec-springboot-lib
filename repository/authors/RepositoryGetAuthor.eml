@@ -5,6 +5,10 @@ $[ publisher org.entityc.springboot.repository.get ]
         $[ author to outlet methods
            D "Adds many get methods from get by ID to getting lists by parent relationships."
         ]
+            $[* Don't process composite entities here, a different author will do that *]
+            $[ if entity.isCompositeEntity]
+                $[return]
+            $[/ if ]
             $[ let hasCreationDate = false ]
             $[ foreach attribute in entity.effectiveAttributes|type single ]
                 $[ if attribute.isCreation ]
@@ -86,7 +90,7 @@ $[/ outlet ]
             "ORDER BY ${sortByAttribute|domain:Database|name} ${ascending ? "ASC":"DESC"} " +
                     $[/ if ]
             "LIMIT ?3 OFFSET ?2", nativeQuery = true)
-    List<${responseModelName}> get${responseModelName}ListBy${attribute.name|capitalize}($[if attribute.type.isEnumType()]int$[else]${attribute.type|language}$[/if] ${attribute|domain|name}, long start, int limit);
+    List<${responseModelName}> get${responseModelName}ListBy${attribute.name|capitalize}($[ if attribute.type.isEnumType() ]int$[ else ]${attribute.type|language}$[/ if ] ${attribute|domain|name}, long start, int limit);
 
                 $[/ if ]
             $[/ foreach ]

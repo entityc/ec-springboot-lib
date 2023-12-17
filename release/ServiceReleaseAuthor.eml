@@ -228,12 +228,12 @@ $[* RESET RELEASE WITH OTHER RELEASE *]
             $[ call lookForReleaseStructure(topReleaseEntity: entity)->(results: releaseStructure) ]
             $[ if releaseStructure != null ]
     // [Template] ${__template.name}:${__outlet.name} < ${__author.template.name}
-    public List<${responseDtoName}> getLocked${responseDtoName}List(long start, int limit, boolean hierarchical) throws ServiceException {
+    public List<${responseDtoName}> getLocked${responseDtoName}List(long start, int limit, int levels) throws ServiceException {
         try {
             List<${responseDtoName}> dtoList = new ArrayList<>();
             List<${responseModelName}> list = ${entity|domain:Repository|name|uncapitalize}.getLocked${responseModelName}List(start, limit);
             for(${responseModelName} modelObject : list) {
-                dtoList.add(dtoFromModel(modelObject, hierarchical));
+                dtoList.add(dtoFromModel(modelObject, levels));
             }
             return dtoList;
         } catch (DataAccessException ex) {

@@ -1,0 +1,26 @@
+$[ author to org.entityc.springboot.web.admin.controller.detail ]
+    $[ author to outlet getBody
+       D "This author adds values to help the controller to determine if the user should be able to edit"
+       D "the data or can just view it."
+    ]
+
+        // This code allows the controller to know if it should allow the user to edit the data. It is
+        // better to know up front than when it tries and gets an error.
+        $[ let isUserEntity = (entity|domain:Security).hasTag("user") ]
+        boolean canEdit = ${serviceName|uncapitalize}.canEdit(id);
+        model.addAttribute("canEdit${entity|name}", canEdit);
+        $[ let addedCanEditIf = false ]
+        $[ call writeAccessAttributes(entity: entity)->(attributeList: attributeWriteAccessList) ]
+        $[ foreach attribute in attributeWriteAccessList if !attribute.isSecondaryEntityType ]
+            $[ if !addedCanEditIf ]
+        if (canEdit) {
+                $[ let addedCanEditIf = true ]
+            $[/ if ]
+            boolean canUpdate${attribute|name|capitalize} = ${serviceName|uncapitalize}.canUpdateAttribute($[ if isUserEntity ]dto, $[/ if ]"${attribute|name}");
+            model.addAttribute("canEdit${entity|name}_${attribute|name}", canUpdate${attribute|name|capitalize});
+        $[/ foreach ]
+        $[ if addedCanEditIf ]
+        }
+        $[/ if ]
+    $[/ author ]
+$[/ author ]

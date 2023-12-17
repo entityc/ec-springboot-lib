@@ -1,10 +1,14 @@
 $[ language java ]
 $[ D summary, main "This contains an author that generates various get endpoint methods for a controller class." ]
+$[ import "release/ReleaseFunctions" ]
 
 $[ author to org.entityc.springboot.controller ]
     $[ author to outlet methods
        D "Adds get endpoints to the controller class for its entity."
     ]
+        $[ let defaultStart = 0 ]
+        $[ let defaultLimit = 10 ]
+        $[ let defaultLevels = 1 ]
 $[ send imports ]
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
@@ -18,6 +22,8 @@ $[/ send ]
            D "Get by ID endpoint"
         ]
             $[ if entity.hasPrimaryKey ]
+        $[ call CheckIfReleasedEntity(entity: entity)->(isReleasedEntity: isReleasedEntity) ]
+        $[ call GetReleaseEntityPKAttribute(entity: entity)->(releaseEntityPKAttribute: releaseEntityPKAttribute) ]
     // [Template] ${__template.name}:${__outlet.name} < ${__author.template.name}
     @RequestMapping(
         path = "/{id}",
@@ -28,13 +34,22 @@ $[ outlet annotation
    D "Resides just above the method declaration in the annocation area."
 ]
 $[/ outlet ]
-    public ${dtoClassName} get${modelName}ById(@PathVariable("id") ${entity.pkType|language} id) throws ServiceException {
-        return ${service}.get${entity|domain:JSONDTO|name|capitalize}ById(id);
+    public ${dtoClassName} get${modelName}ById(
+                $[ if isReleasedEntity ]
+        @RequestParam(value = "releaseId", required = true) ${releaseEntityPKAttribute.type|language} releaseId,
+                $[/ if ]
+        @PathVariable("id") ${entity.pkType|language} id,
+        @RequestParam(value = "levels", required = false) Integer levels
+    ) throws ServiceException {
+        return ${service}.get${entity|domain:JSONDTO|name|capitalize}ById($[ if isReleasedEntity ]releaseId, $[/ if ]id,  ResourceUtils.defaultTo(levels, ${defaultLevels}));
     }
 
             $[/ if ]
         $[/ publisher ]
 
+$[**********************************
+          * GET (full) LIST
+          **********************************]
         $[ publisher org.entityc.springboot.controller.getList
            D "Get List endpoint"
         ]
@@ -48,6 +63,9 @@ $[ outlet annotation
 ]
 $[/ outlet ]
     public ResponseEntity<List<${dtoClassName}>> get${modelName}List(
+            $[ if isReleasedEntity ]
+        @RequestParam(value = "releaseId", required = true) ${releaseEntityPKAttribute.type|language} releaseId,
+            $[/ if ]
             $[ let hasParentId = entity.hasPrimaryParentRelationship ]
             $[ if hasParentId ]
                 $[ let relationship = entity.primaryParentRelationship ]
@@ -66,25 +84,27 @@ $[ outlet parameters
 ]
 $[/ outlet ]
         @RequestParam(value = "start", required = false) Integer start,
-        @RequestParam(value = "limit", required = false) Integer limit)
+        @RequestParam(value = "limit", required = false) Integer limit,
+        @RequestParam(value = "levels", required = false) Integer levels)
         throws ServiceException {
 $[ outlet declarations
    D "This is where you want to include variable declarations."
 ]
 $[/ outlet ]
-        final int queryStart = ResourceUtils.defaultTo(start, 0);
-        final int queryLimit = ResourceUtils.defaultTo(limit, 10);
+        final int queryStart = ResourceUtils.defaultTo(start, ${defaultStart});
+        final int queryLimit = ResourceUtils.defaultTo(limit, ${defaultLimit});
+        final int queryLevels = ResourceUtils.defaultTo(levels, ${defaultLevels});
         List<${dtoClassName}> results = null;
             $[ let indent = hasParentId ? "    ":"" ]
             $[ if hasParentId ]
         if (${parentId} != ${isNativeId ? "0":"null"}) {
 $[ outlet parentGet ]
-            results = ${service}.get${entity|domain:JSONDTO|name|capitalize}ListBy${parentName}(${parentIdArg}, queryStart, queryLimit, false);
+            results = ${service}.get${entity|domain:JSONDTO|name|capitalize}ListBy${parentName}($[ if isReleasedEntity ]releaseId, $[/ if ]${parentIdArg}, queryStart, queryLimit, queryLevels);
 $[/ outlet ]
         } else {
             $[/ if ]
 $[ outlet noParentGet ]
-        ${indent}results = ${service}.get${entity|domain:JSONDTO|name|capitalize}List(queryStart, queryLimit, false);
+        ${indent}results = ${service}.get${entity|domain:JSONDTO|name|capitalize}List($[ if isReleasedEntity ]releaseId, $[/ if ]queryStart, queryLimit, ResourceUtils.defaultTo(levels, ${defaultLevels}));
 $[/ outlet ]
             $[ if hasParentId ]
         }
@@ -96,10 +116,61 @@ $[/ outlet ]
     }
 
         $[/ publisher ]
+$[**********************************
+          * GET LIST BY ATTRIBUTE
+          **********************************]
+        $[ publisher org.entityc.springboot.controller.getListByAttribute
+           D "Get List by Attribute Endpoint"
+        ]
+            $[ foreach attribute in entity.attributes ]
+                $[ if attribute.isParent && !attribute.isSequential ]
+                    $[ if attribute.type.isEnumType ]
+$[ send imports ]
+import ${attribute.type|domain:Model|fullname};
+$[/ send ]
+                    $[/ if ]
+    // [Template] ${__template.name}:${__outlet.name} < ${__author.template.name}
+    @RequestMapping(
+        path = "/${attribute|domain:APIPath|name}/{value}",
+        method = RequestMethod.GET,
+        produces = "application/json"
+    )
+$[ outlet annotation
+   D "Resides just above the method declaration in the annocation area."
+]
+$[/ outlet ]
+    public ResponseEntity<List<${dtoClassName}>> get${modelName}ListBy${attribute.name|capitalize}(
+                    $[ if isReleasedEntity ]
+        @RequestParam(value = "releaseId", required = true) ${releaseEntityPKAttribute.type|language} releaseId,
+                    $[/ if ]
+        @PathVariable("value") ${attribute.type|language} value,
+        @RequestParam(value = "start", required = false) Integer start,
+        @RequestParam(value = "limit", required = false) Integer limit,
+        @RequestParam(value = "levels", required = false) Integer levels)
+        throws ServiceException {
+        final int queryStart = ResourceUtils.defaultTo(start, ${defaultStart});
+        final int queryLimit = ResourceUtils.defaultTo(limit, ${defaultLimit});
+        final int queryLevels = ResourceUtils.defaultTo(levels, ${defaultLevels});
+        List<${dtoClassName}> results = ${service}.get${entity|domain:JSONDTO|name|capitalize}ListBy${attribute.name|capitalize}($[ if isReleasedEntity ]releaseId, $[/ if ]value, queryStart, queryLimit, queryLevels);
+        HttpHeaders headers = new HttpHeaders();
+        headers.add("X-Total-Count", "" + results.size());
+        headers.add("Access-Control-Expose-Headers", "X-Total-Count");
+        return new ResponseEntity(results, headers, HttpStatus.OK);
+    }
+
+                $[/ if ]
+            $[/ foreach ]
+        $[/ publisher ]
+$[**********************************
+          * GET LIST BY RELATIONSHIP
+          **********************************]
         $[ publisher org.entityc.springboot.controller.getListByRelationship
            D "Get List by Relationship Endpoint"
         ]
             $[ foreach relationship in entity.relationships ]
+                $[ let toEntity = relationship.to.entity ]
+                $[ if toEntity == null ]$[ continue ]$[/ if ]
+                $[ if toEntity == null || toEntity.hasTag("release:top") ]$[ continue ]$[/ if ]
                 $[ if relationship.isParent ]
     // [Template] ${__template.name}:${__outlet.name} < ${__author.template.name}
     @RequestMapping(
@@ -112,13 +183,18 @@ $[ outlet annotation
 ]
 $[/ outlet ]
     public ResponseEntity<List<${dtoClassName}>> get${modelName}ListBy${relationship.name|capitalize}(
+                    $[ if isReleasedEntity ]
+        @RequestParam(value = "releaseId", required = true) ${releaseEntityPKAttribute.type|language} releaseId,
+                    $[/ if ]
         @PathVariable("id") ${relationship.to.entity.primaryKey.type|language} ${relationship.name}Id,
         @RequestParam(value = "start", required = false) Integer start,
-        @RequestParam(value = "limit", required = false) Integer limit)
+        @RequestParam(value = "limit", required = false) Integer limit,
+        @RequestParam(value = "levels", required = false) Integer levels)
         throws ServiceException {
-        final int queryStart = ResourceUtils.defaultTo(start, 0);
-        final int queryLimit = ResourceUtils.defaultTo(limit, 10);
-        List<${dtoClassName}> results = ${service}.get${entity|domain:JSONDTO|name|capitalize}ListBy${relationship.name|capitalize}(${relationship.name}Id, queryStart, queryLimit, true);
+        final int queryStart = ResourceUtils.defaultTo(start, ${defaultStart});
+        final int queryLimit = ResourceUtils.defaultTo(limit, ${defaultLimit});
+        final int queryLevels = ResourceUtils.defaultTo(levels, ${defaultLevels});
+        List<${dtoClassName}> results = ${service}.get${entity|domain:JSONDTO|name|capitalize}ListBy${relationship.name|capitalize}($[ if isReleasedEntity ]releaseId, $[/ if ]${relationship.name}Id, queryStart, queryLimit, queryLevels);
         HttpHeaders headers = new HttpHeaders();
         headers.add("X-Total-Count", "" + results.size());
         headers.add("Access-Control-Expose-Headers", "X-Total-Count");

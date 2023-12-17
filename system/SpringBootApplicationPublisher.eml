@@ -8,6 +8,8 @@ $[receive distinct imports]
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
+$[outlet annotation D "This outlet is just above the `main()` method of the class and just above @SpringBootApplication."]
+$[/outlet]
 @SpringBootApplication
 public class ${applicationName}Application {
 

@@ -86,7 +86,7 @@ $[/ send ]
             $[/ if ]
         $[/ author ]
     $[/ author ]
-    $[ author to getById, getListByRelationship, getList ]
+    $[ author to getById, getListByAttribute, getListByRelationship, getList ]
         $[ author to outlet annotation
            D "Make sure the user has read permission for these methods."
         ]

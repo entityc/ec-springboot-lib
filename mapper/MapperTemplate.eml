@@ -79,8 +79,8 @@ $[********************************************************************
 
                 $[/ if ]
                 $[ let showAttributeComment = true ]
-                $[ foreach domainAttribute in (entity|domain:JSONDTO|view:APIGet).attributes|sort
-                        if !domainAttribute.attribute.isVirtual && !(domainAttribute.attribute|domain:DTOMapper).hasTag("exclude")]
+                $[ foreach domainAttribute in (entity|domain:JSONDTO|view:APIGet).attributes|sort if
+!domainAttribute.attribute.isVirtual && !(domainAttribute.attribute|domain:DTOMapper).hasTag("exclude") ]
                     $[ let attribute = domainAttribute.attribute ]
                     $[ let nullable = attribute.type|language hasNullable ]
                     $[ let attributeType = attribute.type ]
@@ -146,18 +146,17 @@ $[* we need to consider the data type here *]
                     $[/ if ]
                 $[/ foreach ]$[* attribute *]
 $[** RELATIONSHIPS **]
-                $[ let showRelationshipComment = true ]
-                $[ foreach relationship in (entity|domain:JSONDTO|view:APIGet).relationships ]
-                    $[ if relationship.to.isOne && relationship.withViewName == "Reference" ]
-                        $[ let _toEntity = relationship.to.entity ]
-                        $[ let includeChildEntities = _toEntity.entity.space.name == entity.space.name && !_toEntity.entity.isIncluded ]
-                        $[ if !includeChildEntities ]$[ continue ]$[/ if ]
-                        $[ if showRelationshipComment ]
-        // relationships
-                            $[ let showRelationshipComment = false ]
-                        $[/ if ]
-                        $[ let _toEntityMapperClassName = _toEntity|domain:DTOMapper|name ]
-                        $[ let _toEntityMapperVariableName = _toEntityMapperClassName|uncapitalize ]
+                $[ foreach relationship in (entity|domain:JSONDTO|view:APIGet).relationships if relationship.to.isOne && relationship.withViewName == "Reference" ]
+                    $[ if relationship#first ]
+        // to-one relationships
+        // --------------------
+                    $[/ if ]
+                    $[ let _toEntity = relationship.to.entity ]
+        // ${_toEntity.entity.name}
+                    $[ let includeChildEntities = _toEntity.entity.space.name == entity.space.name && !_toEntity.entity.isIncluded ]
+                    $[ if !includeChildEntities ]$[ continue ]$[/ if ]
+                    $[ let _toEntityMapperClassName = _toEntity|domain:DTOMapper|name ]
+                    $[ let _toEntityMapperVariableName = _toEntityMapperClassName|uncapitalize ]
 $[ send mapperDecl ]
     @Autowired ${_toEntityMapperClassName} ${_toEntityMapperVariableName};
 $[/ send ]
@@ -169,7 +168,6 @@ $[/ send ]
             refObject.set${_toEntity.primaryKeyAttribute|domain:Model|name|capitalize}(modelObject.get${relationship|domain:Model|name|capitalize}Id());
             dtoObject.set${relationship|name|capitalize}(${_toEntityMapperVariableName}.toDtoFromModel(refObject));
         }
-                    $[/ if ]
                 $[/ foreach ]
         return dtoObject;
     }

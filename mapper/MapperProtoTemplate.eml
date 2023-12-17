@@ -1,5 +1,6 @@
 $[ language java ]
 $[ domain DTOMapper ]
+$[ import "release/ReleaseFunctions" ]
 
 $[ author to org.entityc.springboot.mapper ]
     $[ author to outlet methods ]
@@ -18,10 +19,6 @@ $[ send imports ]
 import ${protobufNamespace}.${attribute.type.module|domain:ProtobufDTO|name};
 $[/ send ]
                 $[/ if ]
-            $[/ foreach ]$[ foreach refMod in module.referencedModules|sort ]
-$[ send imports ]
-import ${protobufNamespace}.${refMod.name|capitalize};
-$[/ send ]
             $[/ foreach ]
             $[ capture fullProtobufClassName ]${module.name|capitalize}.${entity|domain:ProtobufDTO|name}$[/ capture ]
 $[********************************************************************
@@ -62,9 +59,9 @@ $[********************************************************************
         ${indent}builder.set${protobufAttributeNameInMethod}(modelObject.${getname}${modelAttributeNameInMethod}Url());
                 $[ elseif attribute.isArray ]
                     $[ if attribute.type.isEnumType ]
-                        $[if attribute.type.isExtern ]
+                        $[ if attribute.type.isExtern ]
                         // extern ${attribute.type.module|domain:ProtobufDTO|name}
-                        $[/if]
+                        $[/ if ]
                         $[ let methodName = "getProtobufValue" ]
                         $[ capture entityScope ]$[ if attribute.type.hasParentEntity ]${attribute.type.parentEntity|domain:ProtobufDTO|name}.$[/ if ]$[/ capture ]
         ${indent}builder.addAll${protobufAttributeNameInMethod}(modelObject.get${modelAttributeNameInMethod}().stream().map(s -> ${attribute.type.module|domain:ProtobufDTO|name}.${entityScope}${attribute.type|domain:ProtobufDTO|name}.valueOf(s.${methodName}())).collect(Collectors.toSet()));
@@ -107,33 +104,37 @@ $[* we need to consider the data type here *]
             $[/ foreach ]$[* attribute *]
 $[** RELATIONSHIPS **]
             $[ let showRelationshipComment = true ]
-            $[ foreach entity.relationships ]
+            $[ foreach relationship in entity.relationships ]
+                $[ let toEntity = relationship.to.entity ]
+                $[ if toEntity == null || toEntity.hasTag("release:top") ]$[ continue ]$[/ if ]
                 $[ if relationship.to.isOne ]
-                    $[ let _toEntity = relationship.to.entity ]
-                    $[ let isSelf = _toEntity.name == entity.name ]
-                    $[ let includeChildEntities = _toEntity.space.name == entity.space.name && !_toEntity.isIncluded ]
+                    $[ let isSelf = toEntity.name == entity.name ]
+                    $[ let includeChildEntities = toEntity.space.name == entity.space.name && !toEntity.isIncluded ]
                     $[ if !includeChildEntities ]$[ continue ]$[/ if ]
                     $[ if showRelationshipComment ]
         // relationships
                         $[ let showRelationshipComment = false ]
                     $[/ if ]
-                    $[ let _toEntityMapperClassName = _toEntity|domain:DTOMapper|name ]
-                    $[ let _toEntityMapperVariableName = _toEntityMapperClassName|uncapitalize ]
+                    $[ let toEntityMapperClassName = toEntity|domain:DTOMapper|name ]
+                    $[ let toEntityMapperVariableName = toEntityMapperClassName|uncapitalize ]
                     $[ if isSelf ]
-                        $[ let _toEntityMapperVariableName = "this" ]
+                        $[ let toEntityMapperVariableName = "this" ]
                     $[ else ]
 $[ send mapperDecl ]
-    @Autowired ${_toEntityMapperClassName} ${_toEntityMapperVariableName};
+    @Autowired ${toEntityMapperClassName} ${toEntityMapperVariableName};
 $[/ send ]
 $[ send imports ]
-import ${_toEntity|domain:Model|fullname};
+import ${toEntity|domain:Model|fullname};
 $[/ send ]
                     $[/ if ]
         if (modelObject.get${relationship|domain:Model|name|capitalize}Id() != null) {
-            ${_toEntity|domain:Model|name} refObject = new ${_toEntity|domain:Model|name}();
-            refObject.set${_toEntity.primaryKeyAttribute|domain:Model|name|capitalize}(modelObject.get${relationship|domain:Model|name|capitalize}Id());
-            builder.set${relationship|domain:ProtobufDTO|name|capitalize}(${_toEntityMapperVariableName}.toProtobufFromModel(refObject));
+            ${toEntity|domain:Model|name} refObject = new ${toEntity|domain:Model|name}();
+            refObject.set${toEntity.primaryKeyAttribute|domain:Model|name|capitalize}(modelObject.get${relationship|domain:Model|name|capitalize}Id());
+            builder.set${relationship|domain:ProtobufDTO|name|capitalize}(${toEntityMapperVariableName}.toProtobufFromModel(refObject));
         }
+$[ send imports ]
+import ${protobufNamespace}.${toEntity.module.name|capitalize};
+$[/ send ]
                 $[/ if ]
             $[/ foreach ]
         return (${fullProtobufClassName})builder.build();
@@ -155,8 +156,7 @@ $[********************************************************************
 
             $[/ if ]
             $[ let showAttributeComment = true ]
-            $[ foreach attribute in entity.attributes
-                        if !attribute.isVirtual && !(attribute|domain:DTOMapper).hasTag("exclude") ]
+            $[ foreach attribute in entity.attributes if !attribute.isVirtual && !(attribute|domain:DTOMapper).hasTag("exclude") ]
                 $[ let nullable = attribute.type|language hasNullable ]
                 $[ let attributeType = attribute.type ]
                 $[ if attribute.isSecondaryEntityType ]
@@ -220,7 +220,11 @@ $[* we need to consider the data type here *]
             $[/ foreach ]$[* attribute *]
 $[** RELATIONSHIPS **]
             $[ let showRelationshipComment = true ]
-            $[ foreach entity.relationships ]
+            $[ call CheckIfReleasedEntity(entity: entity)->(isReleasedEntity: isReleasedEntity) ]
+            $[ foreach relationship in entity.relationships ]
+                $[ let toEntity = relationship.to.entity ]
+                $[ if toEntity == null ]$[ continue ]$[/ if ]
+                $[ if isReleasedEntity && toEntity.hasTag("release:top") ]$[ continue ]$[/ if ]
                 $[ if relationship.to.isOne ]
                     $[ let _toEntity = relationship.to.entity ]
                     $[ let includeChildEntities = _toEntity.space.name == entity.space.name && !_toEntity.isIncluded ]
@@ -263,8 +267,8 @@ $[********************************************************************
             $[/ if ]
 
             $[ let showAttributeComment = true ]
-            $[ foreach attribute in entity.attributes
-                        if !attribute.isVirtual && !(attribute|domain:DTOMapper).hasTag("exclude") ]
+            $[ foreach attribute in entity.attributes if
+!attribute.isVirtual && !(attribute|domain:DTOMapper).hasTag("exclude") ]
                 $[ let attributeType = attribute.type ]
                 $[ if attribute.isSecondaryEntityType ]
                     $[ let attributeType = attribute.getTypeEntity() ]
@@ -324,6 +328,9 @@ $[* we need to consider the data type here *]
             $[ if true ]
                 $[ let showRelationshipComment = true ]
                 $[ foreach entity.relationships ]
+                    $[ let toEntity = relationship.to.entity ]
+                    $[ if toEntity == null ]$[ continue ]$[/ if ]
+                    $[ if isReleasedEntity && toEntity.hasTag("release:top") ]$[ continue ]$[/ if ]
                     $[ if relationship.to.isOne ]
                         $[ let _toEntity = relationship.to.entity ]
                         $[ let includeChildEntities = _toEntity.space.name == entity.space.name && !_toEntity.isIncluded ]
@@ -375,8 +382,8 @@ $[********************************************************************
             $[/ if ]
 
             $[ let showAttributeComment = true ]
-            $[ foreach attribute in entity.attributes
-                        if !attribute.isVirtual && !(attribute|domain:DTOMapper).hasTag("exclude") ]
+            $[ foreach attribute in entity.attributes if
+!attribute.isVirtual && !(attribute|domain:DTOMapper).hasTag("exclude") ]
                 $[ let attributeType = attribute.type ]
                 $[ if attribute.isSecondaryEntityType ]
                     $[ let attributeType = attribute.getTypeEntity() ]

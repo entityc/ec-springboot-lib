@@ -160,7 +160,7 @@ $[if useInviteFeature]
             return "invite_accept";
         }
 
-        List<${inviteEntity|domain:JSONDTO|name}> invites = inviteService.get${inviteEntity|domain:JSONDTO|name}ListBy${userEntity|domain:Model|name}(existingUser.getId(), 0, 1, false);
+        List<${inviteEntity|domain:JSONDTO|name}> invites = inviteService.get${inviteEntity|domain:JSONDTO|name}ListBy${userEntity|domain:Model|name}(existingUser.getId(), 0, 1, 0 /*levels*/);
 
         if (invites.size() == 0 || !acceptDto.getInviteCode().equals(invites.get(0).get${inviteCodeAttribute|domain:JSONDTO|name|capitalize}())) {
             return "invite_accept";

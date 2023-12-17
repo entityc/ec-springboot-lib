@@ -101,7 +101,7 @@ $[ author to org.entityc.springboot.repository ]
             $[ if hasParentEntity ]
                 $[ let objParentTableName = objParentEntity|domain:Database|name ]
             $[/ if ]
-            $[ let retiredAttr = null ]
+            $[ let releasableAttr = null ]
             $[ foreach attr in entity.attributes ]
                 $[ if attr.isCreation ]
                     $[ let creationDateAttrName = attr|domain:Database|name ]
@@ -109,8 +109,8 @@ $[ author to org.entityc.springboot.repository ]
                 $[/ if ]
             $[/ foreach ]
             $[ foreach attr in objEntity.attributes ]
-                $[ if attr.hasTag("release:retired") ]
-                    $[ let retiredAttr = attr ]
+                $[ if attr.hasTag("release:enable") ]
+                    $[ let releasableAttr = attr ]
                 $[/ if ]
             $[/ foreach ]
             $[ capture queryEnding ], nativeQuery = true)$[/ capture ]
@@ -120,18 +120,18 @@ $[ author to org.entityc.springboot.repository ]
                                  "FROM ${verTableName} " +
                              "GROUP BY ${objTableName}_id) o " +
                            "ON o.${objTableName}_id = v.${objTableName}_id " +
-                          "AND v.${creationDateAttrName} = o.max_${creationDateAttrName} $[ if hasParentEntity || retiredAttr != null ]" +
+                          "AND v.${creationDateAttrName} = o.max_${creationDateAttrName} $[ if hasParentEntity || releasableAttr != null ]" +
                    "INNER JOIN ${objTableName} o2 ON o2.${objTableName}_id = v.${objTableName}_id " +
             $[ else ]"${queryEnding}
             $[/ if ]
             $[ if hasParentEntity ]
-                $[ if retiredAttr != null ]
-                   " WHERE o2.${objParentTableName}_id = ?1 AND NOT o2.${retiredAttr|domain:Database|name}"${queryEnding}
+                $[ if releasableAttr != null ]
+                   " WHERE o2.${objParentTableName}_id = ?1 AND o2.${releasableAttr|domain:Database|name}"${queryEnding}
                 $[ else ]
                    " WHERE o2.${objParentTableName}_id = ?1"${queryEnding}
                 $[/ if ]
-            $[ elseif retiredAttr != null ]
-                   " WHERE NOT o2.${retiredAttr|domain:Database|name}"${queryEnding}
+            $[ elseif releasableAttr != null ]
+                   " WHERE o2.${releasableAttr|domain:Database|name}"${queryEnding}
             $[/ if ]
             $[ if hasParentEntity ]
     public List<${modelName}> getLatestVersionsFor${objParentEntity.name}(${objParentEntity.pkType|language} ${objParentEntity.name|uncapitalize}Id);

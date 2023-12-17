@@ -1,0 +1,151 @@
+$[ language java ]
+$[ domain ReleasedJSONDTO ]
+$[ D summary, main "This template generates \"Released\" DTO classes for versioned entities that are part of a" ]
+$[ D summary, main "release." ]
+$[ publisher org.entityc.springboot.dto.released ]
+    $[ foreach module in space.modules if !module.isIncluded]
+    $[* we need to do this also for any entities that make reference to a unified (Released) entity !!
+    also don't bring over the version entities parent or object entities version children!! *]
+        $[ foreach entity in module.entities if !entity.isImplicit && !entity.isExtern && entity.hasTag("release:version") ]
+            $[ let versionEntity = entity ]
+            $[ let objectEntity = versionEntity.getPrimaryParentEntity ]
+            $[ assert objectEntity.hasPrimaryKey fatal ]The entity (${objectEntity.name}) must have a primary key.$[/ assert ]
+            $[ assert versionEntity.hasPrimaryKey fatal ]The entity (${objectEntity.name}) must have a primary key.$[/ assert ]
+            $[ assert objectEntity.hasTag("release:object") fatal ]The parent (${objectEntity.name}) of an entity tagged "release:version" (${versionEntity.name} must be tagged with "release:object".$[/ assert ]
+            $[ let d_versionEntity = versionEntity|domain:ReleasedJSONDTO ]
+            $[ let d_objectEntity = objectEntity|domain:ReleasedJSONDTO ]
+            $[ let dtoClassName = d_objectEntity|name ]
+            $[ file d_objectEntity.domain.namespace|path dtoClassName "java" ]
+//
+// This is the Released DTO class for entities: ${objectEntity.name} and ${versionEntity.name}
+//
+// THIS FILE IS GENERATED. DO NOT EDIT!!
+//
+package ${d_objectEntity.domain.namespace};
+
+import java.util.Date;
+import java.util.List;
+import java.util.Set;
+import java.util.ArrayList;
+import java.util.UUID;
+$[ receive distinct imports ]
+
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import lombok.Data;
+$[* Import referenced enums *]
+                $[ foreach d_attribute in d_objectEntity.attributes if d_attribute.type.isEnumType ]
+import ${d_attribute.type|domain:Model|fullname};
+                $[/ foreach ]
+                $[ foreach d_attribute in d_versionEntity.attributes if d_attribute.type.isEnumType ]
+import ${d_attribute.type|domain:Model|fullname};
+                $[/ foreach ]
+
+$[* Top of the class definition *]
+@Data
+@JsonIgnoreProperties(ignoreUnknown = true)
+public class ${dtoClassName}
+{
+$[* Primary Key *]
+                $[ let primaryKeyAttribute = objectEntity.primaryKeyAttribute ]
+                $[ if primaryKeyAttribute.hasDescription ]
+    // ${primaryKeyAttribute.description}
+                $[ else ]
+    // PRIMARY KEY
+                $[/ if ]
+    private ${primaryKeyAttribute.type|language} ${d_objectEntity.primaryKeyAttribute|name};
+
+                $[ function DomainAttribute
+                   D "Outputs member declaration for a domain attribute."
+                   (d_attribute
+                    D "The domain attribute."
+                   )
+                ]
+                    $[ let attribute = d_attribute.attribute ]
+                    $[ let d_attributeName = d_attribute|name ]
+                    $[ let attributeType = attribute.type|language nullable ]
+                    $[ if attribute.type.isEntityType ]
+                        $[ let d_attributeEntity = attribute.type ]
+                        $[ let attributeType = d_attributeEntity|domain:JSONDTO|name ]
+                    $[/ if ]
+                    $[ if attribute.hasDescription ]
+    // ${attribute.description}
+                    $[/ if ]
+                    $[ if attribute.isArray ]
+    private Set<${attributeType}> ${d_attributeName};
+                    $[ else ]
+    private ${attributeType} ${d_attributeName};
+                    $[/ if ]
+
+                $[/ function ]
+    //
+    // OBJECT ATTRIBUTES
+    //
+
+                $[ foreach d_attribute in (d_objectEntity|view:Default).attributes|sort if !d_attribute.attribute.isModification && !d_versionEntity.hasAttributeNamed(d_attribute.name) ]
+                    $[ call DomainAttribute(d_attribute: d_attribute) ]
+                $[/ foreach ]
+    //
+    // REVISIONED ATTRIBUTES
+    //
+
+                $[ foreach d_attribute in (d_versionEntity|view:Default).attributes|sort if !d_attribute.attribute.isCreation ]
+                    $[ call DomainAttribute(d_attribute: d_attribute) ]
+                $[/ foreach ]
+                $[ function DomainRelationship
+                   D "Outputs member declaration for a domain relationships."
+                   (d_relationship
+                    D "The domain relationship."
+                   )
+                ]
+                    $[ let entity = d_relationship.relationship.from.entity]
+                    $[ let toEntity = d_relationship.to.entity.entity ]
+                    $[ if toEntity == null || toEntity.isImplicit || toEntity.isExtern || toEntity.isIncluded ]$[ return ]$[/ if ]
+                    $[ let includeChildEntities = toEntity.space.name == entity.space.name ]
+                    $[ if d_relationship.hasDescription ]
+    // ${d_relationship.description}
+                    $[/ if ]
+                    $[ if d_relationship.to.isOne ]
+                        $[ let typeName = "String" ]
+                        $[ if toEntity.pkType != null ]
+                            $[ let typeName = toEntity.pkType|language ]
+                        $[/ if ]
+                        $[ if !includeChildEntities || d_relationship.isWithPrimaryKey ]
+    private ${typeName} ${d_relationship.name}Id;
+                        $[ else ]
+    private ${toEntity|domain:JSONDTO|name} ${d_relationship.name};
+                        $[/ if ]
+                    $[ elseif d_relationship.to.isMany ]
+                        $[ if includeChildEntities ]
+    private Set<${toEntity|domain:JSONDTO|name}> ${d_relationship.name};
+                        $[/ if ]
+                    $[/ if ]
+
+                $[/ function ]
+    //
+    // OBJECT RELATIONSHIPS
+    //
+
+                $[ foreach d_relationship in (d_objectEntity|view:Default).relationships ]
+                    $[ call DomainRelationship(d_relationship: d_relationship) ]
+                $[/ foreach ]
+    //
+    // REVISIONED RELATIONSHIPS
+    //
+
+                $[ foreach d_relationship in (d_versionEntity|view:Default).relationships ]
+                    $[ call DomainRelationship(d_relationship: d_relationship) ]
+                $[/ foreach ]
+$[ outlet members
+   D "Member variables can be declared here."
+]
+$[/ outlet ]
+$[ outlet methods
+   D "Methods can be declared here."
+]
+$[/ outlet ]
+}
+            $[/ file ]
+
+        $[/ foreach ]
+    $[/ foreach ]
+$[/ publisher ]

@@ -1,6 +1,9 @@
 $[ import "release/ControllerReleaseAuthor"]
 $[ import "release/ServiceReleaseAuthor"]
 $[ import "release/RepositoryReleaseAuthor"]
+$[ import "release/RepositoryReleasedGetAuthor"]
+$[* import "release/ReleasedUnifiedObjectsAuthor"]
+$[ import "release/ReleasedDtoTemplate"*]
 
 $[* TODO - This came from the service class get list endpoints, instead of modifying regular get list endoints
   new ones should be created specifically for locking.
@@ -27,7 +30,7 @@ $[* TODO - This came from the service class get list endpoints, instead of modif
           }
       }
 
-      public List<${responseDtoName}> get${responseDtoName}List(${lockedDeclInsert}long start, int limit, boolean hierarchical) throws ServiceException {
+      public List<${responseDtoName}> get${responseDtoName}List(${lockedDeclInsert}long start, int limit, int levels) throws ServiceException {
           try {
               List<${responseDtoName}> dtoList = new ArrayList<>();
   $[if hasLockAttribute]
@@ -41,7 +44,7 @@ $[* TODO - This came from the service class get list endpoints, instead of modif
               List<${responseModelName}> list = ${repositoryVariableName}.get${responseModelName}List(start, limit);
   $[/if]
               for(${responseModelName} modelObject : list) {
-                  dtoList.add(dtoFromModel(modelObject, hierarchical));
+                  dtoList.add(dtoFromModel(modelObject, levels));
               }
               return dtoList;
           } catch (DataAccessException ex) {

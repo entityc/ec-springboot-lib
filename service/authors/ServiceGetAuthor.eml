@@ -3,21 +3,28 @@ $[ D summary, main "service methods." ]
 $[ D "This includes methods for getting not just a single object but lists of objects." ]
 $[ publisher org.entityc.springboot.service.get ]
     $[ import "util/AutoWired" ]
+    $[ import "release/ReleaseFunctions" ]
     $[ author to org.entityc.springboot.service ]
         $[ author to outlet methods ]
+            $[ call CheckIfReleasedEntity(entity: entity)->(isReleasedEntity: isReleasedEntity) ]
+            $[ call GetReleaseEntityPKAttribute(entity: entity)->(releaseEntityPKAttribute: releaseEntityPKAttribute) ]
+            $[ if isReleasedEntity ]
+                $[ assert releaseEntityPKAttribute != null error ]Release entity ${entity.name} does not have a "release" constituent entity!$[/ assert ]
+                $[ if releaseEntityPKAttribute == null ]$[ return ]$[/ if ]
+            $[/ if ]
             $[ function GetResponseVarsForDomain
                D "This is used by many of the other functions in this template to create variables based on a"
-               D "response domain." 
+               D "response domain."
                (entity
-                D "The entity the variables are based on." ,
+                D "The entity the variables are based on.",
                 responseDomain
-                D "The response domain. Currently Model, JSONDTO and ProtobufDTO are supported." 
+                D "The response domain. Currently Model, JSONDTO and ProtobufDTO are supported."
                )->
                (responseClassName
-                D "The Java class name corresponding to the response object." ,
+                D "The Java class name corresponding to the response object.",
                 responseInMethodName
                 D "When creating method names that correspond to the response domain, this value should be"
-                D "used." ,
+                D "used.",
                 cacheVariableName
                 D "If a cache is defined, this would be the name of the cache."
                )
@@ -44,6 +51,7 @@ $[ outlet init
 $[/ outlet ]
             $[ let exceptionNamespace = (space.domain("Exception")).namespace ]
 $[ send imports ]
+import org.springframework.dao.DataAccessException;
 import ${exceptionNamespace}.ServiceException;
 import ${exceptionNamespace}.DaoException;
 import ${exceptionNamespace}.EntityNotFoundException;
@@ -66,12 +74,24 @@ $[*************]
                 useCache,
                 useSingleCache
                ) ]
+                $[ call CheckIfReleasedEntity(entity: entity)->(isReleasedEntity: isReleasedEntity) ]
+                $[ call GetReleaseEntityPKAttribute(entity: entity)->(releaseEntityPKAttribute: releaseEntityPKAttribute) ]
                 $[ call GetResponseVarsForDomain(entity: entity, responseDomain: responseDomain)->(responseClassName: responseClassName, responseInMethodName: responseInMethodName, cacheVariableName: cacheVariableName) ]
                 $[ let responseModelName = entity|domain:Model|name ]
                 $[ let repositoryVariableName = entity|domain:Repository|name|uncapitalize ]
                 $[ let pkidtype = entity.pkType|language ]
                 $[ let pkidname = entity.primaryKeyAttribute|domain:Service|name ]
-    public ${responseClassName} get${responseInMethodName}ById(${pkidtype} id) throws ServiceException {
+                $[ if isReleasedEntity ]
+                    $[ assert releaseEntityPKAttribute != null error ]Release entity ${entity.name} does not have a "release" constituent entity!$[/ assert ]
+                    $[ if releaseEntityPKAttribute == null ]$[ return ]$[/ if ]
+                $[/ if ]
+    public ${responseClassName} get${responseInMethodName}ById(
+                $[ if isReleasedEntity ]
+            ${releaseEntityPKAttribute.type|language} releaseId,
+                $[/ if ]
+            ${pkidtype} id,
+            int levels
+        ) throws ServiceException {
         try {
             ${responseClassName} responseObject = null;
                 $[ let indent = "" ]
@@ -83,18 +103,18 @@ $[*************]
                     $[ let indent = "    " ]
                 $[/ if ]
 
-            ${indent}Optional<${responseModelName}> modelObjectOptional = ${repositoryVariableName}.findById(id);
+            ${indent}Optional<${responseModelName}> modelObjectOptional = ${repositoryVariableName}.getById($[ if isReleasedEntity ]releaseId, $[/ if ]id);
             ${indent}if (!modelObjectOptional.isPresent()) {
             ${indent}    throw new EntityNotFoundException("${responseModelName} not found.");
             ${indent}}
 
             ${indent}${responseModelName} modelObject = modelObjectOptional.get();
                 $[ if responseDomain.name == "JSONDTO" ]
-            ${indent}responseObject = dtoFromModel(modelObject);
+            ${indent}responseObject = dtoFromModel(modelObject, levels);
                 $[ elseif responseDomain.name == "Model" ]
             ${indent}responseObject = modelObject;
                 $[ else ]
-            ${indent}responseObject = protobufFromModel(modelObject);
+            ${indent}responseObject = protobufFromModel(modelObject, levels);
                 $[/ if ]
 
                 $[ if useCache && useSingleCache ]
@@ -131,27 +151,40 @@ $[*************]
 $[***********]
 $[*  COUNT  *]
 $[***********]
-    public long get${responseModelName}Count() throws ServiceException {
-        return ${repositoryVariableName}.count();
+    public long get${responseModelName}Count($[ if isReleasedEntity ]${releaseEntityPKAttribute.type|language} releaseId$[/ if ]) throws ServiceException {
+        return ${repositoryVariableName}.count($[ if isReleasedEntity ]releaseId$[/ if ]);
     }
 
 $[************]
 $[* GET LIST *]
 $[************]
-    public List<${responseModelName}> get${responseModelName}List(long start, int limit) throws ServiceException {
+    public List<${responseModelName}> get${responseModelName}List(
+            $[ if isReleasedEntity ]
+        ${releaseEntityPKAttribute.type|language} releaseId,
+            $[/ if ]
+        long start,
+        int limit
+    ) throws ServiceException {
         try {
-            return ${repositoryVariableName}.get${responseModelName}List(start, limit);
+            return ${repositoryVariableName}.get${responseModelName}List($[ if isReleasedEntity ]releaseId, $[/ if ]start, limit);
         } catch (DataAccessException ex) {
             throw new DaoException(ex.getMessage(), ex);
         }
     }
 
-    public List<${responseDtoName}> get${responseDtoName}List(long start, int limit, boolean hierarchical) throws ServiceException {
+    public List<${responseDtoName}> get${responseDtoName}List(
+            $[ if isReleasedEntity ]
+        ${releaseEntityPKAttribute.type|language} releaseId,
+            $[/ if ]
+            long start,
+            int limit,
+            int levels
+    ) throws ServiceException {
         try {
             List<${responseDtoName}> dtoList = new ArrayList<>();
-            List<${responseModelName}> list = ${repositoryVariableName}.get${responseModelName}List(start, limit);
+            List<${responseModelName}> list = ${repositoryVariableName}.get${responseModelName}List($[ if isReleasedEntity ]releaseId, $[/ if ]start, limit);
             for(${responseModelName} modelObject : list) {
-                dtoList.add(dtoFromModel(modelObject, hierarchical));
+                dtoList.add(dtoFromModel(modelObject, levels));
             }
             return dtoList;
         } catch (DataAccessException ex) {
@@ -162,12 +195,19 @@ $[************]
 
                 $[ let protobufClassName = entity|domain:ProtobufDTO|name ]
                 $[ capture fullProtobufClassName ]${entity.module|domain:ProtobufDTO|name}.${protobufClassName}$[/ capture ]
-    public ${fullProtobufClassName}List get${protobufClassName}PBList(long start, int limit, boolean hierarchical) throws ServiceException {
+    public ${fullProtobufClassName}List get${protobufClassName}PBList(
+                $[ if isReleasedEntity ]
+        ${releaseEntityPKAttribute.type|language} releaseId,
+                $[/ if ]
+            long start,
+            int limit,
+            int levels
+    ) throws ServiceException {
         try {
             ${fullProtobufClassName}List.Builder pbList = ${fullProtobufClassName}List.newBuilder();
-            List<${responseModelName}> list = ${repositoryVariableName}.get${responseModelName}List(start, limit);
+            List<${responseModelName}> list = ${repositoryVariableName}.get${responseModelName}List($[ if isReleasedEntity ]releaseId, $[/ if ]start, limit);
             for(${responseModelName} modelObject : list) {
-                pbList.addItem(protobufFromModel(modelObject));
+                pbList.addItem(protobufFromModel(modelObject, levels));
             }
             return pbList.build();
         } catch (DataAccessException ex) {
@@ -180,15 +220,17 @@ $[* GET LIST BY (attributes) *]
 $[****************************]
             $[ function makeGetListByAttributeMethod
                D "This function generates a method to get a list of objects relative to some specified"
-               D "attribute." 
+               D "attribute."
                (responseDomain
-                D "The domain associated with the response object (e.g, Model, JSONDTO, etc.)." ,
+                D "The domain associated with the response object (e.g, Model, JSONDTO, etc.).",
                 entity
-                D "The entity to which this method is synthesized." ,
+                D "The entity to which this method is synthesized.",
                 attribute
-                D "The attribute to which the results are relative." 
+                D "The attribute to which the results are relative."
                )
             ]
+                $[ call CheckIfReleasedEntity(entity: entity)->(isReleasedEntity: isReleasedEntity) ]
+                $[ call GetReleaseEntityPKAttribute(entity: entity)->(releaseEntityPKAttribute: releaseEntityPKAttribute) ]
                 $[ call GetResponseVarsForDomain(entity: entity, responseDomain: responseDomain)->(responseClassName: responseClassName, responseInMethodName: responseInMethodName, cacheVariableName: cacheVariableName) ]
                 $[ let repositoryVariableName = entity|domain:Repository|name|uncapitalize ]
                 $[ let responseModelName = entity|domain:Model|name ]
@@ -201,10 +243,13 @@ $[****************************]
                     $[ capture fullResponseName ]${responseClassName}List$[/ capture ]
                 $[/ if ]
     public ${fullResponseName} get${responseInMethodName}ListBy${attribute.name|capitalize}(
+                $[ if isReleasedEntity ]
+        ${releaseEntityPKAttribute.type|language} releaseId,
+                $[/ if ]
         ${attribute.type|language} ${attribute.name},
         long start,
         int limit,
-        boolean hierarchical) throws ServiceException {
+        int levels) throws ServiceException {
 
         try {
                 $[ if isModelVariant || isDtoVariant ]
@@ -214,16 +259,16 @@ $[****************************]
             List<${responseClassName}> dtoList = new ArrayList<>();
                     $[/ if ]
                 $[/ if ]
-            List<${responseModelName}> list = ${repositoryVariableName}.get${responseModelName}ListBy${attribute.name|capitalize}(${attribute.name}$[if attribute.type.isEnumType()].getNumberValue()$[/if], start, limit);
+            List<${responseModelName}> list = ${repositoryVariableName}.get${responseModelName}ListBy${attribute.name|capitalize}($[ if isReleasedEntity ]releaseId, $[/ if ]${attribute.name}$[ if attribute.type.isEnumType() ].getNumberValue()$[/ if ], start, limit);
                 $[ if isDtoVariant ]
             for(${responseModelName} modelObject : list) {
-                ${listName}.add(dtoFromModel(modelObject, hierarchical));
+                ${listName}.add(dtoFromModel(modelObject, levels));
             }
                 $[ elseif isProtobufVariant ]
             ${fullResponseName}.Builder pbList = ${fullResponseName}.newBuilder();
                     $[ let listName = "pbList.build()" ]
             for(${responseModelName} modelObject : list) {
-                pbList.addItem(protobufFromModel(modelObject, hierarchical));
+                pbList.addItem(protobufFromModel(modelObject, levels));
             }
                 $[/ if ]
             return ${listName};
@@ -250,17 +295,19 @@ $[* GET LIST BY (relationships) *]
 $[*******************************]
             $[ function makeGetListByRelationshipMethod
                D "This function generates a method to get a list of objects relative to some specified"
-               D "relationship." 
+               D "relationship."
                (responseDomain
-                D "The domain associated with the response object (e.g, Model, JSONDTO, etc.)." ,
+                D "The domain associated with the response object (e.g, Model, JSONDTO, etc.).",
                 entity
-                D "The entity to which this method is synthesized." ,
+                D "The entity to which this method is synthesized.",
                 relationship
-                D "The relationship to which the results are relative." ,
+                D "The relationship to which the results are relative.",
                 getFlavor
-                D "The repository get method can have a flavor such as Locked so this can be set to use that flavor." 
+                D "The repository get method can have a flavor such as Locked so this can be set to use that flavor."
                )
             ]
+                $[ call CheckIfReleasedEntity(entity: entity)->(isReleasedEntity: isReleasedEntity) ]
+                $[ call GetReleaseEntityPKAttribute(entity: entity)->(releaseEntityPKAttribute: releaseEntityPKAttribute) ]
                 $[ call GetResponseVarsForDomain(entity: entity, responseDomain: responseDomain)->(responseClassName: responseClassName, responseInMethodName: responseInMethodName, cacheVariableName: cacheVariableName) ]
                 $[ let isDtoVariant = responseDomain.name == "JSONDTO" ]
                 $[ let isModelVariant = responseDomain.name == "Model" ]
@@ -271,10 +318,13 @@ $[*******************************]
                 $[ let toPrimaryKeyName = relationship.to.entity.primaryKeyAttribute.name ]
                 $[ capture fullResponseName ]$[ if isPBVariant ]${responseClassName}List$[ else ]List<${responseClassName}>$[/ if ]$[/ capture ]
     public ${fullResponseName} get${getFlavor}${responseInMethodName}ListBy${relationship.name|capitalize}(
+                $[ if isReleasedEntity ]
+        ${releaseEntityPKAttribute.type|language} releaseId,
+                $[/ if ]
         ${relationship.to.entity.pkType|language} ${toPrimaryKeyName},
         long start,
         int limit,
-        boolean hierarchical) throws ServiceException {
+        int levels) throws ServiceException {
 
         try {
                 $[ let listName = "list" ]
@@ -285,13 +335,13 @@ $[*******************************]
                     $[ let listName = "pbList" ]
             ${responseClassName}List.Builder pbList = ${responseClassName}List.newBuilder();
                 $[/ if ]
-            List<${responseModelName}> list = ${repositoryVariableName}.get${getFlavor}${responseModelName}ListBy${relationship.name|capitalize}(${toPrimaryKeyName}, start, limit);
+            List<${responseModelName}> list = ${repositoryVariableName}.get${getFlavor}${responseModelName}ListBy${relationship.name|capitalize}($[ if isReleasedEntity ]releaseId, $[/ if ]${toPrimaryKeyName}, start, limit);
                 $[ if isDtoVariant || isPBVariant ]
             for(${responseModelName} modelObject : list) {
                     $[ if isDtoVariant ]
-                ${listName}.add(dtoFromModel(modelObject, hierarchical));
+                ${listName}.add(dtoFromModel(modelObject, levels));
                     $[ else ]
-                ${listName}.addItem(protobufFromModel(modelObject));
+                ${listName}.addItem(protobufFromModel(modelObject, levels));
                     $[/ if ]
             }
                 $[/ if ]
@@ -306,17 +356,90 @@ $[*******************************]
     }
 
     public Long get${getFlavor}${responseInMethodName}CountBy${relationship.name|capitalize}(
-        ${relationship.to.entity.pkType|language} ${toPrimaryKeyName}) throws ServiceException {
+                $[ if isReleasedEntity ]
+        ${releaseEntityPKAttribute.type|language} releaseId,
+                $[/ if ]
+        ${relationship.to.entity.pkType|language} ${toPrimaryKeyName}
+    ) throws ServiceException {
 
         try {
-            return ${repositoryVariableName}.count${getFlavor}${responseModelName}By${relationship.name|capitalize}Id(${toPrimaryKeyName});
+            return ${repositoryVariableName}.count${getFlavor}${responseModelName}By${relationship.name|capitalize}Id($[ if isReleasedEntity ]releaseId, $[/ if ]${toPrimaryKeyName});
         } catch (DataAccessException ex) {
             throw new DaoException(ex.getMessage(), ex);
         }
     }
 
             $[/ function ]
+            $[ function makeGetListByMMRelationshipMethod
+               D "This function generates a method to get a list of objects relative to some specified"
+               D "relationship."
+               (responseDomain
+                D "The domain associated with the response object (e.g, Model, JSONDTO, etc.).",
+                entity
+                D "The entity to which this method is synthesized.",
+                relationship
+                D "The relationship to which the results are relative.",
+                getFlavor
+                D "The repository get method can have a flavor such as Locked so this can be set to use that flavor."
+               )
+            ]
+                $[ call CheckIfReleasedEntity(entity: entity)->(isReleasedEntity: isReleasedEntity) ]
+                $[ call GetReleaseEntityPKAttribute(entity: entity)->(releaseEntityPKAttribute: releaseEntityPKAttribute) ]
+                $[ call GetResponseVarsForDomain(entity: entity, responseDomain: responseDomain)->(responseClassName: responseClassName, responseInMethodName: responseInMethodName, cacheVariableName: cacheVariableName) ]
+                $[ let isDtoVariant = responseDomain.name == "JSONDTO" ]
+                $[ let isModelVariant = responseDomain.name == "Model" ]
+                $[ let isPBVariant = responseDomain.name == "ProtobufDTO" ]
+                $[ let repositoryVariableName = entity|domain:Repository|name|uncapitalize ]
+                $[ let responseModelName = entity|domain:Model|name ]
+                $[ let responseDtoName = entity|domain:JSONDTO|name ]
+                $[ let toPrimaryKeyName = relationship.to.entity.primaryKeyAttribute.name ]
+                $[ capture fullResponseName ]$[ if isPBVariant ]${responseClassName}List$[ else ]List<${responseClassName}>$[/ if ]$[/ capture ]
+                $[ if relationship.to.entity.pkType == null ]$[ return ]$[/ if ]
+    public ${fullResponseName} get${getFlavor}${responseInMethodName}ListBy${relationship.to.entity.name|capitalize}(
+                $[ if isReleasedEntity ]
+        ${releaseEntityPKAttribute.type|language} releaseId,
+                $[/ if ]
+        ${relationship.to.entity.pkType|language} ${toPrimaryKeyName},
+        long start,
+        int limit,
+        int levels) throws ServiceException {
+
+        try {
+                $[ let listName = "list" ]
+                $[ if isDtoVariant ]
+                    $[ let listName = "dtoList" ]
+            List<${responseClassName}> dtoList = new ArrayList<>();
+                $[ elseif isPBVariant ]
+                    $[ let listName = "pbList" ]
+            ${responseClassName}List.Builder pbList = ${responseClassName}List.newBuilder();
+                $[/ if ]
+            List<${responseModelName}> list = ${repositoryVariableName}.get${getFlavor}${responseModelName}ListAssociatedWith${relationship.to.entity.name|capitalize}($[ if isReleasedEntity ]releaseId, $[/ if ]${toPrimaryKeyName}, start, limit);
+                $[ if isDtoVariant || isPBVariant ]
+            for(${responseModelName} modelObject : list) {
+                    $[ if isDtoVariant ]
+                ${listName}.add(dtoFromModel(modelObject, levels));
+                    $[ else ]
+                ${listName}.addItem(protobufFromModel(modelObject, levels));
+                    $[/ if ]
+            }
+                $[/ if ]
+                $[ if isPBVariant ]
+            return ${listName}.build();
+                $[ else ]
+            return ${listName};
+                $[/ if ]
+        } catch (DataAccessException ex) {
+            throw new DaoException(ex.getMessage(), ex);
+        }
+    }
+
+            $[/ function ]
+            $[ call CheckIfReleasedEntity(entity: entity)->(isReleasedEntity: isReleasedEntity) ]
+            $[ call GetReleaseEntityPKAttribute(entity: entity)->(releaseEntityPKAttribute: releaseEntityPKAttribute) ]
             $[ foreach relationship in entity.relationships if relationship.to.isOne ]
+                $[ let toEntity = relationship.to.entity ]
+                $[ if toEntity == null ]$[ continue ]$[/ if ]
+                $[ if isReleasedEntity && toEntity.hasTag("release:top") ]$[ continue ]$[/ if ]
                 $[ let getFlavor = null ]
                 $[ call makeGetListByRelationshipMethod(responseDomain: space.domain("Model"), relationship: relationship, entity: entity, getFlavor: getFlavor) ]
                 $[ call makeGetListByRelationshipMethod(responseDomain: space.domain("JSONDTO"), relationship: relationship, entity: entity, getFlavor: getFlavor) ]
@@ -333,12 +456,18 @@ $[/ outlet ]
                     $[/ if ]
                 $[/ if ]
             $[/ foreach ]
+            $[ foreach relationship in entity.relationships if relationship.isManyToMany ]
+                $[ let getFlavor = null ]
+                $[ if space.hasDomain("ProtobufDTO") && !(entity.module|domain:ProtobufDTO).hasTag("noproto") ]
+                    $[ call makeGetListByMMRelationshipMethod(responseDomain: space.domain("ProtobufDTO"), relationship: relationship, entity: entity, getFlavor: getFlavor) ]
+                $[/ if ]
+            $[/ foreach ]
             $[ if entity.hasPrimaryParentRelationship ]
                 $[ let primaryParentEntity = entity.primaryParentRelationship.to.entity ]
                 $[ let pkType = entity.pkType|language ]
                 $[ let parentPkType = primaryParentEntity.pkType|language ]
-    public ${parentPkType} getParentId(${pkType} objId) {
-        Optional<${modelName}> objOptional = ${repositoryVariableName}.getById(objId);
+    public ${parentPkType} getParentId($[ if isReleasedEntity ]${releaseEntityPKAttribute.type|language} releaseId, $[/ if ]${pkType} objId) {
+        Optional<${modelName}> objOptional = ${repositoryVariableName}.getById($[ if isReleasedEntity ]releaseId, $[/ if ]objId);
         if (objOptional.isPresent()) {
             ${modelName} obj = objOptional.get();
             ${parentPkType} parentId = obj.get${entity.primaryParentRelationship|domain:Model|name|capitalize}Id();

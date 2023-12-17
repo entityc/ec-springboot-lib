@@ -1,23 +1,27 @@
-$[D summary, main "This template contains the author that is responsible for generating the save object"]
-$[D summary, main "repository method."]
-$[publisher org.entityc.springboot.repository.save]
-    $[author to org.entityc.springboot.repository]
-        $[author to outlet methods
-          D "Simply adds a method to override an inherited save method so that outlets can be added."
+$[ D summary, main "This template contains the author that is responsible for generating the save object" ]
+$[ D summary, main "repository method." ]
+$[ publisher org.entityc.springboot.repository.save ]
+    $[ author to org.entityc.springboot.repository ]
+        $[ author to outlet methods
+           D "Simply adds a method to override an inherited save method so that outlets can be added."
         ]
+$[* Composite entities can't be saved. *]
+            $[ if entity.isCompositeEntity ]
+                $[ return ]
+            $[/ if ]
     default <S extends ${modelName}> S save${modelName}(S object) {
-$[outlet preSave
-  D "This is right **before** the object (in variable `object`) is saved to the repository."
+$[ outlet preSave
+   D "This is right **before** the object (in variable `object`) is saved to the repository."
 ]
-$[/outlet]
+$[/ outlet ]
         S savedObject = save(object);
-$[outlet postSave
-  D "This is right **after** the object is saved to the repository (as variable `savedObject`)."
+$[ outlet postSave
+   D "This is right **after** the object is saved to the repository (as variable `savedObject`)."
 ]
-$[/outlet]
+$[/ outlet ]
         return savedObject;
     }
 
-        $[/author]
-    $[/author]
-$[/publisher]
+        $[/ author ]
+    $[/ author ]
+$[/ publisher ]

@@ -106,8 +106,8 @@ $[/ send ]
             $[ let releaseServiceVariableName = releaseEntity|domain:Service|name|uncapitalize ]
     public ${entity|domain:JSONDTO|name} getReleaseDeltaDto(${releaseEntity.pkType|language} fromReleaseId, ${releaseEntity.pkType|language} toReleaseId) throws ServiceException {
             $[ if useCache ]
-        ${releaseEntity|domain:Model|name} fromRelease = ${releaseServiceVariableName}.get${releaseEntity|domain:Model|name}ById(fromReleaseId);
-        ${releaseEntity|domain:Model|name} toRelease = ${releaseServiceVariableName}.get${releaseEntity|domain:Model|name}ById(toReleaseId);
+        ${releaseEntity|domain:Model|name} fromRelease = ${releaseServiceVariableName}.get${releaseEntity|domain:Model|name}ById(fromReleaseId, 0 /*levels*/);
+        ${releaseEntity|domain:Model|name} toRelease = ${releaseServiceVariableName}.get${releaseEntity|domain:Model|name}ById(toReleaseId, 0 /*levels*/);
         String cacheKey = null;
         if (fromRelease.isLocked() && toRelease.isLocked()) {
             cacheKey = "" + fromReleaseId + toReleaseId;
@@ -118,10 +118,10 @@ $[/ send ]
             $[/ if ]
         ${entity|domain:JSONDTO|name} delta = new ${entity|domain:JSONDTO|name}();
         // since we are going to fill in the details based on the delta, make these without hierarchy
-        ${releaseEntity|domain:JSONDTO|name} fromDto = ${releaseServiceVariableName}.dtoFromModel(${releaseServiceVariableName}.get${releaseEntity|domain:Model|name}ById(fromReleaseId), false);
-        ${releaseEntity|domain:JSONDTO|name} removedDto = ${releaseServiceVariableName}.dtoFromModel(${releaseServiceVariableName}.get${releaseEntity|domain:Model|name}ById(toReleaseId), false);
-        ${releaseEntity|domain:JSONDTO|name} changedDto = ${releaseServiceVariableName}.dtoFromModel(${releaseServiceVariableName}.get${releaseEntity|domain:Model|name}ById(toReleaseId), false);
-        ${releaseEntity|domain:JSONDTO|name} addedDto = ${releaseServiceVariableName}.dtoFromModel(${releaseServiceVariableName}.get${releaseEntity|domain:Model|name}ById(toReleaseId), false);
+        ${releaseEntity|domain:JSONDTO|name} fromDto = ${releaseServiceVariableName}.dtoFromModel(${releaseServiceVariableName}.get${releaseEntity|domain:Model|name}ById(fromReleaseId, 0 /*levels*/), 0 /*levels*/);
+        ${releaseEntity|domain:JSONDTO|name} removedDto = ${releaseServiceVariableName}.dtoFromModel(${releaseServiceVariableName}.get${releaseEntity|domain:Model|name}ById(toReleaseId, 0 /*levels*/), 0 /*levels*/);
+        ${releaseEntity|domain:JSONDTO|name} changedDto = ${releaseServiceVariableName}.dtoFromModel(${releaseServiceVariableName}.get${releaseEntity|domain:Model|name}ById(toReleaseId, 0 /*levels*/), 0 /*levels*/);
+        ${releaseEntity|domain:JSONDTO|name} addedDto = ${releaseServiceVariableName}.dtoFromModel(${releaseServiceVariableName}.get${releaseEntity|domain:Model|name}ById(toReleaseId, 0 /*levels*/), 0 /*levels*/);
         delta.setFrom(fromDto);
         delta.setRemoved(removedDto);
         delta.setChanged(changedDto);
@@ -147,21 +147,21 @@ $[/ send ]
             List<${binderEntity|domain:Model|name}> added = ${binderEntity|domain:Repository|name|uncapitalize}.getExcess${binderEntity|domain:Model|name}ListBy${releaseEntity|domain:Model|name}(fromRelease.get${releaseEntity.primaryKeyAttribute|domain:Model|name|capitalize}(), toRelease.get${releaseEntity.primaryKeyAttribute|domain:Model|name|capitalize}());
             HashSet<${binderEntity|domain:JSONDTO|name}> addedDtoSet = new HashSet<>(added.size());
             for (${binderEntity|domain:Model|name} item : added) {
-                addedDtoSet.add(${serviceVariableName}.dtoFromModel(item));
+                addedDtoSet.add(${serviceVariableName}.dtoFromModel(item, 0 /*levels*/));
             }
             addedDto.set${binderEntity|domain:Model|name}(addedDtoSet);
             // REMOVED
             List<${binderEntity|domain:Model|name}> removed = ${binderEntity|domain:Repository|name|uncapitalize}.getExcess${binderEntity|domain:Model|name}ListBy${releaseEntity|domain:Model|name}(toRelease.get${releaseEntity.primaryKeyAttribute|domain:Model|name|capitalize}(), fromRelease.get${releaseEntity.primaryKeyAttribute|domain:Model|name|capitalize}());
             HashSet<${binderEntity|domain:JSONDTO|name}> removedDtoSet = new HashSet<>(removed.size());
             for (${binderEntity|domain:Model|name} item : removed) {
-                removedDtoSet.add(${serviceVariableName}.dtoFromModel(item, false)); // the removed ones don't need full detail
+                removedDtoSet.add(${serviceVariableName}.dtoFromModel(item, 0 /*levels*/)); // the removed ones don't need full detail
             }
             removedDto.set${binderEntity|domain:Model|name}(removedDtoSet);
             // CHANGED
             List<${binderEntity|domain:Model|name}> changed = ${binderEntity|domain:Repository|name|uncapitalize}.getChanged${binderEntity|domain:Model|name}ListBy${releaseEntity|domain:Model|name}(fromRelease.get${releaseEntity.primaryKeyAttribute|domain:Model|name|capitalize}(), toRelease.get${releaseEntity.primaryKeyAttribute|domain:Model|name|capitalize}());
             HashSet<${binderEntity|domain:JSONDTO|name}> changedDtoSet = new HashSet<>(changed.size());
             for (${binderEntity|domain:Model|name} item : changed) {
-                changedDtoSet.add(${serviceVariableName}.dtoFromModel(item));
+                changedDtoSet.add(${serviceVariableName}.dtoFromModel(item, 0 /*levels*/));
             }
             changedDto.set${binderEntity|domain:Model|name}(changedDtoSet);
         }
@@ -179,8 +179,8 @@ $[/ send ]
             $[ capture fullReleaseProtobufClassName ]${releaseEntity.module|domain:ProtobufDTO|name}.${releaseEntity|domain:ProtobufDTO|name}$[/ capture ]
     public ${fullProtobufClassName} getReleaseDeltaProtobuf(${releaseEntity.pkType|language} fromReleaseId, ${releaseEntity.pkType|language} toReleaseId) throws ServiceException {
             $[ if useCache ]
-        ${releaseEntity|domain:Model|name} fromRelease = ${releaseServiceVariableName}.get${releaseEntity|domain:Model|name}ById(fromReleaseId);
-        ${releaseEntity|domain:Model|name} toRelease = ${releaseServiceVariableName}.get${releaseEntity|domain:Model|name}ById(toReleaseId);
+        ${releaseEntity|domain:Model|name} fromRelease = ${releaseServiceVariableName}.get${releaseEntity|domain:Model|name}ById(fromReleaseId, 0 /*levels*/);
+        ${releaseEntity|domain:Model|name} toRelease = ${releaseServiceVariableName}.get${releaseEntity|domain:Model|name}ById(toReleaseId, 0 /*levels*/);
         String cacheKey = null;
         if (fromRelease.isLocked() && toRelease.isLocked()) {
             cacheKey = "" + fromReleaseId + toReleaseId;
@@ -191,10 +191,10 @@ $[/ send ]
             $[/ if ]
         ${fullProtobufClassName}.Builder deltaBuilder = ${fullProtobufClassName}.newBuilder();
         // since we are going to fill in the details based on the delta, make these without hierarchy
-        ${fullReleaseProtobufClassName} fromProtobuf = ${releaseServiceVariableName}.protobufFromModel(${releaseServiceVariableName}.get${releaseEntity|domain:Model|name}ById(fromReleaseId), false);
-        ${fullReleaseProtobufClassName} removedProtobuf = ${releaseServiceVariableName}.protobufFromModel(${releaseServiceVariableName}.get${releaseEntity|domain:Model|name}ById(toReleaseId), false);
-        ${fullReleaseProtobufClassName} changedProtobuf = ${releaseServiceVariableName}.protobufFromModel(${releaseServiceVariableName}.get${releaseEntity|domain:Model|name}ById(toReleaseId), false);
-        ${fullReleaseProtobufClassName} addedProtobuf = ${releaseServiceVariableName}.protobufFromModel(${releaseServiceVariableName}.get${releaseEntity|domain:Model|name}ById(toReleaseId), false);
+        ${fullReleaseProtobufClassName} fromProtobuf = ${releaseServiceVariableName}.protobufFromModel(${releaseServiceVariableName}.get${releaseEntity|domain:Model|name}ById(fromReleaseId, 0 /*levels*/), 0 /*levels*/);
+        ${fullReleaseProtobufClassName} removedProtobuf = ${releaseServiceVariableName}.protobufFromModel(${releaseServiceVariableName}.get${releaseEntity|domain:Model|name}ById(toReleaseId, 0 /*levels*/), 0 /*levels*/);
+        ${fullReleaseProtobufClassName} changedProtobuf = ${releaseServiceVariableName}.protobufFromModel(${releaseServiceVariableName}.get${releaseEntity|domain:Model|name}ById(toReleaseId, 0 /*levels*/), 0 /*levels*/);
+        ${fullReleaseProtobufClassName} addedProtobuf = ${releaseServiceVariableName}.protobufFromModel(${releaseServiceVariableName}.get${releaseEntity|domain:Model|name}ById(toReleaseId, 0 /*levels*/), 0 /*levels*/);
         deltaBuilder.setFrom(fromProtobuf);
         deltaBuilder.setRemoved(removedProtobuf);
         deltaBuilder.setChanged(changedProtobuf);
@@ -221,21 +221,21 @@ $[/ send ]
             List<${binderEntity|domain:Model|name}> added = ${binderEntity|domain:Repository|name|uncapitalize}.getExcess${binderEntity|domain:Model|name}ListBy${releaseEntity|domain:Model|name}(fromRelease.get${releaseEntity.primaryKeyAttribute|domain:Model|name|capitalize}(), toRelease.get${releaseEntity.primaryKeyAttribute|domain:Model|name|capitalize}());
             HashSet<${fullBinderProtobufClassName}> addedProtobufSet = new HashSet<>(added.size());
             for (${binderEntity|domain:Model|name} item : added) {
-                addedProtobufSet.add(${serviceVariableName}.protobufFromModel(item));
+                addedProtobufSet.add(${serviceVariableName}.protobufFromModel(item, 0 /*levels*/));
             }
             addedProtobuf.toBuilder().addAll${binderEntity|domain:ProtobufDTO|name}(addedProtobufSet).build();
             // REMOVED
             List<${binderEntity|domain:Model|name}> removed = ${binderEntity|domain:Repository|name|uncapitalize}.getExcess${binderEntity|domain:Model|name}ListBy${releaseEntity|domain:Model|name}(toRelease.get${releaseEntity.primaryKeyAttribute|domain:Model|name|capitalize}(), fromRelease.get${releaseEntity.primaryKeyAttribute|domain:Model|name|capitalize}());
             HashSet<${fullBinderProtobufClassName}> removedProtobufSet = new HashSet<>(removed.size());
             for (${binderEntity|domain:Model|name} item : removed) {
-                removedProtobufSet.add(${serviceVariableName}.protobufFromModel(item, false)); // the removed ones don't need full detail
+                removedProtobufSet.add(${serviceVariableName}.protobufFromModel(item, 0 /*levels*/)); // the removed ones don't need full detail
             }
             removedProtobuf.toBuilder().addAll${binderEntity|domain:ProtobufDTO|name}(removedProtobufSet).build();
             // CHANGED
             List<${binderEntity|domain:Model|name}> changed = ${binderEntity|domain:Repository|name|uncapitalize}.getChanged${binderEntity|domain:Model|name}ListBy${releaseEntity|domain:Model|name}(fromRelease.get${releaseEntity.primaryKeyAttribute|domain:Model|name|capitalize}(), toRelease.get${releaseEntity.primaryKeyAttribute|domain:Model|name|capitalize}());
             HashSet<${fullBinderProtobufClassName}> changedProtobufSet = new HashSet<>(changed.size());
             for (${binderEntity|domain:Model|name} item : changed) {
-                changedProtobufSet.add(${serviceVariableName}.protobufFromModel(item));
+                changedProtobufSet.add(${serviceVariableName}.protobufFromModel(item, 0 /*levels*/));
             }
             changedProtobuf.toBuilder().addAll${binderEntity|domain:ProtobufDTO|name}(changedProtobufSet).build();
         }

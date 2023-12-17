@@ -42,7 +42,7 @@ $[* The first author simply sets the hasLockAttribute for all the other authors 
 $[* Here we add the "lockedOnly" parameter to the endpoint. *]
     $[ author to getList outlet parameters ]
         $[ if hasLockAttribute ]
-        @RequestParam("lockedOnly") Boolean lockedOnly,
+        @RequestParam(value = "lockedOnly", required = false) Boolean lockedOnly,
         $[/ if ]
     $[/ author ]
 $[* We need to default it to a value of true if not used. *]
@@ -54,25 +54,25 @@ $[* We need to default it to a value of true if not used. *]
 $[* Now we used the "lockedOnly" option to call the appropriate service method for when a parent object is specified. *]
     $[ author to getList outlet parentGet ]
         $[ if hasLockAttribute ]
-            if (lockedOnly) {
-                results = ${service}.getLocked${dtoNameInMethod}ListBy${parentName}(${parentIdArg}, queryStart, queryLimit, false);
+            if (queryLockedOnly) {
+                results = ${service}.getLocked${dtoNameInMethod}ListBy${parentName}($[ if isReleasedEntity ]releaseId, $[/ if ]${parentIdArg}, queryStart, queryLimit, queryLevels);
             } else {
-                results = ${service}.get${dtoNameInMethod}ListBy${parentName}(${parentIdArg}, queryStart, queryLimit, false);
+                results = ${service}.get${dtoNameInMethod}ListBy${parentName}($[ if isReleasedEntity ]releaseId, $[/ if ]${parentIdArg}, queryStart, queryLimit, queryLevels);
             }
         $[ else ]
-            results = ${service}.get${dtoNameInMethod}ListBy${parentName}(${parentIdArg}, queryStart, queryLimit, false);
+            results = ${service}.get${dtoNameInMethod}ListBy${parentName}($[ if isReleasedEntity ]releaseId, $[/ if ]${parentIdArg}, queryStart, queryLimit, queryLevels);
         $[/ if ]
     $[/ author ]
 $[* Now we used the "lockedOnly" option to call the appropriate service method for when a parent object is NOT specified. *]
     $[ author to getList outlet noParentGet ]
         $[ if hasLockAttribute ]
-            if (lockedOnly) {
-                results = ${service}.getLocked${dtoNameInMethod}List(queryStart, queryLimit, false);
+            if (queryLockedOnly) {
+                results = ${service}.getLocked${dtoNameInMethod}List($[ if isReleasedEntity ]releaseId, $[/ if ]queryStart, queryLimit, queryLevels);
             } else {
-                results = ${service}.get${dtoNameInMethod}List(queryStart, queryLimit, false);
+                results = ${service}.get${dtoNameInMethod}List($[ if isReleasedEntity ]releaseId, $[/ if ]queryStart, queryLimit, queryLevels);
             }
         $[ else ]
-            results = ${service}.get${dtoNameInMethod}List(queryStart, queryLimit, false);
+            results = ${service}.get${dtoNameInMethod}List($[ if isReleasedEntity ]releaseId, $[/ if ]queryStart, queryLimit, queryLevels);
         $[/ if ]
     $[/ author ]
 

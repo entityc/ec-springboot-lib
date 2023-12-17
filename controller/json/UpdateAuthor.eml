@@ -3,6 +3,10 @@ $[ author to org.entityc.springboot.controller ]
     $[ author to outlet methods
        D "Adds update endpoints to the controller class for its entity."
     ]
+$[* Composite entities can't be updated. *]
+        $[ if entity.isCompositeEntity ]
+            $[ return ]
+        $[/ if ]
 $[ send imports ]
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -52,7 +56,7 @@ $[/ outlet ]
                     $[ let pkidtype = entity.pkType|language ]
                     $[ let pkidname = entity.primaryKeyAttribute|domain:Model|name|capitalize ]
     public ${dtoClassName} update${modelName}(@PathVariable("id") ${pkidtype} id) throws ServiceException {
-        ${modelName} object = ${service}.get${modelName}ById(id);
+        ${modelName} object = ${service}.get${modelName}ById(id, 0);
         object.set${entity.attributeTagged("release:lock")|domain:Model|name|capitalize}(true);
         ${modelName} resultObject = ${service}.update${modelName}(object);
         return mapper.map(resultObject, ${dtoClassName}.class);

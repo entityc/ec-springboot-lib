@@ -1,0 +1,428 @@
+$[ language java ]
+$[ domain AdminUI ]
+
+$[ import "web/thymeleaf-bootstrap/WebPageFunctions" ]
+$[ import "web/thymeleaf-bootstrap/modal/ModalFunctions" ]
+$[ import "security/SecurityFunctions" ]
+$[ import "release/ReleaseFunctions" ]
+
+$[ call findUserEntity()->(userEntity: userEntity, usernameAttribute: usernameAttribute) ]
+$[ capture filedir ]java/${domain.namespace|path}$[/ capture ]
+
+$[ publisher org.entityc.springboot.web.admin.controller.detail
+   D "This publisher builds a controller class for each entity that controls the data sent to an"
+   D "admin web page used to display the details of an entity object."
+]
+    $[ let securityNamespace = (space.domain("Security")).namespace ]
+    $[ let exceptionNamespace = (space.domain("Exception")).namespace ]
+    $[ foreach entity in space.entities ]
+        $[ if entity.isImplicit || entity.isExtern || entity.isIncluded || entity.isTransient || entity.isSecondary ]$[ continue ]$[/ if ]
+        $[ let pkTypeName = entity.pkType|language ]
+        $[ let pkIsUUID = entity.pkType.isUUIDType ]
+        $[ let domainEntity = entity|domain ]
+        $[ let htmlFilename = "admin/" + domainEntity.name + "_detail" ]
+        $[ let entityDtoClassName = entity|domain:JSONDTO|name ]
+        $[ let className = entity.name + "DetailController" ]
+        $[ call CheckIfReleasedEntity(entity: entity)->(isReleasedEntity: isReleasedEntity) ]
+        $[ call GetReleaseEntityPKAttribute(entity: entity)->(releaseEntityPKAttribute: releaseEntityPKAttribute) ]
+$[******************************************]
+        $[ file filedir className "java" ]
+$[******************************************]
+package ${domain.namespace};
+
+import ${securityNamespace}.PersistentUserDetailsService;
+import ${securityNamespace}.SecurityService;
+import ${exceptionNamespace}.ServiceException;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.servlet.ModelAndView;
+import javax.servlet.http.HttpServletRequest;
+import org.springframework.web.servlet.View;
+import org.springframework.http.HttpStatus;
+import org.springframework.security.access.prepost.PreAuthorize;
+
+$[ receive distinct imports ]
+
+import java.util.Set;
+import java.util.List;
+import java.util.UUID;
+import java.util.Vector;
+import java.util.stream.Collectors;
+
+@Controller
+@RequestMapping(value = "${adminUrlPrefix}")
+public class ${className} {
+
+    @Autowired
+    private SecurityService securityService;
+
+    @Autowired
+    private PersistentUserDetailsService userDetailsService;
+
+$[ receive distinct autowired ]
+
+            $[ function AutoWireEntity
+               D "This function should be called for all entities used in this template. It auto-wires in the"
+               D "service class and imports it along with the JSONDTO class."
+               (entity
+                D "The entity to auto-wire and import."
+               )
+            ]
+$[ send imports ]
+import ${entity|domain:JSONDTO|fullname};
+import ${entity|domain:Service|fullname};
+$[/ send ]
+                $[ let serviceName = entity|domain:Service|name ]
+$[ send autowired ]
+    @Autowired private ${serviceName} ${serviceName|uncapitalize};
+$[/ send ]
+            $[/ function ]
+$[ send imports ]
+import ${userEntity|domain:Model|fullname};
+$[/ send ]
+    /**
+     * Populates the currently logged in user to the page model.
+     */
+    private void populateUser(Model model) {
+        ${userEntity|domain:Model|name} user = userDetailsService.findBy${usernameAttribute|domain:Model|name|capitalize}(securityService.findLoggedInUsername());
+        model.addAttribute("loggedInUser", user);
+    }
+            $[ let serviceName = entity|domain:Service|name ]
+            $[ call AutoWireEntity(entity: entity) ]
+
+$[************************************************************************************************************]
+$[* GET DETAIL *]
+$[************************************************************************************************************]
+    /**
+     * ${adminUrlPrefix}/${entity|domain:APIPath|name}/{id}/detail
+     * Directs the endpoint to use the detail page ${htmlFilename} for ${entity.name}
+     */
+    @GetMapping(value = {"/${entity|domain:APIPath|name}/{id}/detail"})
+$[ outlet securityReadAnnotation
+   D "This is where an author can place annotations based on read access."
+]
+$[/ outlet ]
+    public String get${domainEntity.name}Detail(
+            Model model,
+            $[ if isReleasedEntity ]
+            @RequestParam("releaseId") ${releaseEntityPKAttribute.type|language} releaseId,
+            $[/ if ]
+            @PathVariable("id") ${pkTypeName} id
+    ) throws ServiceException {
+$[ outlet securityReadMethod
+   D "This is where an author place code that checks for specific access rights."
+]
+$[/ outlet ]
+
+        // Get the DTO object by its ID and add it in the page model
+        ${entityDtoClassName} dto = ${serviceName|uncapitalize}.get${entityDtoClassName}ById($[ if isReleasedEntity ]releaseId, $[/ if ]id, 1 /*levels*/);
+        model.addAttribute("${entityDtoClassName|uncapitalize}", dto);
+$[ outlet getBody
+   D "The author can include anything here in the body of the get method."
+]
+$[/ outlet ]
+$[* We need to find all the unique situations where we are not filtering and filtering for a specific attribute *]
+
+        populateUser(model);
+        return "${htmlFilename}";
+    }
+$[* Composite entities can't be updated. *]
+            $[ if !isReleasedEntity ]
+
+$[************************************************************************************************************]
+$[* UPDATE DETAIL FIELDS *]
+$[************************************************************************************************************]
+                $[ if domainEntity.hasDeclaredDomainAttributes || domainEntity.hasDeclaredDomainRelationships ]
+    /**
+     * ${adminUrlPrefix}/${entity|domain:APIPath|name}/{id}/update
+     * The detail page allows the user to edit certain fields. When the user hits a field Edit button, it will go
+     * to this endpoint, where the field to update is contained in the 'field-ident' parameter and the value is in
+     * the 'field-value' parameter.
+     */
+    @PostMapping(value = {"/${entity|domain:APIPath|name}/{id}/update"})
+                    $[ let isUserEntity = (entity|domain:Security).hasTag("user") ]
+$[ outlet securityWriteAnnotation
+   D "This is where an author can place annotations associated with write access."
+]
+$[/ outlet ]
+    public ModelAndView updateFieldIn${domainEntity.name}(HttpServletRequest request, @PathVariable("id") ${pkTypeName} id) throws ServiceException, ParseException {
+$[ send imports ]
+import ${entity|domain:Model|fullname};
+import java.text.ParseException;
+$[/ send ]
+$[ outlet securityWriteMethod
+   D "This is where an author place code that checks for specific access rights."
+]
+$[/ outlet ]
+        ${entity|domain:Model|name} object = ${serviceName|uncapitalize}.get${entity|domain:Model|name}ById(id, 0 /*is 0 level since we are just updating this object*/);
+                    $[ if isUserEntity ]
+$[ send imports ]
+import ${entity|domain:Model|fullname};
+import ${(space.domain("Exception")).namespace}.ForbiddenException;
+import java.text.ParseException;
+$[/ send ]
+        // add authorization checks here and throw exception if necessary
+        if (!${serviceName|uncapitalize}.canEdit(id)) {
+            throw new ForbiddenException("Cannot edit attribute ${attribute.name}.");
+        }
+                    $[/ if ]
+$[ send imports ]
+import ${(space.domain("Utils")).namespace}.ResourceUtils;
+import ${(space.domain("Exception")).namespace}.ValidationException;
+$[/ send ]
+        String[] fieldValues = request.getParameterValues("edit-field-value");
+        String fieldName = request.getParameter("edit-field-ident");
+        if (fieldName == null) {
+            throw new ValidationException("Field to update not provided.");
+        }
+        String fieldValue = fieldValues == null ? null : fieldValues[0];
+                    $[ let ifClause = "if" ]
+$[*-----------------------------------------------------------------------------------------------------------------*]
+                    $[ function genAttributeIfBlock
+                       (space,
+                        entity,
+                        ifClause,
+                        domainAttribute,
+                        serviceName,
+                        secondaryAttributeStack
+                       )->
+                       (addedIfBlock
+                       ) ]
+                        $[ let addedIfBlock = false ]
+                        $[ if domainAttribute.attribute.type.isEntityType ]
+                            $[ do secondaryAttributeStack.add(domainAttribute) ]
+                            $[ foreach secondaryDomainAttribute in (domainAttribute.typeEntity|domain:JSONDTO).attributes ]
+                                $[ call genAttributeIfBlock(entity: domainAttribute.attribute.typeEntity, domainAttribute: secondaryDomainAttribute, space: space, ifClause: ifClause, serviceName: serviceName, secondaryAttributeStack: secondaryAttributeStack)->(addedIfBlock: addedIfBlock) ]
+                            $[/ foreach ]
+                            $[ do secondaryAttributeStack.remove(domainAttribute) ]
+                            $[ return ]
+                        $[/ if ]
+                        $[ let addedIfBlock = true ]
+                        $[ let fieldNameText = domainAttribute.name ]
+                        $[ if secondaryAttributeStack.count > 0 ]
+                            $[ let fieldNameTextPrefix = "" ]
+                            $[ foreach secondaryAttribute in secondaryAttributeStack ]
+                                $[ let fieldNameTextPrefix = fieldNameTextPrefix + secondaryAttribute.attribute.name + "." ]
+                            $[/ foreach ]
+                            $[ let fieldNameText = fieldNameTextPrefix + fieldNameText ]
+                        $[/ if ]
+        ${ifClause} (fieldName.equals("${fieldNameText}")) {
+                        $[ call getContentRelationshipForVirtualAttribute(attribute: domainAttribute.attribute)->(foundRelationship: relationship) ]
+                        $[ let contentEntity = relationship.to.entity ]
+                        $[ if contentEntity != null ]
+$[ send imports ]
+import ${contentEntity|domain:Model|fullname};
+$[/ send ]
+                            $[ let contentClassName = contentEntity|domain:Model|name ]
+            ${contentEntity.pkType|language} contentId = object.get${relationship|domain:Model|name|capitalize}Id();
+            ${contentClassName} content = null;
+            if (contentId == ${contentEntity.pkType.isUUIDType ? "null":"0"}) {
+                // create a content
+                content = new ${contentClassName}();
+                content = ${contentEntity|domain:Service|name|uncapitalize}.create${contentClassName}(content);
+                contentId = content.getId();
+                object.set${relationship|domain:Model|name|capitalize}Id(contentId);
+                ${serviceName|uncapitalize}.update${entity|domain:Model|name}(object);
+            }
+                            $[ let localizedContentEntity = ((contentEntity|domain:Localization).relationshipToEntityTagged("content:localized")).to.entity ]
+$[ send imports ]
+import ${localizedContentEntity|domain:Model|fullname};
+$[/ send ]
+                            $[ let localizedContentServiceVariable = localizedContentEntity|domain:Service|name|uncapitalize ]
+                            $[ let localizedContentModelName = localizedContentEntity|domain:Model|name ]
+                            $[ let textAttribute = (localizedContentEntity|domain:Localization).attributeTagged("content:text") ]
+            ${localizedContentModelName} localizedContent = ${localizedContentServiceVariable}.getPreferred${localizedContentModelName}(contentId);
+            localizedContent.set${textAttribute|domain:Model|name|capitalize}(fieldValue);
+            ${localizedContentServiceVariable}.update${localizedContentModelName}(localizedContent);
+                        $[ else ]
+                            $[ let fieldName = domainAttribute|domain:Model|name|capitalize ]
+                            $[ let fieldValue = null ]
+                            $[ switch domainAttribute.attribute.type ]
+                                $[ case date ]
+                                    $[ capture fieldValue ]ResourceUtils.ParseDateString(fieldValue)$[/ capture ]
+                                $[ case boolean ]
+                                    $[ capture fieldValue ]fieldValue != null && (fieldValue.equalsIgnoreCase("true") || fieldValue.equals("1"))$[/ capture ]
+                                $[ case string ]
+                                    $[ capture fieldValue ]fieldValue$[/ capture ]
+                                $[ case int32 ]
+                                    $[ capture fieldValue ]Integer.valueOf(fieldValue)$[/ capture ]
+                                $[ case int64 ]
+                                    $[ capture fieldValue ]Long.valueOf(fieldValue)$[/ capture ]
+                                $[ case float ]
+                                    $[ capture fieldValue ]Float.valueOf(fieldValue)$[/ capture ]
+                                $[ case double ]
+                                    $[ capture fieldValue ]Double.valueOf(fieldValue)$[/ capture ]
+                                $[ case enum ]
+$[ send imports ]
+import ${domainAttribute.type.enumType|domain:Model|fullname};
+$[/ send ]
+                                    $[ let enumModelName = domainAttribute.type.enumType|domain:Model|name ]
+                                    $[ if domainAttribute.attribute.isArray ]
+$[ send imports ]
+import java.util.HashSet;
+$[/ send ]
+            Set<${enumModelName}> set = new HashSet<>();
+            for(String value : fieldValues) {
+                set.add(${enumModelName}.numberValueOf(Integer.valueOf(value)));
+            }
+                                        $[ let fieldName = domainAttribute|domain:Model|name|capitalize ]
+                                        $[ capture fieldValue ]set$[/ capture ]
+                                    $[ else ]
+                                        $[ let fieldName = domainAttribute|domain:Model|name|capitalize ]
+                                        $[ capture fieldValue ]${enumModelName}.numberValueOf(Integer.valueOf(fieldValue))$[/ capture ]
+                                    $[/ if ]
+                                $[ default ]
+            // todo
+                            $[/ switch ]
+                            $[ let secondaryAttributeGets = "" ]
+                            $[ foreach secondaryAttribute in secondaryAttributeStack ]
+                                $[ let secondaryAttributeGets = secondaryAttributeGets + "get" + (secondaryAttribute|domain:JSONDTO|name|capitalize) + "()." ]
+                            $[/ foreach ]
+            object.${secondaryAttributeGets}set${fieldName}(${fieldValue});
+                            $[ let topEntity = entity ]
+                            $[ if secondaryAttributeStack.count > 0 ]
+                                $[ let topEntity = (secondaryAttributeStack.first()).domainEntity ]
+                            $[/ if ]
+                        $[/ if ]
+        }
+                    $[/ function ]
+$[*-----------------------------------------------------------------------------------------------------------------*]
+                    $[ foreach domainAttribute in domainEntity.declaredDomainAttributes ]
+                        $[ if !domainAttribute.hasTag("detail") ]$[ continue ]$[/ if ]
+                        $[ if domainAttribute.type.isEntityType && !domainAttribute.hasTag("flatten") ]$[ continue ]$[/ if ]
+                        $[ call genAttributeIfBlock(space: space, domainAttribute: domainAttribute, entity: entity, serviceName: serviceName, secondaryAttributeStack: @[]@, ifClause: ifClause)->(addedIfBlock: addedIfBlock) ]
+                        $[ if addedIfBlock ]$[ let ifClause = "else if" ]$[/ if ]
+                    $[/ foreach ]
+                    $[ foreach domainRelationship in domainEntity.declaredDomainRelationships ]
+                        $[ if domainRelationship.to.isOne ]
+        ${ifClause} (fieldName.equals("${domainRelationship.relationship.name}")) {
+                            $[ let idCode = "Long.valueOf(fieldValue)" ]
+                            $[ if domainRelationship.to.entity.pkType.isUUIDType ]
+                                $[ let idCode = "UUID.fromString(fieldValue)" ]
+                            $[/ if ]
+            object.set${domainRelationship|domain:Model|name|capitalize}Id(${idCode});
+        }
+                            $[ let ifClause = "else if" ]
+                        $[/ if ]
+                    $[/ foreach ]
+        ${serviceName|uncapitalize}.update${entity|domain:Model|name}(object);
+        request.setAttribute(
+          View.RESPONSE_STATUS_ATTRIBUTE, HttpStatus.FOUND);
+        return new ModelAndView("redirect:${adminUrlPrefix}/${entity|domain:APIPath|name}/" + id$[ if pkIsUUID ].toString()$[/ if ] + "/detail");
+    }
+
+    /**
+     * DELETE ${adminUrlPrefix}/${entity|domain:APIPath|name}/{id}
+     * The detail page allows the user to edit certain fields. When the user hits a field Edit button, it will go
+     * to this endpoint, where the field to update is contained in the 'field-ident' parameter and the value is in
+     * the 'field-value' parameter.
+     */
+$[ send imports ]
+import ${entity|domain:Model|fullname};
+$[/ send ]
+    @PostMapping(value = {"/${entity|domain:APIPath|name}/{id}/delete"})
+                    $[ call preAuthorizeEntity(accessType: "write", entity: entity) ]
+    public ModelAndView delete${domainEntity.name}(HttpServletRequest request, @PathVariable("id") ${pkTypeName} id) throws ServiceException {
+        // check to make sure it exists
+                    $[ if entity.hasPrimaryParentRelationship ]
+                        $[ let parentEntity = entity.primaryParentEntity ]
+                        $[ let parentPkTypeName = parentEntity.pkType|language ]
+        ${parentPkTypeName} ${entity|name|uncapitalize}ParentId = ${entity|domain:Service|name|uncapitalize}.getParentId(id);
+                    $[/ if ]
+        ${entity|domain:Model|name} object = ${serviceName|uncapitalize}.get${entity|domain:Model|name}ById(id, 0 /*levels*/);
+        ${serviceName|uncapitalize}.delete${entity|domain:Model|name}ById(id);
+                    $[ if entity.hasPrimaryParentRelationship ]
+        return new ModelAndView("redirect:${adminUrlPrefix}/${parentEntity|domain:APIPath|name}/" + ${entity|name|uncapitalize}ParentId + "/detail");
+                    $[ else ]
+        return new ModelAndView("redirect:${adminUrlPrefix}/${entity|domain:APIPath|name}");
+                    $[/ if ]
+    }
+
+                    $[ let assetAttributes = @[]@ ]
+                    $[ foreach attribute in entity.attributes ]
+                        $[ if attribute.type.isEntityType ]
+                            $[ let secondaryEntity = attribute.typeEntity ]
+                            $[ if secondaryEntity.hasTag("asset:file") ]
+                                $[ do assetAttributes.add(attribute) ]
+                            $[/ if ]
+                        $[/ if ]
+                    $[/ foreach ]
+                    $[ if !assetAttributes.isEmpty() ]
+$[ send imports ]
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestPart;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.ResponseStatus;
+import java.io.IOException;
+import ${(space.domain("Exception")).namespace}.EntityNotFoundException;
+import ${(space.domain("Exception")).namespace}.ValidationException;
+import ${entity|domain:Model|fullname};
+$[/ send ]
+    @PostMapping(value = {"/${entity|domain:APIPath|name}/{id}/upload-file"})
+                        $[ let isUserEntity = (entity|domain:Security).hasTag("user") ]
+                        $[ if !isUserEntity ]
+                            $[ call preAuthorizeEntity(accessType: "write", entity: entity) ]
+                        $[/ if ]
+    public ModelAndView upload${entity.name}File(HttpServletRequest request, @PathVariable("id") UUID id,
+                                @RequestPart(value = "file") MultipartFile file
+                                ) throws ServiceException {
+        String fieldName = request.getParameter("upload-field-ident");
+        String fullFilename = file.getOriginalFilename();
+        String extension = fullFilename.substring(fullFilename.lastIndexOf(".")+1);
+                        $[ let modelName = entity|domain:Model|name ]
+                        $[ let modelVariableName = modelName|uncapitalize ]
+        ${modelName} ${modelVariableName};
+        try {
+            ${modelVariableName} = ${serviceName|uncapitalize}.get${modelName}ById(id, 0 /*levels*/);
+        } catch (EntityNotFoundException e) {
+            throw new ValidationException("Could not find ${modelName} by its id: " + id);
+        }
+        byte[] byteArray;
+        try {
+            byteArray = file.getBytes();
+        } catch (IOException e) {
+                        $[ let exceptionText = attribute|domain:Model|name|words|lowercase ]
+                        $[ if hasCollection ]
+                            $[ capture exceptionText ]${exceptionText} of collection ${collectionName|words|lowercase}$[/ capture ]
+                        $[/ if ]
+            throw new ValidationException("Could not read uploaded file for ${modelName} ${exceptionText}.");
+        }
+
+                        $[ let ifClause = "if" ]
+                        $[ foreach attribute in assetAttributes ]
+        ${ifClause} (fieldName.equals("${attribute.name}")) {
+                            $[ let hasCollection = collectionAttribute != null ]
+                            $[ if hasCollection ]
+                                $[ let collectionName = collectionAttribute|domain:Model|name ]
+                                $[ capture assetPath ]${collectionAttribute|domain:APIPath|name}/${attribute|domain:APIPath|name}$[/ capture ]
+                            $[/ if ]
+                            $[ let methodName = attribute|domain:Model|name|capitalize ]
+                            $[ if hasCollection ]
+                                $[ capture methodName ]${collectionName|capitalize}${methodName}$[/ capture ]
+                            $[/ if ]
+            ${serviceName|uncapitalize}.upload${methodName}(${modelVariableName}, file.getContentType(), byteArray, extension);
+                            $[ let ifClause = "else if" ]
+        }
+                        $[/ foreach ]
+        else {
+            throw new ValidationException("Could not uploaded file non-asset attribute: " + fieldName);
+        }
+        return new ModelAndView("redirect:${adminUrlPrefix}/${entity|domain:APIPath|name}/" + id$[ if pkIsUUID ].toString()$[/ if ] + "/detail");
+    }
+                    $[/ if ]
+                $[/ if ]
+            $[/ if ]
+}
+        $[/ file ]
+    $[/ foreach ]
+$[/ publisher ]

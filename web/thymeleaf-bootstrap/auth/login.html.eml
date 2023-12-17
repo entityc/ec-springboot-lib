@@ -7,7 +7,6 @@ $[ let authUrlPrefix = ((space|domain:APIPath).domain.tagValue("url:prefix:auth"
     $[call commonHead(title:"Login")]
 </head>
 <body>
-$[call commonBodyScripts()]
 $[call commonBodyNavbar(backURL:null, title:"Login", excludeLogout:true)]
 <br>
 <br>

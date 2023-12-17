@@ -1,60 +1,64 @@
-$[D summary, main "This template contains the author that is responsible for generating the delete object"]
-$[D summary, main "service methods."]
-$[import "util/AutoWired"]
-$[author to org.entityc.springboot.service]
-    $[author to outlet methods
-      D "**Delete by Parent** Creates a method that can delete all objects for a specified parent"
-      D "object. `void delete`*entity*`By`*parent*`Id();`"
+$[ D summary, main "This template contains the author that is responsible for generating the delete object" ]
+$[ D summary, main "service methods." ]
+$[ import "util/AutoWired" ]
+$[ author to org.entityc.springboot.service ]
+    $[ author to outlet methods
+       D "**Delete by Parent** Creates a method that can delete all objects for a specified parent"
+       D "object. `void delete`*entity*`By`*parent*`Id();`"
     ]
-        $[if entity.hasParentRelationship]
-            $[foreach entity.relationships]$[if !relationship.isParent]$[continue]$[/if]
+$[* Composite entities can't be deleted. *]
+        $[ if entity.isCompositeEntity ]
+            $[ return ]
+        $[/ if ]
+        $[ if entity.hasParentRelationship ]
+            $[ foreach entity.relationships ]$[ if !relationship.isParent ]$[ continue ]$[/ if ]
     public void delete${modelName}By${relationship.name|capitalize}Id(${relationship.to.entity.pkType|language} ${relationship.name}Id) throws ServiceException {
         try {
-                $[if entity.hasTag("release:binder") && entity.hasPrimaryParentRelationship && entity.primaryParentRelationship.to.entity.hasAttributeTagged("release:lock")]
+                $[ if entity.hasTag("release:binder") && entity.hasPrimaryParentRelationship && entity.primaryParentRelationship.to.entity.hasAttributeTagged("release:lock") ]
             // need to throw an exception if the parent ${entity.primaryParentRelationship.to.entity.name} object is locked.
-                    $[let parentEntity = entity.primaryParentRelationship.to.entity]
-                    $[let lockAttribute = parentEntity.attributeTagged("release:lock")]
-                    $[call addAutoWired(domainEntity:parentEntity|domain:Repository)]
-$[send imports]
+                    $[ let parentEntity = entity.primaryParentRelationship.to.entity ]
+                    $[ let lockAttribute = parentEntity.attributeTagged("release:lock") ]
+                    $[ call addAutoWired(domainEntity: parentEntity|domain:Repository) ]
+$[ send imports ]
 import ${exceptionNamespace}.UnauthorizedException;
-$[/send]
+$[/ send ]
             Optional<${parentEntity|domain:Model|name}> parentObjectOptional = ${parentEntity|domain:Repository|name|uncapitalize}.findById(${relationship.name}Id);
             if (parentObjectOptional.isPresent() && parentObjectOptional.get().is${lockAttribute|domain:Model|name|capitalize}()) {
                 throw new UnauthorizedException("The parent ${parentEntity|name|words} object is locked.");
             }
-                $[/if]
+                $[/ if ]
             ${repositoryVariableName}.delete${modelName}By${relationship.name|capitalize}Id(${relationship.name}Id);
-                $[if useCache]
-                    $[foreach entity.relationships]$[if !relationship.isParent || relationship.isOptional]$[continue]$[/if]
-                        $[let hasCache = relationship.reverseRelationship|domain|has cache]
-                        $[if !hasCache]$[continue]$[/if]
+                $[ if useCache ]
+                    $[ foreach entity.relationships ]$[ if !relationship.isParent || relationship.isOptional ]$[ continue ]$[/ if ]
+                        $[ let hasCache = relationship.reverseRelationship|domain|has cache ]
+                        $[ if !hasCache ]$[ continue ]$[/ if ]
             ${relationship.name}ListCache.invalidate(${relationship.name}Id);
-                    $[/foreach]
-                $[/if]
+                    $[/ foreach ]
+                $[/ if ]
         } catch (DataAccessException ex) {
             throw new DaoException(ex.getMessage(), ex);
         }
     }
 
-            $[/foreach]
-        $[/if]
-    $[/author]
-    $[author to outlet methods
-      D "**Delete by ID** Creates a method that can delete a single object by its ID."
+            $[/ foreach ]
+        $[/ if ]
+    $[/ author ]
+    $[ author to outlet methods
+       D "**Delete by ID** Creates a method that can delete a single object by its ID."
     ]
-        $[if entity.hasPrimaryKey]
-            $[let pkidtype = entity.pkType|language]
-            $[let pkidname = entity.primaryKeyAttribute|domain|name]
+        $[ if entity.hasPrimaryKey ]
+            $[ let pkidtype = entity.pkType|language ]
+            $[ let pkidname = entity.primaryKeyAttribute|domain|name ]
     public void delete${modelName}ById(${pkidtype} id) throws ServiceException {
         try {
-            $[if entity.hasTag("release:binder") && entity.hasPrimaryParentRelationship && entity.primaryParentRelationship.to.entity.hasAttributeTagged("release:lock")]
+            $[ if entity.hasTag("release:binder") && entity.hasPrimaryParentRelationship && entity.primaryParentRelationship.to.entity.hasAttributeTagged("release:lock") ]
             // need to throw an exception if the parent ${entity.primaryParentRelationship.to.entity.name} object is locked.
-                $[let parentEntity = entity.primaryParentRelationship.to.entity]
-                $[let lockAttribute = parentEntity.attributeTagged("release:lock")]
-                $[call addAutoWired(domainEntity:parentEntity|domain:Repository)]
-$[send imports]
+                $[ let parentEntity = entity.primaryParentRelationship.to.entity ]
+                $[ let lockAttribute = parentEntity.attributeTagged("release:lock") ]
+                $[ call addAutoWired(domainEntity: parentEntity|domain:Repository) ]
+$[ send imports ]
 import ${exceptionNamespace}.UnauthorizedException;
-$[/send]
+$[/ send ]
             Optional<${entity|domain:Model|name}> objectOptional = ${repositoryVariableName}.findById(id);
             if (objectOptional.isPresent()) {
                 Optional<${parentEntity|domain:Model|name}> parentObjectOptional = ${parentEntity|domain:Repository|name|uncapitalize}.findById(objectOptional.get().get${entity.primaryParentRelationship|domain:Model|name|capitalize}Id());
@@ -64,31 +68,31 @@ $[/send]
             } else {
                 throw new EntityNotFoundException("The specified ${entity|name|words} object was not found.");
             }
-            $[/if]
-            $[if useCache]
-$[receive distinct defineObject]
-                $[let invalidatedObject = false]
-                $[foreach entity.relationships]
-                    $[if !relationship.isParent || relationship.isOptional]$[continue]$[/if]
-                    $[let hasCache = relationship.reverseRelationship|domain|has cache]
-                    $[if !hasCache]$[continue]$[/if]
-                    $[let invalidatedObject = true]
-$[send defineObject]
+            $[/ if ]
+            $[ if useCache ]
+$[ receive distinct defineObject ]
+                $[ let invalidatedObject = false ]
+                $[ foreach entity.relationships ]
+                    $[ if !relationship.isParent || relationship.isOptional ]$[ continue ]$[/ if ]
+                    $[ let hasCache = relationship.reverseRelationship|domain|has cache ]
+                    $[ if !hasCache ]$[ continue ]$[/ if ]
+                    $[ let invalidatedObject = true ]
+$[ send defineObject ]
             Optional<${modelName}> object = ${repositoryVariableName}.findById(id);
             if( object.isPresent()) {
-$[/send]
+$[/ send ]
                 ${relationship.name}ListCache.invalidate(object.get${relationship.name|capitalize}Id());
-                $[/foreach]
-                $[if invalidatedObject]
+                $[/ foreach ]
+                $[ if invalidatedObject ]
             }
-                $[/if]
-            $[/if]
+                $[/ if ]
+            $[/ if ]
             ${repositoryVariableName}.deleteById(id);
         } catch (DataAccessException ex) {
             throw new DaoException(ex.getMessage(), ex);
         }
     }
 
-        $[/if]
-    $[/author]
-$[/author]
+        $[/ if ]
+    $[/ author ]
+$[/ author ]

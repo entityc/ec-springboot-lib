@@ -1,0 +1,43 @@
+$[ function GetHeadlineExpression
+   D "This generates a Thymeleaf expression used for constructing a Headline string based on"
+   D "attribute values. The expression will try to construct the headline as follows: *header*"
+   D "*number*: *title*.  The entity title will be used as the *header* if it is tagged with"
+   D "`headline:prefix`. An attribute tagged with `headline:number` will be used for the"
+   D "*number* (if found). Finally an attribute tagged with `headline:title` will be used as the"
+   D "*title* (if found)."
+   (entity
+    D "The entity associated with the headline.",
+    dtoEntity
+    D "The JSONDTO domain entity."
+   )->
+   (thExpression
+    D "The produced Thymeleaf expression."
+   )
+]
+    $[ let entityAsHeader = (entity|domain:AdminUI).hasTag("headline:prefix") ]
+    $[ let numberAttribute = null ]
+    $[ let titleAttribute = null ]
+    $[ foreach attribute in dtoEntity.attributes ]
+        $[ if (attribute|domain:AdminUI).hasTag("headline:number") ]
+            $[ let numberAttribute = attribute ]
+        $[ elseif (attribute|domain:AdminUI).hasTag("headline:title") ]
+            $[ let titleAttribute = attribute ]
+        $[/ if ]
+    $[/ foreach ]
+    $[ let titleAttributeField = (titleAttribute != null && titleAttribute.type.isEnumType) ? ".title": "" ]
+    $[ let includeColon = entityAsHeader || numberAttribute != null ]
+    $[ if entityAsHeader || numberAttribute != null || titleAttribute != null ]
+        $[ capture thExpression ]|$[ if entityAsHeader ]${entity|domain:AdminUI|title}$[/ if ]$[ if numberAttribute != null ] ${$}{${dtoEntity|name|uncapitalize}.${numberAttribute|name}}$[/ if ]$[ if titleAttribute != null ]${includeColon ? ": ":""}${$}{${dtoEntity|name|uncapitalize}.${titleAttribute|name}${titleAttributeField}}$[/ if ]|$[/ capture ]
+    $[ else ]
+        $[ let thExpression = null ]
+    $[/ if ]
+$[/ function ]
+
+$[ author to org.entityc.springboot.web.admin.html.detail ]
+    $[ author to outlet HeadlineSection ]
+        $[ call GetHeadlineExpression(dtoEntity: entity|domain:JSONDTO, entity: entity)->(thExpression: headlineExpression) ]
+        $[ if headlineExpression != null ]
+    <h2 th:text="${headlineExpression}"></h2>
+        $[/ if ]
+    $[/ author ]
+$[/ author ]

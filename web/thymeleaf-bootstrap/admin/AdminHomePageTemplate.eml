@@ -19,6 +19,7 @@ $[ D detail "the entity are included by tagging the fields with the tag `summary
 
 $[ import "web/thymeleaf-bootstrap/WebPageFunctions" ]
 $[ import "security/SecurityFunctions" ]
+$[ import "release/ReleaseFunctions" ]
 
 $[ let projectBaseApiPath = space.getMetadataValue("appBaseUrlPath") ]
 $[ if adminUrlPrefix == null || adminUrlPrefix == "" ]
@@ -65,9 +66,6 @@ $[/ outlet ]
         $[/ foreach ]
     </div>
 </div>
-
-        $[ call commonBodyScripts() ]
-
 </body>
 </html>
     $[/ file ]
@@ -102,6 +100,7 @@ $[/ outlet ]
                 $[ if topEntity.hasPrimaryParentRelationship ]
                     $[ log info ]When placing entities with primary parents (like ${topEntity.name}) at the top level will not have a create button since there is no parent defined.$[/ log ]
                 $[ else ]
+    <!-- BUTTON FOR CREATING NEW ${topEntity|name} OBJECTS -->
     <form th:if="${$}{canAdd${topEntity|name}}" th:action="@{${adminUrlPrefix}/${topEntity|domain:APIPath|name}/add}" method="post">
         <input type="submit" name="${topEntity.name}add" id="${topEntity.name}-add"
                class="btn btn-primary" value="New ${topEntity|title}" />
@@ -111,45 +110,47 @@ $[/ outlet ]
 	<div class="container" th:unless="${$}{#lists.isEmpty(${topEntityListName})}">
             $[ if topEntity.hasTag("paging:size") ]
                 $[ let pageSize = topEntity.tagValue("paging:size") ]
+                $[ capture pageUrl ]${adminUrlPrefix}/${topEntity|domain:APIPath|name}$[/ capture ]
+    <!-- PAGING -->
     <nav aria-label="...">
       <ul th:unless="${$}{lastPage==0}" class="pagination justify-content-end">
         <li th:unless="${$}{page>0}" class="page-item disabled">
           <span class="page-link">Previous</span>
         </li>
         <li th:if="${$}{page>0}" class="page-item">
-          <a class="page-link" th:href="@{'${adminUrlPrefix}/${topEntity|domain:APIPath|name}?page=' + ${$}{page-1}}">Previous</a>
+          <a class="page-link" th:href="@{'${pageUrl}?page=' + ${$}{page-1}}">Previous</a>
         </li>
         <li th:if="${$}{page>2}" class="page-item">
-            <a class="page-link" th:href="@{'${adminUrlPrefix}/${topEntity|domain:APIPath|name}?page=' + ${$}{page-3}}" th:text="${$}{page-2}">prev</a>
+            <a class="page-link" th:href="@{'${pageUrl}?page=' + ${$}{page-3}}" th:text="${$}{page-2}">prev</a>
         </li>
         <li th:if="${$}{page>1}" class="page-item">
-            <a class="page-link" th:href="@{'${adminUrlPrefix}/${topEntity|domain:APIPath|name}?page=' + ${$}{page-2}}" th:text="${$}{page-1}">prev</a>
+            <a class="page-link" th:href="@{'${pageUrl}?page=' + ${$}{page-2}}" th:text="${$}{page-1}">prev</a>
         </li>
         <li th:if="${$}{page>0}" class="page-item">
-            <a class="page-link" th:href="@{'${adminUrlPrefix}/${topEntity|domain:APIPath|name}?page=' + ${$}{page-1}}" th:text="${$}{page}">prev</a>
+            <a class="page-link" th:href="@{'${pageUrl}?page=' + ${$}{page-1}}" th:text="${$}{page}">prev</a>
         </li>
         <li class="page-item active" aria-current="page">
           <span class="page-link" th:text="${$}{page+1}">page</span>
         </li>
         <li th:if="${$}{page<lastPage}" class="page-item">
-            <a class="page-link" th:href="@{'${adminUrlPrefix}/${topEntity|domain:APIPath|name}?page=' + ${$}{page+1}}" th:text="${$}{page+2}">next</a>
+            <a class="page-link" th:href="@{'${pageUrl}?page=' + ${$}{page+1}}" th:text="${$}{page+2}">next</a>
         </li>
         <li th:if="${$}{page<(lastPage-1)}" class="page-item">
-            <a class="page-link" th:href="@{'${adminUrlPrefix}/${topEntity|domain:APIPath|name}?page=' + ${$}{page+2}}" th:text="${$}{page+3}">next</a>
+            <a class="page-link" th:href="@{'${pageUrl}?page=' + ${$}{page+2}}" th:text="${$}{page+3}">next</a>
         </li>
         <li th:if="${$}{page<(lastPage-2)}" class="page-item">
-            <a class="page-link" th:href="@{'${adminUrlPrefix}/${topEntity|domain:APIPath|name}?page=' + ${$}{page+3}}" th:text="${$}{page+4}">next</a>
+            <a class="page-link" th:href="@{'${pageUrl}?page=' + ${$}{page+3}}" th:text="${$}{page+4}">next</a>
         </li>
         <li th:unless="${$}{page<lastPage}" class="page-item disabled">
           <span class="page-link">Next</span>
         </li>
         <li th:if="${$}{page<lastPage}" class="page-item">
-          <a class="page-link" th:href="@{'${adminUrlPrefix}/${topEntity|domain:APIPath|name}?page=' + ${$}{page+1}}">Next</a>
+          <a class="page-link" th:href="@{'${pageUrl}?page=' + ${$}{page+1}}">Next</a>
         </li>
       </ul>
     </nav>
             $[/ if ]
-        <!-- Main Table for ${topEntity.name} -->
+        <!-- MAIN TABLE FOR ${topEntity.name} -->
 		<table class="table table-striped">
 		<thead>
 		<tr>
@@ -207,9 +208,6 @@ $[/ outlet ]
 			</tbody>
 		</table>
 </div>
-
-            $[ call commonBodyScripts() ]
-
 </body>
 </html>
         $[/ file ]
@@ -255,6 +253,7 @@ $[ receive distinct serviceDeclarations ]
 
     $[ call findRoleEnum()->(roleEnum: roleEnum, defaultEnumItem: defaultEnumItem) ]
     $[ foreach topEntity in (space|domain).entitiesTagged("home")|sort ]
+        $[ call CheckIfReleasedEntity(entity: topEntity.entity)->(isReleasedEntity: isReleasedEntity) ]
         $[ let hasPaging = topEntity.hasTag("paging:size") ]
     @GetMapping(value = {"/${topEntity|domain:APIPath|name}"})
     public String ${topEntity.name|uncapitalize}Home(Model model$[ if hasPaging ], @Param("page") Long page$[/ if ]) throws ServiceException {
@@ -276,10 +275,10 @@ $[/ send ]
             page = 0L;
         }
         $[/ if ]
-        long totalItemCount = ${serviceClassName|uncapitalize}.get${topEntity|domain:Model|name}Count();
+        long totalItemCount = ${serviceClassName|uncapitalize}.get${topEntity|domain:Model|name}Count($[ if isReleasedEntity ]null$[/ if ]);
         $[ let objectLevelAccess = (topEntity|domain:Security).hasTag("access:object:level") ]
         $[ if objectLevelAccess ]
-        model.addAttribute("${topEntityListName}", ${serviceClassName|uncapitalize}.get${topEntity|domain:JSONDTO|name}ListFor${userEntity|domain:Model|name}(${pageArgs}, true));
+        model.addAttribute("${topEntityListName}", ${serviceClassName|uncapitalize}.get${topEntity|domain:JSONDTO|name}ListFor${userEntity|domain:Model|name}(${pageArgs}, 1 /*levels*/));
             $[ if hasPaging ]
         model.addAttribute("${topEntity|name|uncapitalize}Count", ${serviceClassName|uncapitalize}.get${topEntity|domain:Model|name}Count());
         model.addAttribute("lastPage", (totalItemCount-1) / ${pageSize});
@@ -298,7 +297,7 @@ $[/ send ]
                 $[ call rolesContains(accessType: "read", rolesArrayName: "roles", entity: topEntity)->(hasRoles: hasRoles, rolesExpr: rolesExpr) ]
                 $[ if hasRoles ]
         if (${rolesExpr}) {
-            model.addAttribute("${topEntityListName}", ${serviceClassName|uncapitalize}.get${topEntity|domain:JSONDTO|name}List(${pageArgs}, true));
+            model.addAttribute("${topEntityListName}", ${serviceClassName|uncapitalize}.get${topEntity|domain:JSONDTO|name}List($[if isReleasedEntity]null, $[/if]${pageArgs}, 1 /*levels*/));
                     $[ if hasPaging ]
             model.addAttribute("${topEntity|name|uncapitalize}Count", totalItemCount);
             model.addAttribute("lastPage", (totalItemCount-1) / ${pageSize});

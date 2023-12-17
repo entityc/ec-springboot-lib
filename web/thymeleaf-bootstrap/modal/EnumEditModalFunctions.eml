@@ -18,13 +18,13 @@ $[function insertEnumEditModalHTML
         <!-- -->
         <!-- ENUM EDIT MODAL for entity: ${entity|name} -->
         <!-- -->
-        <div class="modal fade" id="${attribute.type.name}_EditModal" tabindex="-1" role="dialog" aria-labelledby="${attribute.type.name}_EditModalLabel" aria-hidden="true">
+        <div class="modal fade" id="${attribute.type.name}_EnumEditModal" tabindex="-1" role="dialog" aria-labelledby="${attribute.type.name}_EnumEditModalLabel" aria-hidden="true">
           <div class="modal-dialog modal-sm" role="document">
             <form th:action="@{${adminUrlPrefix}/${entityPrefix}/{id}/update(id=${$}{${entityDtoClassName}.id})}" method="post">
 				<input id="${attribute.name|dashes}-edit-field-ident" name="edit-field-ident" type="hidden"/>
                 <div class="modal-content">
                   <div class="modal-header">
-                    <h5 class="modal-title" id="${attribute.name}_EditModalLabel">Edit Field</h5>
+                    <h5 class="modal-title" id="${attribute.name}_EnumEditModalLabel">Edit Field</h5>
                     <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
                       <span aria-hidden="true">&times;</span>
                     </button>
@@ -58,16 +58,16 @@ $[function insertEnumEditModalScript
   )
 ]
 <script>
-var ${attribute.type.name}_EditModal = document.getElementById('${attribute.type.name}_EditModal')
-${attribute.type.name}_EditModal.addEventListener('show.bs.modal', function (event) {
+var ${attribute.type.name}_EnumEditModal = document.getElementById('${attribute.type.name}_EnumEditModal')
+${attribute.type.name}_EnumEditModal.addEventListener('show.bs.modal', function (event) {
   // Button that triggered the modal
   var button = event.relatedTarget
   var fieldName = button.getAttribute('data-bs-field-name')
   var fieldTitle = button.getAttribute('data-bs-field-title')
   var enumItems = button.getAttribute('data-bs-field-value');
   var modalFieldIdent = document.getElementById('${attribute.name|dashes}-edit-field-ident')
-  var modalTitle = ${attribute.type.name}_EditModal.querySelector('.modal-title')
-  var modalBodySelect = ${attribute.type.name}_EditModal.querySelector('.modal-body select')
+  var modalTitle = ${attribute.type.name}_EnumEditModal.querySelector('.modal-title')
+  var modalBodySelect = ${attribute.type.name}_EnumEditModal.querySelector('.modal-body select')
   modalFieldIdent.value = fieldName
   modalTitle.textContent = 'Edit ' + fieldTitle
   for ( var i = 0, len = modalBodySelect.options.length; i < len; i++ ) {
@@ -96,13 +96,13 @@ $[function insertManyEnumEditModalHTML
   )
 ]
     $[let entityPrefix = entity|domain:APIPath|name|uncapitalize]
-        <div class="modal fade" id="${attribute.type.name}_Multi_EditModal" tabindex="-1" role="dialog" aria-labelledby="${attribute.type.name}_Multi_EditModalLabel" aria-hidden="true">
+        <div class="modal fade" id="${attribute.type.name}_Multi_EnumEditModal" tabindex="-1" role="dialog" aria-labelledby="${attribute.type.name}_Multi_EnumEditModalLabel" aria-hidden="true">
           <div class="modal-dialog modal-sm" role="document">
             <form th:action="@{${adminUrlPrefix}/${entity|domain:APIPath|name}/{id}/update(id=${$}{${entityDtoClassName}.id})}" method="post">
 				<input id="${attribute.name|dashes}-edit-field-ident" name="edit-field-ident" type="hidden"/>
                 <div class="modal-content">
                   <div class="modal-header">
-                    <h5 class="modal-title" id="${attribute.type.name}_Multi_EditModalLabel">Edit Field</h5>
+                    <h5 class="modal-title" id="${attribute.type.name}_Multi_EnumEditModalLabel">Edit Field</h5>
                     <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
                       <span aria-hidden="true">&times;</span>
                     </button>
@@ -132,16 +132,16 @@ $[function insertManyEnumEditModalScript
   )
 ]
 <script>
-var ${attribute.type.name}_Multi_EditModal = document.getElementById('${attribute.type.name}_Multi_EditModal')
-${attribute.type.name}_Multi_EditModal.addEventListener('show.bs.modal', function (event) {
+var ${attribute.type.name}_Multi_EnumEditModal = document.getElementById('${attribute.type.name}_Multi_EnumEditModal')
+${attribute.type.name}_Multi_EnumEditModal.addEventListener('show.bs.modal', function (event) {
   // Button that triggered the modal
   var button = event.relatedTarget
   var fieldName = button.getAttribute('data-bs-field-name')
   var fieldTitle = button.getAttribute('data-bs-field-title')
   var enumItems = button.getAttribute('data-bs-field-value');
   var modalFieldIdent = document.getElementById('${attribute.name|dashes}-edit-field-ident')
-  var modalTitle = ${attribute.type.name}_Multi_EditModal.querySelector('.modal-title')
-  var modalBodySelect = ${attribute.type.name}_Multi_EditModal.querySelector('.modal-body select')
+  var modalTitle = ${attribute.type.name}_Multi_EnumEditModal.querySelector('.modal-title')
+  var modalBodySelect = ${attribute.type.name}_Multi_EnumEditModal.querySelector('.modal-body select')
   modalFieldIdent.value = fieldName
   modalTitle.textContent = 'Edit ' + fieldTitle
   for ( var i = 0, len = modalBodySelect.options.length; i < len; i++ ) {

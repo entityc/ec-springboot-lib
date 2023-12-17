@@ -1,0 +1,34 @@
+$[ author to org.entityc.springboot.web.admin.controller.detail ]
+    $[ author to outlet securityReadAnnotation ]
+        $[ let objectLevelAccess = (entity|domain:Security).hasTag("access:object:level") ]
+        $[ if !objectLevelAccess ]
+            $[ call preAuthorizeEntity(accessType: "read", entity: entity) ]
+        $[/ if ]
+    $[/ author ]
+    $[ author to outlet securityWriteAnnotation ]
+        $[ let objectLevelAccess = (entity|domain:Security).hasTag("access:object:level") ]
+        $[ if !objectLevelAccess ]
+            $[ call preAuthorizeEntity(accessType: "write", entity: entity) ]
+        $[/ if ]
+    $[/ author ]
+    $[ author to outlet securityReadMethod ]
+        $[ if objectLevelAccess ]
+$[ send imports ]
+import ${exceptionNamespace}.ForbiddenException;
+$[/ send ]
+        if (!${serviceName|uncapitalize}.canView(id)) {
+            throw new ForbiddenException("User does not have permission to view this card.");
+        }
+        $[/ if ]
+    $[/ author ]
+    $[ author to outlet securityWriteMethod ]
+        $[ if objectLevelAccess ]
+$[ send imports ]
+import ${exceptionNamespace}.ForbiddenException;
+$[/ send ]
+        if (!${serviceName|uncapitalize}.canEdit(id)) {
+            throw new ForbiddenException("User does not have permission to edit this card.");
+        }
+        $[/ if ]
+    $[/ author ]
+$[/ author ]

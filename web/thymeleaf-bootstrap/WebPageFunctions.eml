@@ -1,5 +1,14 @@
 $[ D summary, main "Contains a set of functions that produce web page code that is in common with the different" ]
 $[ D summary, main "types of pages." ]
+
+$[ function stylesheet_css(href, th, attr) ]
+    <link rel="stylesheet" ${attr} type="text/css"
+          ${th?"th:":""}href="${href}"/>
+$[/function]
+$[ function javascript(src, th, attr) ]
+    <script type="text/javascript" ${th?"th:":""}src="${src}" ${attr}></script>
+$[/function]
+
 $[ function commonHead
    D "Supplies code for the <head> section of the web page for meta and stylesheets." 
    (title
@@ -8,27 +17,18 @@ $[ function commonHead
     D "The space." 
    )
 ]
-    $[ let staticUrlPrefix = (space|domain:APIPath).domain.tagValue("url:prefix:static") ]
     <meta charset="utf-8" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <link rel="stylesheet" type="text/css"
-          th:href="@{${staticUrlPrefix}/webjars/bootstrap/5.0.1/css/bootstrap.min.css}" />
-    <script type="text/javascript"
-            th:src="@{${staticUrlPrefix}/webjars/jquery/3.6.0/jquery.min.js/}"></script>
-    <script type="text/javascript"
-            th:src="@{${staticUrlPrefix}/webjars/bootstrap/5.0.1/js/bootstrap.min.js}"></script>
-    <script type="text/javascript"
-            th:src="@{${staticUrlPrefix}/js/restore-scroll-point.js}"></script>
-
     <title>${title}</title>
-$[/ function ]
-$[ function commonBodyScripts
-   D "Provides code that can be placed at the bottom of the <body> to define scripts." 
-   (
-   )
-]
+
+    $[ let staticUrlPrefix = (space|domain:APIPath).domain.tagValue("url:prefix:static") ]
+    $[ call stylesheet_css(href: "@{" + staticUrlPrefix + "/webjars/bootstrap/5.0.1/css/bootstrap.min.css}", th:true, attr:"") ]
+    $[ call javascript(src: "@{" + staticUrlPrefix + "/webjars/jquery/3.6.0/jquery.min.js/}", th:true, attr:"") ]
+    $[ call javascript(src: "@{" + staticUrlPrefix + "/webjars/bootstrap/5.0.1/js/bootstrap.min.js}", th:true, attr:"") ]
+    $[ call javascript(src: "@{" + staticUrlPrefix + "/js/restore-scroll-point.js}", th:true, attr:"") ]
+
 $[/ function ]
 $[ function commonBodyNavbar
    D "Supplies code for the top navigation bar." 
@@ -141,6 +141,7 @@ $[ function requiredEditableFields
     $[ let relationships = @[]@ ]
     $[ foreach domainAttribute in (entity|domain:AdminUI).orderedDomainAttributes ]
         $[ let attribute = domainAttribute.attribute ]
+        $[ if attribute == null]$[log fatal]Found domain attribute not resolved: ${domainAttribute|name} on entity: ${entity.name}$[/log]$[/if]
         $[ call checkIfAttributeIsRequired(attribute: attribute)->(required: required) ]
         $[ call checkIfAttributeIsEditable(attribute: attribute)->(editable: editable) ]
         $[ if (required || domainAttribute.hasTag("required")) && editable ]
@@ -160,41 +161,6 @@ $[* skip ones that are for localization *]
             $[/ if ]
         $[/ if ]
     $[/ foreach ]
-$[/ function ]
-$[ function headlineExpression
-   D "This generates a Thymeleaf expression used for constructing a Headline string based on"
-   D "attribute values. The expression will try to construct the headline as follows: *header*"
-   D "*number*: *title*.  The entity title will be used as the *header* if it is tagged with"
-   D "`headline:prefix`. An attribute tagged with `headline:number` will be used for the"
-   D "*number* (if found). Finally an attribute tagged with `headline:title` will be used as the"
-   D "*title* (if found)." 
-   (entity
-    D "The entity associated with the headline." ,
-    dtoEntity
-    D "The JSONDTO domain entity." 
-   )->
-   (thExpression
-    D "The produced Thymeleaf expression." 
-   )
-]
-    $[ let entityAsHeader = (entity|domain:AdminUI).hasTag("headline:prefix") ]
-    $[ let numberAttribute = null ]
-    $[ let titleAttribute = null ]
-    $[ foreach attribute in dtoEntity.attributes ]
-        $[ if (attribute|domain:AdminUI).hasTag("headline:number") ]
-            $[ let numberAttribute = attribute ]
-        $[ elseif (attribute|domain:AdminUI).hasTag("headline:title") ]
-            $[ let titleAttribute = attribute ]
-        $[/ if ]
-    $[/ foreach ]
-    $[ let titleAttributeField = "" ]
-    $[ if titleAttribute.type.isEnumType ]$[ let titleAttributeField = ".title" ]$[/ if ]
-    $[ let includeColon = entityAsHeader || numberAttribute != null ]
-    $[ if entityAsHeader || numberAttribute != null || titleAttribute != null ]
-        $[ capture thExpression ]|$[ if entityAsHeader ]${entity|domain:AdminUI|title}$[/ if ]$[ if numberAttribute != null ] ${$}{${dtoEntity|name|uncapitalize}.${numberAttribute|name}}$[/ if ]$[ if titleAttribute != null ]${includeColon ? ": ":""}${$}{${dtoEntity|name|uncapitalize}.${titleAttribute|name}${titleAttributeField}}$[/ if ]|$[/ capture ]
-    $[ else ]
-        $[ let thExpression = null ]
-    $[/ if ]
 $[/ function ]
 $[ function breadcrumbExpression
    D "This generates a Thymeleaf expression used for constructing a breadcrumb item string based"

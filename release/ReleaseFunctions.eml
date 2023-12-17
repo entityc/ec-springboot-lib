@@ -217,3 +217,16 @@ $[ function GetRelationshipToReleaseEntity
         $[/ if ]
     $[/ if ]
 $[/ function ]
+$[ function GetReleaseEntity
+   (space
+   )->
+   (releaseEntity
+   ) ]
+    $[ let releaseEntity = null ]
+    $[ foreach entity in space.entities ]
+        $[ if entity.hasTag("release:top") ]
+            $[ let releaseEntity = entity ]
+            $[ break ]
+        $[/ if ]
+    $[/ foreach ]
+$[/ function ]

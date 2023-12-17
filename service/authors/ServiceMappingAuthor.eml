@@ -16,6 +16,8 @@ $[ receive methodDescriptionReceiver ]
             $[ let _mapperDomainEntity = entity|domain:DTOMapper ]
             $[ call addAutoWired(domainEntity: _mapperDomainEntity) ]
             $[ let _mapperVariableName = _mapperDomainEntity|name|uncapitalize ]
+            $[ call GetRelationshipToReleaseEntity(entity: entity)->(relationship: relationshipToReleaseEntity) ]
+            $[ call GetReleaseEntity()->(releaseEntity: releaseEntity) ]
         ${responseDtoName} dtoObject = ${_mapperVariableName}.toDtoFromModel(modelObject);
 $[ outlet dtoFromModelTop
    D "At the top of the `dtoFromModel()` method just after the `dtoObject` was initially mapped"
@@ -23,10 +25,13 @@ $[ outlet dtoFromModelTop
 ]
 $[/ outlet ]
             $[ let copiedEntities = @[]@ ]
-        $[* String indent = ""; for (int i=0; i<levels; i++) { indent += "    "; }
+$[* String indent = ""; for (int i=0; i<levels; i++) { indent += "    "; }
         System.out.println(indent + "dtoFromModel(${responseModelName} modelObject, int levels = " + levels + ")");*]
-        if (levels > 0) {
             $[ foreach relationship in (entity|domain:JSONDTO|view:APIGet).relationships|sort ]
+                $[ let ignoreLevels = (relationship|domain:DTO).hasTag("levels:all") ]
+                $[ let levelsIfStart = ignoreLevels ? "// always map " + relationship.name:"if (levels > 0) {" ]
+                $[ let levelsIfIndent = ignoreLevels ? "":"    " ]
+                $[ let levelsIfEnd = ignoreLevels ? "":"}" ]
                 $[ let _toEntity = relationship.to.entity ]
                 $[ if _toEntity.entity.isImplicit || _toEntity.entity.isExtern || _toEntity.entity.isIncluded ]$[ continue ]$[/ if ]
                 $[ let toSelf = _toEntity.entity.name == entity.name ]
@@ -49,21 +54,30 @@ $[/ send ]
                         $[ call addAutoWired(domainEntity: _toEntity|domain:Service) ]
                     $[/ if ]
                     $[ call GetRelationshipToReleaseEntity(entity: _toEntity.entity)->(relationship: relationshipToReleaseEntity) ]
-            // Relationship to one ${_toEntity.name}, filling in the whole ${_toEntity.name} object
-            if (modelObject.get${relationship|domain:Model|name|capitalize}Id() != ${relationship.to.entity.pkType.isUUIDType ? "null":"0"}) {
-                Optional<${_toEntityModelClassName}> fieldObjectOptional = ${_toEntityRepository|name|uncapitalize}.getById($[ if isReleasedToEntity ]modelObject.get${relationshipToReleaseEntity|name|capitalize}Id(), $[/ if ]modelObject.get${relationship|domain:Model|name|capitalize}Id());
-                if (!fieldObjectOptional.isPresent()) {
-                    throw new EntityNotFoundException("${_toEntityModelClassName} not found.");
-                }
-                dtoObject.set${relationship|domain:Model|name|capitalize}($[ if toSelf ]this$[ else ]${_toEntity|domain:Service|name|uncapitalize}$[/ if ].dtoFromModel(fieldObjectOptional.get(), levels-1));
-            }
+        // Relationship to one ${_toEntity.name}, filling in the whole ${_toEntity.name} object
+        ${levelsIfStart}
+        ${levelsIfIndent}if (modelObject.get${relationship|domain:Model|name|capitalize}Id() != ${relationship.to.entity.pkType.isUUIDType ? "null":"0"}) {
+        ${levelsIfIndent}    Optional<${_toEntityModelClassName}> fieldObjectOptional = ${_toEntityRepository|name|uncapitalize}.getById($[ if isReleasedToEntity ]modelObject.get${relationshipToReleaseEntity|name|capitalize}Id(), $[/ if ]modelObject.get${relationship|domain:Model|name|capitalize}Id());
+        ${levelsIfIndent}    if (!fieldObjectOptional.isPresent()) {
+        ${levelsIfIndent}        throw new EntityNotFoundException("${_toEntityModelClassName} not found.");
+        ${levelsIfIndent}    }
+        ${levelsIfIndent}    dtoObject.set${relationship|domain:Model|name|capitalize}($[ if toSelf ]this$[ else ]${_toEntity|domain:Service|name|uncapitalize}$[/ if ].dtoFromModel(fieldObjectOptional.get(), levels-1));
+        ${levelsIfIndent}}
+        ${levelsIfEnd}
                 $[ elseif relationship.isOneToMany && relationship.withViewName != "Reference" ]
                     $[ if isReleasedToEntity ]
-                        $[ let bySomething = "" ]
+                        $[ if entity.name == releaseEntity.name ]
+                            $[* TODO: we have decided to special case this although we probably shouldn't *]
+                            $[ capture bySomething ]$[/ capture ]
+                            $[ capture byArgument ]modelObject.get${entity.primaryKeyAttribute|domain:Model|name|capitalize}(), $[/ capture ]
+                        $[ else ]
+                            $[ capture bySomething ]By${relationship.relationship.reverseRelationship|domain:Model|name|capitalize}$[/ capture ]
+                            $[ capture byArgument ]modelObject.get${relationshipToReleaseEntity|domain:Model|name|capitalize}Id(), modelObject.get${entity.primaryKeyAttribute|domain:Model|name|capitalize}(), $[/ capture ]
+                        $[/ if ]
                     $[ else ]
                         $[ capture bySomething ]By${entity|domain:Model|name|capitalize}$[/ capture ]
+                        $[ capture byArgument ]modelObject.get${entity.primaryKeyAttribute|domain:Model|name|capitalize}(), $[/ capture ]
                     $[/ if ]
-                    $[ capture byArgument ]modelObject.get${entity.primaryKeyAttribute|domain:Model|name|capitalize}(), $[/ capture ]
 $[ send imports ]
 import java.util.HashSet;
 $[/ send ]
@@ -80,7 +94,9 @@ $[else*]
                     $[ if !toSelf ]
                         $[ call addAutoWired(domainEntity: _toEntity|domain:Service) ]
                     $[/ if ]
-            dtoObject.set${relationship|domain:Model|name|capitalize}(new HashSet<>($[ if toSelf ]this$[ else ]${_toEntity|domain:Service|name|uncapitalize}$[/ if ].get${_toEntity|domain:JSONDTO|name|capitalize}List${bySomething}(${byArgument}0, 10000, levels-1)));
+        ${levelsIfStart}
+        ${levelsIfIndent}dtoObject.set${relationship|domain:Model|name|capitalize}(new HashSet<>($[ if toSelf ]this$[ else ]${_toEntity|domain:Service|name|uncapitalize}$[/ if ].get${_toEntity|domain:JSONDTO|name|capitalize}List${bySomething}(${byArgument}0, 10000, levels-1)));
+        ${levelsIfEnd}
 $[*/if*]
                 $[ elseif relationship.isManyToMany && relationship.withViewName != "Reference" ]
 $[ send imports ]
@@ -91,19 +107,21 @@ $[/ send ]
                         $[ call addAutoWired(domainEntity: _toEntity|domain:Repository) ]
                         $[ call addAutoWired(domainEntity: _toEntity|domain:Service) ]
                     $[/ if ]
-            List<${_toEntityModelClassName}> associatedObjectList = ${_toEntity|domain:Repository|name|uncapitalize}.get${_toEntityModelClassName}ListAssociatedWith${responseModelName}(modelObject.getId(), 0, 1000);
-            HashSet<${_toEntityDtoClassName}> associatedDtoList = new HashSet<>();
-            for (${_toEntityModelClassName} object : associatedObjectList) {
-                associatedDtoList.add(${_toEntity|domain:Service|name|uncapitalize}.dtoFromModel(object, levels-1));
-            }
-            dtoObject.set${relationship|domain:Model|name|capitalize}(associatedDtoList);
+        ${levelsIfStart}
+        ${levelsIfIndent}List<${_toEntityModelClassName}> associatedObjectList = ${_toEntity|domain:Repository|name|uncapitalize}.get${_toEntityModelClassName}ListAssociatedWith${responseModelName}(modelObject.getId(), 0, 1000);
+        ${levelsIfIndent}HashSet<${_toEntityDtoClassName}> associatedDtoList = new HashSet<>();
+        ${levelsIfIndent}for (${_toEntityModelClassName} object : associatedObjectList) {
+        ${levelsIfIndent}    associatedDtoList.add(${_toEntity|domain:Service|name|uncapitalize}.dtoFromModel(object, levels-1));
+        ${levelsIfIndent}}
+        ${levelsIfIndent}dtoObject.set${relationship|domain:Model|name|capitalize}(associatedDtoList);
+        ${levelsIfEnd}
                 $[/ if ]
             $[/ foreach ]
 $[ outlet dtoFromModelMiddle
    D "Inside `levels > 0` if block, near the bottom of it. The dto object is `dtoObject`."
 ]
 $[/ outlet ]
-        }
+
         return dtoObject;
     }
 

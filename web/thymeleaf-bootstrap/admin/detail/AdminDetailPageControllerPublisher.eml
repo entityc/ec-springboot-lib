@@ -13,6 +13,8 @@ $[ publisher org.entityc.springboot.web.admin.controller.detail
    D "This publisher builds a controller class for each entity that controls the data sent to an"
    D "admin web page used to display the details of an entity object."
 ]
+    $[ let securityNamespace = (space.domain("Security")).namespace ]
+    $[ let exceptionNamespace = (space.domain("Exception")).namespace ]
     $[ foreach entity in space.entities ]
         $[ if entity.isImplicit || entity.isExtern || entity.isIncluded || entity.isTransient || entity.isSecondary ]$[ continue ]$[/ if ]
         $[ let pkTypeName = entity.pkType|language ]
@@ -28,8 +30,6 @@ $[******************************************]
 $[******************************************]
 package ${domain.namespace};
 
-            $[ let securityNamespace = (space.domain("Security")).namespace ]
-            $[ let exceptionNamespace = (space.domain("Exception")).namespace ]
 import ${securityNamespace}.PersistentUserDetailsService;
 import ${securityNamespace}.SecurityService;
 import ${exceptionNamespace}.ServiceException;

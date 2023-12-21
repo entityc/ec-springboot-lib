@@ -1,0 +1,2 @@
+export PGPASSWORD=postgres
+psql --username=postgres --dbname=postgres < platform_admin_user.dmp

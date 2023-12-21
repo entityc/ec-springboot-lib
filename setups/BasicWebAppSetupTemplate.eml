@@ -10,7 +10,13 @@ $[ let stdLibRepoTag = "v0.10.0" ]
 $[ let appFolderName = "BasicWebApp" ]
 
 $[* -------------- PROMPTS -------------- *]
-$[ log ]$[/ log ]
+$[ log ]
+
+----------------------------------------------------------------------------------
+ Configure your Microservice
+----------------------------------------------------------------------------------
+
+$[/ log ]
 
 $[* APPLICATION NAME *]
 $[ let appName = (#appName:"MyApp") ]
@@ -38,8 +44,8 @@ $[/ if ]
 $[ log ]$[/ log ]
 
 $[* APP BASE JAVA PACKAGE *]
-$[ let appBasePackage = #appBasePackage ]
-$[ prompt appBasePackage: string ]Enter the base Java package for all installed/generated source files: $[/ prompt ]
+$[ let appBasePackage = (#appBasePackage:"com.example.service") ]
+$[ prompt appBasePackage: string ]Enter the base Java package for all installed/generated source files [${appBasePackage}]: $[/ prompt ]
 $[ if appBasePackage == null || appBasePackage.length == 0 ]
     $[ log fatal ]You must specify at least one level of package.$[/ log ]
 $[/ if ]
@@ -100,12 +106,17 @@ $[ install "basicWebApp/Configuration.edl" "" ]
 $[ install "basicWebApp/Space.edl" "" ]
 
 $[log]
+
+----------------------------------------------------------------------------------
+ Build and Bring up Microservice
+----------------------------------------------------------------------------------
+
 An Entity Compiler project has been created in a folder named "${appFolderName}". You will need to do the following:
 
 1) You need to have Postgres installed on your local machine.
 
 2) In Postgres, create a database named "${databaseName}" owned by username "postgres" with password "postgres".
-   These are defaults, you can edit the projects "application.yaml" file to change these settings.
+   These are defaults, you can edit the projects "application.yaml" file to change these settings to be more secure.
 
 3) With a command line, go into the "${appFolderName}" directory and run the "runec.sh" script:
      % cd ${appFolderName}
@@ -119,9 +130,21 @@ An Entity Compiler project has been created in a folder named "${appFolderName}"
 
 5) Now you are ready to bring up the microservice. Run the "start.sh" script:
      % ./start.sh
-   This will startup the microservice.
+   This will startup the microservice; however, you do not have an initial admin user.
+
+6) Shutdown the microservice by hitting Ctrl-C
+
+7) Run the "restore_admin_user.sh" script:
+     % ./restore_admin_user.sh
+   This will install an admin user directly into the database.
+
+8) Bring up the microservice again:
+     % ./start.sh
 
 $[let prefix = urlPrefix != "" ? urlPrefix + "/" : ""]
-6) Open a web browser to https://localhost:8080/${prefix}admin
-
+9) Open a web browser to https://localhost:8080/${prefix}login
+   You will need to login with:
+       Email: admin@example.com
+       Password: admin
+   This will bring you to the main admin page where you can see a button for your entity "${entityName}"
 $[/log]

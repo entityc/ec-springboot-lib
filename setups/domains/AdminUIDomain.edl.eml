@@ -1,5 +1,11 @@
 domain AdminUI (${appName}) {
 
+    enum Role {
+        T "role"
+        Editor { T "canAccess" }
+        Administrator { T "canAccess" }
+    }
+
     entity ${entityName} {
         T "home", "edit"
         attributes {

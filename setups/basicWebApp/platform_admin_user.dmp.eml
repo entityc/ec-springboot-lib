@@ -30,6 +30,7 @@ COPY public.platform_user (created_on, email, enabled, encoded_password, first_n
 --
 
 COPY public.platform_user_roles (user_id, value) FROM stdin;
+d8c49f52-1a34-4d63-9390-fa59b09e0f2b	3
 d8c49f52-1a34-4d63-9390-fa59b09e0f2b	2
 d8c49f52-1a34-4d63-9390-fa59b09e0f2b	1
 \.

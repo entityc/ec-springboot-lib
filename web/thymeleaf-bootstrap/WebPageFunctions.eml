@@ -42,6 +42,7 @@ $[ function commonBodyNavbar
    )
 ]
     $[ let userUrlPrefix = (space|domain:APIPath).domain.tagValue("url:prefix:user") ]
+    $[ let authUrlPrefix = (space|domain:APIPath).domain.tagValue("url:prefix:auth") ]
 <!-- Navigation Bar -->
 <nav class="navbar navbar-expand-md navbar-dark bg-dark">
 	<div class="container-fluid">

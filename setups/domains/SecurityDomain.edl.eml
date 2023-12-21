@@ -40,6 +40,8 @@ domain Security (${appName}) {
 
     entity ${entityName} {
         T "access:write:role:editor"
+        T "access:read:role:editor"
+        T "access:read:role:default"
         relationships {
             createdUser {
                 T "user:created"

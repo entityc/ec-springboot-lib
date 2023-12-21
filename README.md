@@ -37,36 +37,51 @@ The following are the major technologies are used by this library:
 
 ## How to Use
 
-With your Entity Compiler project setup, the library is used by declaring it as a `repository` in your project's
-`Space` referencing a specific tag, where the tag corresponds to a version of the library.
+The easiest way to get started is to install a sample project. This can be done using the Entity Compiler's `setup` command. To do this you first need to have the Entity Compiler installed. See 
 
-Your repository declaration may look like:
+On a command line run the following command:
 
-```
-    repository SpringbootTemplates {
-        type github
-        organization "entityc"
-        name "ec-springboot-lib"
-        path "templates"
-        tag "v0.7.0"
-    }
+```zsh
+ec setup github:entityc/ec-springboot-lib:production/setups/BasicWebApp
 ```
 
-You can then import the templates using something like the following:
+This will start the process of installing a basic spring boot application. It will prompt you to enter information about the microservice it is setting up. Many of the prompts have default values:
 
 ```
-    output ServerCode {
-        path "src/main/java"
-    }
-
-    templates {
-        import from SpringbootTemplates
-
-        template Microservice {
-            output primary ServerCode
-        }
-    }
+INFO: Fetching setup: github:entityc/ec-springboot-lib:production/setups/BasicWebApp
+INFO: Downloading file: setups/BasicWebApp.edl production
+Enter project directory name [BasicWebApp]: 
+INFO: Downloading file: setups/BasicWebAppSetupTemplate.eml production
+INFO: Downloading file: setups/MakeRunECScriptTemplate.eml production
+Enter the name of the application [MyApp]: 
+Enter optional URL prefix for the application (e.g., my/app): 
+Enter the base Java package for all installed/generated source files: org.entityc.sample.app
+Enter an entity name to get things started [Widget]: 
+Would you like to include Protobuf support (y/n)? [n]: 
 ```
+
+After the prompts it will download and configure the Entity Compiler to build a sample Spring Boot based microservice.
+
+The next step is to run the entity compiler for the project:
+
+```zsh
+cd BasicWebApp
+./runec.sh
+```
+
+This will create the actual Spring Boot project using just a starter entity. 
+
+If you run `ls` you will now see a script called `build.sh`. Run this script:
+
+```zsh
+./build.sh
+```
+
+This compile the project.
+
+Before bring up the microservice you will need to setup a postgres database.
+
+...
 
 ## Licensing
 

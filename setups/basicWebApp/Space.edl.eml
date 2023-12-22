@@ -9,6 +9,7 @@ space ${appName} {
         "microserviceTitle" : "${appName|title}",
         "microserviceName" : "${appName}",
         "basePackage" : "${appBasePackage}",
+        "databaseName" : "${databaseName}",
 $[if appBaseUrlPath != null]
         "appBaseUrlPath" : "${appBaseUrlPath}",
 $[/if]

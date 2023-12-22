@@ -37,36 +37,20 @@ The following are the major technologies are used by this library:
 
 ## How to Use
 
-With your Entity Compiler project setup, the library is used by declaring it as a `repository` in your project's
-`Space` referencing a specific tag, where the tag corresponds to a version of the library.
+The easiest way to get started is to install a sample project. This can be done using the Entity Compiler's `setup` command. To do this you first need to have the Entity Compiler installed. See 
 
-Your repository declaration may look like:
+On a command line run the following command:
 
-```
-    repository SpringbootTemplates {
-        type github
-        organization "entityc"
-        name "ec-springboot-lib"
-        path "templates"
-        tag "v0.7.0"
-    }
+```zsh
+ec setup github:entityc/ec-springboot-lib:production/setups/BasicWebApp
 ```
 
-You can then import the templates using something like the following:
+This will start the process of installing a basic spring boot application.
+It will prompt you to enter information about the microservice it is creating for you.
+Many of the prompts have default values; you can either just hit return to get the default value
+or enter another value.
 
-```
-    output ServerCode {
-        path "src/main/java"
-    }
-
-    templates {
-        import from SpringbootTemplates
-
-        template Microservice {
-            output primary ServerCode
-        }
-    }
-```
+It will then print out instructions on how to bring up the microservice.
 
 ## Licensing
 

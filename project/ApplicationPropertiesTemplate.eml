@@ -4,7 +4,7 @@ $[D ""]
 $[D "> In the future it may be capable of merging with an existing application.properties file but"]
 $[D "for now it only. generates the initial version of the file."]
 
-$[let microserviceTitle = space.getMetadataValue("microserviceTitle")]
+$[let databaseName = space.getMetadataValue("databaseName")]
 $[file ifdoesnotexist "src/main/resources" "application" "yml"]
 info:
   app:
@@ -40,9 +40,9 @@ spring:
   application:
     name: '@artifactId@'
   datasource:
-    url: ''
-    username: ''
-    password: ''
+    url: 'jdbc:postgresql://localhost:5432/${databaseName}'
+    username: 'postgres'
+    password: 'postgres'
   jpa:
     hibernate:
       ddl-auto: update

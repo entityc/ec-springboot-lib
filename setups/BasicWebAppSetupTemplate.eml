@@ -7,24 +7,33 @@ $[ D "compiler input files to generate the application." ]
 $[ let repoTag = "production" ]
 $[ let stdLibRepoName = "ec-std-lib" ]
 $[ let stdLibRepoTag = "v0.10.0" ]
+$[ let appFolderName = (#SetupDirectoryName:"BasicWebApp") ]
 
 $[* -------------- PROMPTS -------------- *]
-$[ log ]$[/ log ]
+$[ log ]
+
+----------------------------------------------------------------------------------
+ Configure your Microservice
+----------------------------------------------------------------------------------
+
+$[/ log ]
 
 $[* APPLICATION NAME *]
 $[ let appName = (#appName:"MyApp") ]
 $[ prompt appName: string ]Enter the name of the application [${appName}]: $[/ prompt ]
 $[ if !(appName|is:identifier) ]
-    $[ log fatal ]The application name must start with a letter and only contain letters and numbers.$[/ log ]
+    $[ log fatal ]The application name must start with a capital letter and only contain letters and numbers.$[/ log ]
 $[/ if ]
 $[ if appName|is:uncapitalized ]
     $[ let appName = appName|capitalize ]
     $[ log info ]Capitalizing application name: ${appName}$[/ log ]
 $[/ if ]
 
+$[ log ]$[/ log ]
+
 $[* API PREFIX NAMESPACE *]
-$[ let urlPrefix = #urlPrefix ]
-$[ prompt urlPrefix: string ]Enter optional URL prefix for the application (e.g., my/app): $[/ prompt ]
+$[ let urlPrefix = (#urlPrefix:"my/app") ]
+$[ prompt urlPrefix: string ]Enter optional URL prefix for the application [${urlPrefix}]: $[/ prompt ]
 $[ if urlPrefix == null ]
     $[ let urlPrefix = "" ]
 $[/ if ]
@@ -32,15 +41,28 @@ $[ if !(urlPrefix|is:path) ]
     $[ log fatal ]The URL prefix must be a valid URL path (letters, numbers, '-' and '/').$[/ log ]
 $[/ if ]
 
+$[ log ]$[/ log ]
+
 $[* APP BASE JAVA PACKAGE *]
-$[ let appBasePackage = #appBasePackage ]
-$[ prompt appBasePackage: string ]Enter the base Java package for all installed/generated source files: $[/ prompt ]
+$[ let appBasePackage = (#appBasePackage:"com.example.service") ]
+$[ prompt appBasePackage: string ]Enter the base Java package for all installed/generated source files [${appBasePackage}]: $[/ prompt ]
 $[ if appBasePackage == null || appBasePackage.length == 0 ]
     $[ log fatal ]You must specify at least one level of package.$[/ log ]
 $[/ if ]
 $[ if !(appBasePackage|is:namespace) ]
     $[ log fatal ]The specified package is not a valid Java package.$[/ log ]
 $[/ if ]
+
+$[ log ]$[/ log ]
+
+$[* DATABASE NAME *]
+$[ let databaseName = (#databaseName:"postgres") ]
+$[ prompt databaseName: string ]Enter the name of the postgres database to use [${databaseName}]: $[/ prompt ]
+$[ if !(databaseName|is:identifier) ]
+    $[ log fatal ]The database name must start with a letter and contain only letters and numbers.$[/ log ]
+$[/ if ]
+
+$[ log ]$[/ log ]
 
 $[* ENTITY NAME *]
 $[ let entityName = (#entityName:"Widget") ]
@@ -53,6 +75,8 @@ $[ if entityName|is:uncapitalized ]
     $[ log info ]Capitalizing entity name: ${entityName}$[/ log ]
 $[/ if ]
 
+$[ log ]$[/ log ]
+
 $[ let protobufOption = (#protobuf:"n") ]
 $[ prompt protobufOption: boolean ]Would you like to include Protobuf support (y/n)? [${protobufOption}]: $[/ prompt ]
 
@@ -60,6 +84,8 @@ $[ let extraDomains = @[]@ ]
 $[ if protobufOption ]
     $[ do extraDomains.add("ProtobufDTO") ]
 $[/ if ]
+
+$[ log ]$[/ log ]
 
 $[* -------------- INSTALLS -------------- *]
 
@@ -78,3 +104,48 @@ $[ install "authors/PomAuthor.eml" "authors" ]
 $[* Base *]
 $[ install "basicWebApp/Configuration.edl" "" ]
 $[ install "basicWebApp/Space.edl" "" ]
+
+$[log]
+
+----------------------------------------------------------------------------------
+ Build and Bring up Microservice
+----------------------------------------------------------------------------------
+
+An Entity Compiler project has been created in a folder named "${appFolderName}". You will need to do the following:
+
+1) You need to have Postgres installed on your local machine.
+
+2) In Postgres, create a database named "${databaseName}" owned by username "postgres" with password "postgres".
+   These are defaults, you can edit the projects "application.yaml" file to change these settings to be more secure.
+
+3) With a command line, go into the "${appFolderName}" directory and run the "runec.sh" script:
+     % cd ${appFolderName}
+     % ./runec.sh
+   This will run the Entity Compiler to generate all the microservice files.
+
+4) You should now see a script called "build.sh", run this:
+     % ./build.sh
+   This will enscure that the source files for the microservice were generated properly. If you receive an error,
+   go to the Github repository https://github.com/entityc/ec-springboot-lib and create an issue describing the
+   error you received.
+
+5) Now you are ready to bring up the microservice. Run the "start.sh" script:
+     % ./start.sh
+   This will startup the microservice and setup the database. However, you do not yet have an initial admin user.
+
+6) Shutdown the microservice by hitting Ctrl-C.
+
+7) Run the "restore_admin_user.sh" script:
+     % ./restore_admin_user.sh
+   This will install an admin user directly into the database.
+
+8) Bring up the microservice again:
+     % ./start.sh
+
+$[let prefix = urlPrefix != "" ? urlPrefix + "/" : ""]
+9) Open a web browser to http://localhost:8080/${prefix}auth/login
+   You will need to login with:
+       Email: admin@example.com
+       Password: admin
+   This will bring you to the main admin page where you can see a button for your entity "${entityName}"
+$[/log]

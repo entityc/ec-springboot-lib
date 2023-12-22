@@ -1,4 +1,7 @@
 $[D summary, main "This setup template creates a script that you run after setup completes that will run the"]
 $[D summary, main "entity compiler for this project."]
 
+$[log]Installing scripts...$[/log]
 $[install "basicWebApp/runec.sh" ""]
+$[install "basicWebApp/platform_admin_user.dmp" ""]
+$[install "basicWebApp/restore_admin_user.sh" ""]

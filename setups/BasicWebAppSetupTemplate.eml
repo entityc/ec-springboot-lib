@@ -126,13 +126,14 @@ An Entity Compiler project has been created in a folder named "${appFolderName}"
 4) You should now see a script called "build.sh", run this:
      % ./build.sh
    This will enscure that the source files for the microservice were generated properly. If you receive an error,
-   go to the Github repository https://github.com/entityc/ec-springboot-lib and create an issue describing the error you received.
+   go to the Github repository https://github.com/entityc/ec-springboot-lib and create an issue describing the
+   error you received.
 
 5) Now you are ready to bring up the microservice. Run the "start.sh" script:
      % ./start.sh
-   This will startup the microservice; however, you do not have an initial admin user.
+   This will startup the microservice and setup the database. However, you do not yet have an initial admin user.
 
-6) Shutdown the microservice by hitting Ctrl-C
+6) Shutdown the microservice by hitting Ctrl-C.
 
 7) Run the "restore_admin_user.sh" script:
      % ./restore_admin_user.sh

@@ -7,7 +7,7 @@ $[ D "compiler input files to generate the application." ]
 $[ let repoTag = "production" ]
 $[ let stdLibRepoName = "ec-std-lib" ]
 $[ let stdLibRepoTag = "v0.10.0" ]
-$[ let appFolderName = "BasicWebApp" ]
+$[ let appFolderName = (#SetupDirectoryName:"BasicWebApp") ]
 
 $[* -------------- PROMPTS -------------- *]
 $[ log ]

@@ -37,7 +37,7 @@ The following are the major technologies are used by this library:
 
 ## How to Use
 
-The easiest way to get started is to install a sample project. This can be done using the Entity Compiler's `setup` command. To do this you first need to have the Entity Compiler installed. See 
+The easiest way to get started is to install a sample project. This can be done using the Entity Compiler's `setup` command. To do this you first need to have the Entity Compiler installed. See https://github.com/entityc/entity-compiler for details. 
 
 On a command line run the following command:
 

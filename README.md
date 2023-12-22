@@ -45,43 +45,12 @@ On a command line run the following command:
 ec setup github:entityc/ec-springboot-lib:production/setups/BasicWebApp
 ```
 
-This will start the process of installing a basic spring boot application. It will prompt you to enter information about the microservice it is setting up. Many of the prompts have default values:
+This will start the process of installing a basic spring boot application.
+It will prompt you to enter information about the microservice it is creating for you.
+Many of the prompts have default values; you can either just hit return to get the default value
+or enter another value.
 
-```
-INFO: Fetching setup: github:entityc/ec-springboot-lib:production/setups/BasicWebApp
-INFO: Downloading file: setups/BasicWebApp.edl production
-Enter project directory name [BasicWebApp]: 
-INFO: Downloading file: setups/BasicWebAppSetupTemplate.eml production
-INFO: Downloading file: setups/MakeRunECScriptTemplate.eml production
-Enter the name of the application [MyApp]: 
-Enter optional URL prefix for the application (e.g., my/app): 
-Enter the base Java package for all installed/generated source files: org.entityc.sample.app
-Enter an entity name to get things started [Widget]: 
-Would you like to include Protobuf support (y/n)? [n]: 
-```
-
-After the prompts it will download and configure the Entity Compiler to build a sample Spring Boot based microservice.
-
-The next step is to run the entity compiler for the project:
-
-```zsh
-cd BasicWebApp
-./runec.sh
-```
-
-This will create the actual Spring Boot project using just a starter entity. 
-
-If you run `ls` you will now see a script called `build.sh`. Run this script:
-
-```zsh
-./build.sh
-```
-
-This compile the project.
-
-Before bring up the microservice you will need to setup a postgres database.
-
-...
+It will then print out instructions on how to bring up the microservice.
 
 ## Licensing
 

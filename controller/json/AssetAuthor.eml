@@ -1,5 +1,5 @@
-$[ D summary, main "This contains an author that generates code for endpoints that support uploading digital" ]
-$[ D summary, main "assets." ]
+$[ D summary, main "This contains an author that generates code for endpoints that support uploading digital" 
+   D summary, main "assets." ]
 
 $[ function assetUpload
    D "This function generates controller code for either a single file upload or a collection of"
@@ -16,32 +16,31 @@ $[ function assetUpload
     D "The name of the code variable for the object of the Service class that has the delegated create"
     D "function."
    )
-]
-$[* Composite entities can't be uploaded. *]
-    $[ if entity.isCompositeEntity ]
-        $[ return ]
-    $[/ if ]
-$[ send imports ]
+
+       /* Composite entities can't be uploaded. */ 
+       if entity.isCompositeEntity 
+           return 
+       endif 
+   send imports ]
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RequestMethod;
 import java.io.IOException;
-$[/ send ]
-    $[ let assetPath = attribute|domain:APIPath|name ]
-    $[ let hasCollection = collectionAttribute != null ]
-    $[ if hasCollection ]
-        $[ let collectionName = collectionAttribute|domain:Model|name ]
-        $[ capture assetPath ]${collectionAttribute|domain:APIPath|name}/${attribute|domain:APIPath|name}$[/ capture ]
-    $[/ if ]
-    $[ let methodName = attribute|domain:Model|name|capitalize ]
-    $[ if hasCollection ]
-        $[ capture methodName ]${collectionName|capitalize}${methodName}$[/ capture ]
-    $[/ if ]
-    $[ publisher org.entityc.springboot.controller.assetUpload
-       D "Asset upload endpoints."
-    ]
+$[ endsend 
+       let assetPath = attribute|domain:APIPath|name 
+       let hasCollection = collectionAttribute != null 
+       if hasCollection 
+           let collectionName = collectionAttribute|domain:Model|name 
+           capture assetPath ]${collectionAttribute|domain:APIPath|name}/${attribute|domain:APIPath|name}$[ endcapture 
+       endif 
+       let methodName = attribute|domain:Model|name|capitalize 
+       if hasCollection 
+           capture methodName ]${collectionName|capitalize}${methodName}$[ endcapture 
+       endif 
+       publisher org.entityc.springboot.controller.assetUpload
+       D "Asset upload endpoints." ]
     // [Template] ${__template.name}:${__outlet.name} < ${__author.template.name}
     @RequestMapping(
         path = "/{id}/form/${assetPath}/{ext}",
@@ -49,15 +48,15 @@ $[/ send ]
     )
     @ResponseStatus(HttpStatus.ACCEPTED)
 $[ outlet annotation
-   D "Resides just above the method declaration in the annocation area."
-]
-$[/ outlet ]
+       D "Resides just above the method declaration in the annocation area." 
+   endoutlet ]
     public void upload${methodName}(@PathVariable("id") UUID id,
                                 @PathVariable("ext") String extension,
                                 @RequestPart(value = "file") MultipartFile file
                                 ) throws ServiceException {
-        $[ let modelName = entity|domain:Model|name ]
-        $[ let modelVariableName = modelName|uncapitalize ]
+        $[ let modelName = entity|domain:Model|name
+                                                                        
+           let modelVariableName = modelName|uncapitalize ]
         ${modelName} ${modelVariableName};
         try {
             ${modelVariableName} = ${service}.get${modelName}ById(id, 0 /*levels set to 0 since we don't need child objects*/);
@@ -68,10 +67,10 @@ $[/ outlet ]
         try {
             byteArray = file.getBytes();
         } catch (IOException e) {
-        $[ let exceptionText = attribute|domain:Model|name|words|lowercase ]
-        $[ if hasCollection ]
-            $[ capture exceptionText ]${exceptionText} of collection ${collectionName|words|lowercase}$[/ capture ]
-        $[/ if ]
+        $[ let exceptionText = attribute|domain:Model|name|words|lowercase 
+           if hasCollection 
+               capture exceptionText ]${exceptionText} of collection ${collectionName|words|lowercase}$[ endcapture 
+           endif ]
             throw new ValidationException("Could not read uploaded file for ${modelName} ${exceptionText}.");
         }
 
@@ -86,9 +85,8 @@ $[/ outlet ]
     )
     @ResponseStatus(HttpStatus.ACCEPTED)
 $[ outlet annotation
-   D "Resides just above the method declaration in the annocation area."
-]
-$[/ outlet ]
+   D "Resides just above the method declaration in the annocation area." 
+   endoutlet ]
     public void upload${methodName}Raw(@PathVariable("id") UUID id,
                                 @PathVariable("ext") String extension,
                                 @RequestBody byte[] byteArray
@@ -102,24 +100,24 @@ $[/ outlet ]
 
         ${service}.upload${methodName}(${modelVariableName}, "${attribute.contentType}", byteArray, extension);
     }
-    $[/ publisher ]
-$[/ function ]
+    $[ endpublisher 
+   endfunction ]
 
-$[ author to org.entityc.springboot.controller ]
-    $[ author to outlet methods
-       D "Adds asset upload endpoints to controller."
-    ]
-        $[ foreach entity.attributes ]
-            $[ if attribute.secondaryEntityIsTagged("asset:collection") ]
-                $[ let secondaryAttributeEntity = attribute.getTypeEntity() ]
-                $[ foreach secondaryAttribute in secondaryAttributeEntity.attributes ]
-                    $[ call assetUpload(role: role, collectionAttribute: attribute, service: service, attribute: secondaryAttribute, entity: entity) ]
+$[ author to org.entityc.springboot.controller 
+       author to outlet methods
+   D "Adds asset upload endpoints to controller." 
+           foreach entity.attributes 
+               if attribute.secondaryEntityIsTagged("asset:collection") 
+                   let secondaryAttributeEntity = attribute.getTypeEntity()
+                                                                                                      
+                   foreach secondaryAttribute in secondaryAttributeEntity.attributes 
+                       call assetUpload(role: role, collectionAttribute: attribute, service: service, attribute: secondaryAttribute, entity: entity) ]
 
-                $[/ foreach ]
-            $[ elseif attribute.secondaryEntityIsTagged("asset:file") ]
-                $[ call assetUpload(role: role, collectionAttribute: null, service: service, attribute: attribute, entity: entity) ]
+                $[ endforeach 
+               elseif attribute.secondaryEntityIsTagged("asset:file") 
+                   call assetUpload(role: role, collectionAttribute: null, service: service, attribute: attribute, entity: entity) ]
 
-            $[/ if ]
-        $[/ foreach ]
-    $[/ author ]
-$[/ author ]
+            $[ endif 
+           endforeach 
+       endauthor 
+   endauthor ]

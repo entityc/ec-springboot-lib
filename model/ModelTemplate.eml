@@ -1,16 +1,16 @@
 $[ language java ]
-$[ domain Model ]
-$[ D summary "This template builds what are called Model classes." ]
-$[ D "This template builds what are called Model classes. A Model class is used to represent" ]
-$[ D "objects of an entity that are used internally on the server. They typically match pretty" ]
-$[ D "closely to how they are modeled in the database." ]
-$[ D "" ]
-$[ D "In addition to creating model class files for the entities it also creates source files for" ]
-$[ D "the enums." ]
-$[ D "" ]
-$[ D "The template also generates markdown documentation about the model classes in a README.md" ]
-$[ D "file written at the same level as the model class files. This basically creates" ]
-$[ D "documentation when viewed with GitHub." ]
+$[ domain Model 
+   D summary "This template builds what are called Model classes." 
+   D "This template builds what are called Model classes. A Model class is used to represent" 
+   D "objects of an entity that are used internally on the server. They typically match pretty" 
+   D "closely to how they are modeled in the database." 
+   D "" 
+   D "In addition to creating model class files for the entities it also creates source files for" 
+   D "the enums." 
+   D "" 
+   D "The template also generates markdown documentation about the model classes in a README.md" 
+   D "file written at the same level as the model class files. This basically creates" 
+   D "documentation when viewed with GitHub." ]
 
 $[ function buildOverrides
    D "In a Springboot Model class, annotations are used to map attribute variables to database"
@@ -24,54 +24,54 @@ $[ function buildOverrides
    )->
    (overrides
    )
-]
-    $[ if databaseNamePrefix != null ]
-        $[ let databaseNamePrefix = databaseNamePrefix + "_" ]
-        $[ let databaseNamePrefix = databaseNamePrefix + (attribute|domain:Database|name) ]
-    $[ else ]
-        $[ let databaseNamePrefix = attribute|domain:Database|name ]
-    $[/ if ]
-    $[ let overrides = @[]@ ]
-    $[ foreach secondaryAttribute in (attribute.getTypeEntity()).attributes ]
-        $[ if secondaryAttribute.isSecondaryEntityType() ]
-            $[ let secondaryAttributeName = secondaryAttribute|domain:Model|name ]
-            $[ if modelNamePrefix != null ]
-                $[ let secondaryModelNamePrefix = modelNamePrefix + "." + secondaryAttributeName ]
-            $[ else ]
-                $[ let secondaryModelNamePrefix = secondaryAttributeName ]
-            $[/ if ]
-            $[ call buildOverrides(modelNamePrefix: secondaryModelNamePrefix, attribute: secondaryAttribute, databaseNamePrefix: databaseNamePrefix)->(overrides: secondaryOverrides) ]
-            $[ do overrides.addAll(secondaryOverrides) ]
-        $[ else ]
-            $[ let secondaryAttributeName = secondaryAttribute|domain:Model|name ]
-            $[ if modelNamePrefix == null ]
-                $[ capture attributeName ]${secondaryAttributeName}$[/ capture ]
-            $[ else ]
-                $[ capture attributeName ]${modelNamePrefix}.${secondaryAttributeName}$[/ capture ]
-            $[/ if ]
-            $[ capture columnName ]${databaseNamePrefix}_${secondaryAttribute|domain:Database|name}$[/ capture ]
-            $[ let attributeColumnPair = @[attributeName,columnName]@ ]
-            $[ do overrides.add(attributeColumnPair) ]
-        $[/ if ]
-    $[/ foreach ]
-    $[ foreach secondaryRelationship in (attribute.getTypeEntity()).relationships ]
-        $[ if secondaryRelationship.to.isOne ]
-            $[ let secondaryRelationshipName = (secondaryRelationship|domain:Model|name) + "Id" ]
-            $[ if modelNamePrefix == null ]
-                $[ capture attributeName ]${secondaryRelationshipName}$[/ capture ]
-            $[ else ]
-                $[ capture attributeName ]${modelNamePrefix}.${secondaryRelationshipName}$[/ capture ]
-            $[/ if ]
-            $[ capture columnName ]${databaseNamePrefix}_${secondaryRelationship|domain:Database|name}_id$[/ capture ]
-            $[ let attributeColumnPair = @[attributeName,columnName]@ ]
-            $[ do overrides.add(attributeColumnPair) ]
-        $[/ if ]
-    $[/ foreach ]
-$[/ function ]
 
-$[ import "doc/SourceHeaders" ]
-$[ import "release/ReleaseFunctions" ]
-$[ file domain.namespace|path "README" "md" ]
+       if databaseNamePrefix != null 
+           let databaseNamePrefix = databaseNamePrefix + "_" 
+           let databaseNamePrefix = databaseNamePrefix + (attribute|domain:Database|name) 
+       else 
+           let databaseNamePrefix = attribute|domain:Database|name 
+       endif 
+       let overrides = @[]@ 
+       foreach secondaryAttribute in (attribute.getTypeEntity()).attributes 
+           if secondaryAttribute.isSecondaryEntityType() 
+               let secondaryAttributeName = secondaryAttribute|domain:Model|name 
+               if modelNamePrefix != null 
+                   let secondaryModelNamePrefix = modelNamePrefix + "." + secondaryAttributeName 
+               else 
+                   let secondaryModelNamePrefix = secondaryAttributeName 
+               endif 
+               call buildOverrides(modelNamePrefix: secondaryModelNamePrefix, attribute: secondaryAttribute, databaseNamePrefix: databaseNamePrefix)->(overrides: secondaryOverrides) 
+               do overrides.addAll(secondaryOverrides) 
+           else 
+               let secondaryAttributeName = secondaryAttribute|domain:Model|name 
+               if modelNamePrefix == null 
+                   capture attributeName ]${secondaryAttributeName}$[ endcapture 
+               else 
+                   capture attributeName ]${modelNamePrefix}.${secondaryAttributeName}$[ endcapture 
+               endif 
+               capture columnName ]${databaseNamePrefix}_${secondaryAttribute|domain:Database|name}$[ endcapture 
+               let attributeColumnPair = @[attributeName,columnName]@ 
+               do overrides.add(attributeColumnPair) 
+           endif 
+       endforeach 
+       foreach secondaryRelationship in (attribute.getTypeEntity()).relationships 
+           if secondaryRelationship.to.isOne 
+               let secondaryRelationshipName = (secondaryRelationship|domain:Model|name) + "Id" 
+               if modelNamePrefix == null 
+                   capture attributeName ]${secondaryRelationshipName}$[ endcapture 
+               else 
+                   capture attributeName ]${modelNamePrefix}.${secondaryRelationshipName}$[ endcapture 
+               endif 
+               capture columnName ]${databaseNamePrefix}_${secondaryRelationship|domain:Database|name}_id$[ endcapture 
+               let attributeColumnPair = @[attributeName,columnName]@ 
+               do overrides.add(attributeColumnPair) 
+           endif 
+       endforeach 
+   endfunction ]
+
+$[ import "doc/SourceHeaders" 
+   import "release/ReleaseFunctions" 
+   file domain.namespace|path "README" "md" ]
 # Model Classes
 
 Model classes closely represent how data is stored in the database and even include Spring Framework annotations to tie it to the database. The Repository classes are made to return objects of these classes.
@@ -80,49 +80,49 @@ Model classes closely represent how data is stored in the database and even incl
 
 The following is the list of entities generated here by module:
 
-    $[ foreach space.modules|sort ]
-        $[ if module.isIncluded ]$[ continue ]$[/ if ]
+    $[ foreach space.modules|sort 
+           if module.isIncluded ]$[ continue ]$[ endif ]
 ## ${module.name|title}
 
 ### Entities
 
 |Name|Description|
 |---|---|
-        $[ foreach module.entities|sort ]
-            $[ if entity.isImplicit || entity.isExtern ]$[ continue ]$[/ if ]
-            $[ if entity.hasTag("template") && entity.hasTag("release") ]
-                $[ let parentEntity = entity.primaryParentRelationship.to.entity ]
+        $[ foreach module.entities|sort 
+               if entity.isImplicit || entity.isExtern ]$[ continue ]$[ endif 
+               if entity.hasTag("template") && entity.hasTag("release") 
+                   let parentEntity = entity.primaryParentRelationship.to.entity ]
 |${entity|domain|name}|_Generated by entity template `${entity.templateName}` in order to associate objects of `${entity.entityOfTemplateArg("C")|name}` to `${parentEntity.name}` objects as part of release management._|
             $[ else ]
 |${entity.name}|${entity.description}|
-            $[/ if ]
-        $[/ foreach ]
+            $[ endif 
+           endforeach ]
 
         $[ if module.hasEnums() ]
 ### Enums
 
 |Name|Description|
 |---|---|
-            $[ foreach module.enums|sort ]
-                $[ if enum.itemCount > 0 ]
+            $[ foreach module.enums|sort 
+                   if enum.itemCount > 0 ]
 |${enum.name}|${enum.description}
-                $[/ if ]
-            $[/ foreach ]
+                $[ endif 
+               endforeach ]
 
-        $[/ if ]
-    $[/ foreach ]
+        $[ endif 
+       endforeach ]
 
 ## Generated by
 
 Template: `${__template.name}`
 
-$[/ file ]
-$[ foreach module in space.modules if !module.isIncluded ]
-    $[ foreach entity in module.entities if !(entity.isImplicit || entity.isExtern || entity.isTransient) ]
-        $[ file domain.namespace|path entity|domain|name "java" ]
-            $[ publisher springboot.model ]
-                $[ call entityHeader(title: "This is the Model class for following entity.") ]
-                $[ call CheckIfReleasedEntity(entity: entity)->(isReleasedEntity: isReleasedEntity) ]
+$[ endfile 
+   foreach module in space.modules if !module.isIncluded 
+       foreach entity in module.entities if !(entity.isImplicit || entity.isExtern || entity.isTransient) 
+           file domain.namespace|path entity|domain|name "java" 
+               publisher springboot.model 
+                   call entityHeader(title: "This is the Model class for following entity.") 
+                   call CheckIfReleasedEntity(entity: entity)->(isReleasedEntity: isReleasedEntity) ]
 package ${domain.namespace};
 
 import java.util.Date;
@@ -140,12 +140,12 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
                 $[ foreach attribute in entity.attributes if !attribute.isVirtual && attribute.type.isEnumType ]
 import ${attribute.type|domain:Model|fullname};
-                $[/ foreach ]
+                $[ endforeach ]
 
-                $[ if entity.isSecondary ]
-$[ send imports ]
+                $[ if entity.isSecondary 
+   send imports ]
 import javax.persistence.Embeddable;
-$[/ send ]
+$[ endsend ]
 @Embeddable
 @Data
 @NoArgsConstructor
@@ -155,49 +155,49 @@ $[/ send ]
 @Data
                     $[ if isReleasedEntity ]
 @Immutable
-$[send imports]
+$[ send imports ]
 import org.hibernate.annotations.Immutable;
-$[/send]
-                    $[/ if ]
+$[ endsend 
+                       endif ]
 @NoArgsConstructor
 @AllArgsConstructor
 $[ outlet classAnnotations
-   D "Annotations on the entity model class."
-]
-$[/ outlet ]
+                   D "Annotations on the entity model class." 
+   endoutlet ]
 @Table(name = "${entity|domain:Database|name}")
-                $[/ if ]
+                $[ endif ]
 public class ${entity|domain|name}
 {
                 $[ if entity.hasPrimaryKey ]
     @Id
                     $[ if entity.pkType.isUUIDType ]
     @Type(type="pg-uuid")
-                    $[/ if ]
+                    $[ endif ]
     @Column(name = "${entity.primaryKeyAttribute|domain:Database|name}")
     private ${entity.pkType|language nullable} ${entity.primaryKeyAttribute|domain|name};
 
-                $[/ if ]
-$[*  ATTRIBUTES *]
-                $[ foreach attribute in entity.attributes if !attribute.isVirtual ]$[* filter out virtuals *]
-                    $[ let databaseAttributeName = attribute|domain:Database|name ]
-                    $[ if attribute.hasDescription ]
+                $[ endif 
+                   /*  ATTRIBUTES */
+                
+                   foreach attribute in entity.attributes if !attribute.isVirtual    /* filter out virtuals */ 
+                       let databaseAttributeName = attribute|domain:Database|name 
+                       if attribute.hasDescription ]
     // ${attribute.description}
-                    $[/ if ]
-                    $[ let sinceVersion = (attribute|domain:Database).sinceSchemaVersion ]
-                    $[ if sinceVersion > 0 ]
+                    $[ endif 
+                       let sinceVersion = (attribute|domain:Database).sinceSchemaVersion 
+                       if sinceVersion > 0 ]
     // (since database schema v${sinceVersion})
-                    $[/ if ]
-                    $[ if attribute.isArray ]
-$[* ARRAY *]
-$[ send imports ]
+                    $[ endif 
+                       if attribute.isArray 
+                           /* ARRAY */ 
+   send imports ]
 import javax.persistence.CollectionTable;
 import javax.persistence.ElementCollection;
 import javax.persistence.JoinColumn;
 import javax.persistence.FetchType;
 import org.hibernate.annotations.Fetch;
 import org.hibernate.annotations.FetchMode;
-$[/ send ]
+$[ endsend ]
     @ElementCollection(fetch=FetchType.EAGER)
     @Fetch(FetchMode.SUBSELECT)
     @CollectionTable(
@@ -206,30 +206,30 @@ $[/ send ]
     )
                         $[ if !entity.isSecondary ]
     @Column(name = "value")
-                        $[/ if ]
-$[ send imports ]
+                        $[ endif 
+   send imports ]
 import java.util.HashSet;
 import java.util.Set;
-$[/ send ]
+$[ endsend ]
     private Set<${attribute.type|language nullable}> ${attribute|domain|name} = new HashSet<>();
-                    $[ else ]
-$[* NOT ARRAY *]
-                        $[ if !entity.isSecondary ]
-                            $[ if attribute.isSecondaryEntityType() ]
-$[ send imports ]
+                    $[ else 
+                           /* NOT ARRAY */ 
+                           if !entity.isSecondary 
+                               if attribute.isSecondaryEntityType() 
+   send imports ]
 import javax.persistence.AttributeOverrides;
 import javax.persistence.AttributeOverride;
-$[/ send ]
+$[ endsend ]
     @AttributeOverrides({
-                                $[ call buildOverrides(modelNamePrefix: null, attribute: attribute, databaseNamePrefix: null)->(overrides: overrides) ]
-                                $[ foreach override in overrides.values ]
-            @AttributeOverride(name="${override.get(0)}", column=@Column(name="${override.get(1)}"))$[ if !override#last ],$[/ if ]
+                                $[ call buildOverrides(modelNamePrefix: null, attribute: attribute, databaseNamePrefix: null)->(overrides: overrides) 
+                                   foreach override in overrides.values ]
+            @AttributeOverride(name="${override.get(0)}", column=@Column(name="${override.get(1)}"))$[ if !override#last ],$[ endif ]
 
-                                $[/ foreach ]
+                                $[ endforeach ]
     })
 $[ send imports ]
 import javax.persistence.Embedded;
-$[/ send ]
+$[ endsend ]
     @Embedded
                             $[ elseif attribute.isCreation ]
     @Column(name = "${databaseAttributeName}", insertable = false, updatable = false)
@@ -239,32 +239,32 @@ $[/ send ]
     @Column(name = "${databaseAttributeName}", insertable = false, updatable = false)
                             $[ else ]
     @Column(name = "${databaseAttributeName}")
-                            $[/ if ]$[* end secondary entity type *]
-                        $[/ if ]$[* end !entity is secondary *]
-                        $[ if sinceVersion > 1 ]
-                            $[ let coalesceValue = 0 ]
-                            $[ switch attribute.type ]
-                                $[ case boolean ]
-                                    $[ let coalesceValue = "false" ]
-                                $[ case uuid ]
-                                    $[ let coalesceValue = "" ]
-                                $[ default ]
-                            $[/ switch ]
-$[ send imports ]
+                            $[ endif    /* end secondary entity type */ 
+                           endif    /* end !entity is secondary */ 
+                           if sinceVersion > 1 
+                               let coalesceValue = 0 
+                               switch attribute.type 
+                                   case boolean 
+                                       let coalesceValue = "false" 
+                                   case uuid 
+                                       let coalesceValue = "" 
+                                   default 
+                               endswitch 
+   send imports ]
 import org.hibernate.annotations.ColumnTransformer;
-$[/ send ]
+$[ endsend ]
     @ColumnTransformer(forColumn = "${databaseAttributeName}",
             read = "Coalesce(${databaseAttributeName}, ${coalesceValue})",
             write = "?")
-                        $[/ if ]$[* end sinceVersion > 1 *]
-                        $[ if attribute.type.isByteArrayType ]
+                        $[ endif    /* end sinceVersion > 1 */ 
+                           if attribute.type.isByteArrayType ]
     private byte[] ${attribute|domain|name};
-                        $[ elseif attribute.type.isEnumType ]$[* ENUM *]
-                            $[ let enumClassName = attribute.type|language ]
-                            $[ let defaultAssignment = "" ]
-                            $[ if attribute.hasDefaultValue ]
-                                $[ capture defaultAssignment ] = ${attribute.defaultValue|domain}.getNumberValue()$[/ capture ]
-                            $[/ if ]
+                        $[ elseif attribute.type.isEnumType    /* ENUM */ 
+                               let enumClassName = attribute.type|language 
+                               let defaultAssignment = "" 
+                               if attribute.hasDefaultValue 
+                                   capture defaultAssignment ] = ${attribute.defaultValue|domain}.getNumberValue()$[ endcapture 
+                               endif ]
     private int ${attribute|domain|name}${defaultAssignment};
 
     public ${enumClassName} get${attribute|domain|name|capitalize}() {
@@ -274,18 +274,18 @@ $[/ send ]
     public void set${attribute|domain|name|capitalize}(${enumClassName} ${attribute|domain|name}) {
         this.${attribute|domain|name} = ${attribute|domain|name}.getNumberValue();
     }
-                        $[ else ]
-                            $[ let defaultAssignment = "" ]
-                            $[ if attribute.hasDefaultValue ]
-                                $[ capture defaultAssignment ] = ${attribute.defaultValue}$[/ capture ]
-                            $[/ if ]
+                        $[ else 
+                               let defaultAssignment = "" 
+                               if attribute.hasDefaultValue 
+                                   capture defaultAssignment ] = ${attribute.defaultValue}$[ endcapture 
+                               endif ]
     private ${attribute.type|language nullable} ${attribute|domain|name}${defaultAssignment};
-                        $[/ if ]
-                    $[/ if ]
+                        $[ endif 
+                       endif ]
 
-                    $[ if attribute.isSecondaryEntityType() ]
-                        $[ let secondaryDEntity = attribute.typeEntity|domain:Model ]
-                        $[ if attribute.isArray ]
+                    $[ if attribute.isSecondaryEntityType() 
+                           let secondaryDEntity = attribute.typeEntity|domain:Model 
+                           if attribute.isArray ]
     public Set<${secondaryDEntity.name}> get${attribute|domain|name|capitalize}() {
         return ${attribute|domain|name};
     }
@@ -296,58 +296,58 @@ $[/ send ]
         }
         return ${attribute|domain|name};
     }
-                        $[/ if ]
+                        $[ endif ]
 
-                    $[/ if ]
-                    $[ if attribute.type.isBooleanType ]
+                    $[ endif 
+                       if attribute.type.isBooleanType ]
     public boolean is${attribute|domain|name|capitalize}() {
         return ${attribute|domain|name} != null && ${attribute|domain|name};
     }
 
-                    $[/ if ]
-                $[/ foreach ]
-$[*  RELATIONSHIPS *]
-                $[ foreach d_relationship in (entity|domain|view:Default).relationships if d_relationship.to.isAsPrimaryKey ]
-                    $[ let relationship = d_relationship.relationship ]
-                    $[ if !entity.isSecondary ]
+                    $[ endif 
+                   endforeach 
+                   /*  RELATIONSHIPS */ 
+                   foreach d_relationship in (entity|domain|view:Default).relationships if d_relationship.to.isAsPrimaryKey 
+                       let relationship = d_relationship.relationship 
+                       if !entity.isSecondary ]
     @Column(name = "${relationship|domain:Database|name}_id") // relationship
-                    $[/ if ]
-                    $[ if relationship.to.entity.primaryKeyAttribute == null ]
-                        $[ log fatal ]Relationship ${entity.name}.${relationship.name} TO entity ${relationship.to.entity.name} is missing a primary key attribute!$[/ log ]
-                    $[/ if ]
+                    $[ endif 
+                       if relationship.to.entity.primaryKeyAttribute == null 
+                           log fatal ]Relationship ${entity.name}.${relationship.name} TO entity ${relationship.to.entity.name} is missing a primary key attribute!$[ endlog 
+                       endif ]
     ${relationship.to.entity.primaryKey.type|language nullable} ${d_relationship|name}Id;
 
-                $[/ foreach ]
+                $[ endforeach ]
 }
-            $[/ publisher ]
-        $[/ file ]
-    $[/ foreach ]
-$[/ foreach ]
-$[***********]
-$[*  ENUMS  *]
-$[***********]
-$[ foreach space.modules ]
-    $[ foreach module.enums ]
-        $[ if enum.isExtern ]$[ continue ]$[/ if ]
-        $[ file domain.namespace|path enum|domain|name "java" ]
-            $[ let needsProtobufMapping = space.hasDomain("ProtobufDTO") ]
-            $[ call enumHeader(title: "This class is for the implementation of the following enum.") ]
+            $[ endpublisher 
+           endfile 
+       endforeach 
+   endforeach 
+   /***********/ 
+   /*  ENUMS  */ 
+   /***********/ 
+   foreach space.modules 
+       foreach module.enums 
+           if enum.isExtern ]$[ continue ]$[ endif 
+           file domain.namespace|path enum|domain|name "java" 
+               let needsProtobufMapping = space.hasDomain("ProtobufDTO") 
+               call enumHeader(title: "This class is for the implementation of the following enum.") ]
 package ${domain.namespace};
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 
 public enum ${enum|domain|name} {
-            $[ foreach item in enum.items ]
-                $[ if item.hasDescription ]
+            $[ foreach item in enum.items 
+                   if item.hasDescription ]
     // ${item.description}
-                $[/ if ]
-                $[ let extraConstructorArg = needsProtobufMapping ? ", \"" + (enum|domain|name) + "_" + (item|domain|name) + "\"":"" ]
-                $[ let title = item|title ]
-                $[ if item.hasTag("title") ]
-                    $[ let title = item.tagValue("title") ]
-                $[/ if ]
+                $[ endif 
+                   let extraConstructorArg = needsProtobufMapping ? ", \"" + (enum|domain|name) + "_" + (item|domain|name) + "\"":"" 
+                   let title = item|title 
+                   if item.hasTag("title") 
+                       let title = item.tagValue("title") 
+                   endif ]
     ${item|domain|name}(${item.value}, "${title}"${extraConstructorArg}),
-            $[/ foreach ]
+            $[ endforeach ]
     ;
 
             $[ let extraArg = needsProtobufMapping ? ", String protobufValue":"" ]
@@ -356,7 +356,7 @@ public enum ${enum|domain|name} {
         this.title = title;
             $[ if needsProtobufMapping ]
         this.protobufValue = protobufValue;
-            $[/ if ]
+            $[ endif ]
     }
 
     private String title;
@@ -393,7 +393,7 @@ public enum ${enum|domain|name} {
     public String getProtobufValue() {
         return protobufValue;
     }
-$[*
+                $[*
     /**
      This method is needed to convert by the numberValue field instead of by ordinate.
      */
@@ -406,9 +406,9 @@ $[*
         }
         throw new IllegalArgumentException("Invalid value for ${enum|domain|name} enum: " + value);
     } *]
-            $[/ if ]
+              $[ endif ]
 }
 
-        $[/ file ]
-    $[/ foreach ]
-$[/ foreach ]
+        $[ endfile 
+       endforeach 
+   endforeach ]

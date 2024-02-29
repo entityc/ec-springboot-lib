@@ -1,60 +1,52 @@
-$[D summary, main "Generates code inside the methods of the Service class to implement in-memory caching."]
-$[D "The caching code is generated based on information annotated in the Service domain."]
-$[author to org.entityc.springboot]
-    $[author to service]
-        $[author to outlet members phase = initial
-          D "This declares the member variables for the cache objects themselves - one for each"
-          D "relationship involved."
-        ]
-            $[let entityCacheEnabled = (entity|domain:InMemoryCache).hasTag("enable")]
-            $[if entityCacheEnabled]
-                $[let keyClass = entity.pkType|language nullable]
-                $[let valueClass = entity|domain:Model|name]
-                $[let cacheSize = (entity|domain:InMemoryCache).tagValue("size")]
-                $[if cacheSize == null]$[let cacheSize = 10]$[/if]
-                $[let cacheName = "modelCache"]
-$[send imports]
+$[ D summary, main "Generates code inside the methods of the Service class to implement in-memory caching." 
+   D "The caching code is generated based on information annotated in the Service domain." 
+   author to org.entityc.springboot 
+       author to service 
+           author to outlet members phase = initial
+           D "This declares the member variables for the cache objects themselves - one for each"
+           D "relationship involved."
+        
+               let entityCacheEnabled = (entity|domain:InMemoryCache).hasTag("enable") 
+               if entityCacheEnabled 
+                   let keyClass = entity.pkType|language nullable 
+                   let valueClass = entity|domain:Model|name 
+                   let cacheSize = (entity|domain:InMemoryCache).tagValue("size") 
+                   if cacheSize == null ]$[ let cacheSize = 10 ]$[ endif 
+                   let cacheName = "modelCache" 
+   send imports ]
 import ${(space.domain("Utils")).namespace}.LRUCache;
-$[/send]
+$[ endsend ]
     private final LRUCache<${keyClass}, ${valueClass}> ${cacheName} = new LRUCache<>(${cacheSize});
-            $[/if]
-        $[/author]
+            $[ endif 
+           endauthor ]
 
-        $[author to update outlet saved
-          D "After an object is saved, this will place the newly updated object back in the cache."
-        ]
-            $[if entityCacheEnabled]
+        $[ author to update outlet saved
+           D "After an object is saved, this will place the newly updated object back in the cache." 
+               if entityCacheEnabled ]
             ${cacheName}.put(savedObject.getId(), savedObject);
-            $[/if]
-        $[/author]
-        $[author to get outlet init
-          D "Initializes some variables used in later outlets.."
-        ]
-        $[/author]
-        $[author to get outlet preGet
-          D "Looks for the object in the cache and sets `responseObject` to that if found."
-        ]
-            $[if entityCacheEnabled]
+            $[ endif 
+           endauthor 
+           author to get outlet init
+           D "Initializes some variables used in later outlets.." 
+           endauthor 
+           author to get outlet preGet
+           D "Looks for the object in the cache and sets `responseObject` to that if found." 
+               if entityCacheEnabled ]
             // check the cache first
             if (${cacheName}.containsKey(id)) {
                 responseObject = ${cacheName}.get(id);
             }
-            $[/if]
-        $[/author]
-    $[/author]
-$[/author]
+            $[ endif 
+           endauthor 
+       endauthor 
+   endauthor ]
 
-$[function addCacheDef
-  (name,
-   key,
-   valueClass,
-   definition
-  )]
-$[send caches]
-        $[if definition.isLRUType]
+$[ function addCacheDef(name,key,valueClass,definition) 
+   send caches 
+           if definition.isLRUType ]
     private final LRUCache<${key}, ${valueClass}> ${name} = new LRUCache<>(${definition.size});
-        $[else]
-            $[log fatal]This template does not support a cache of type: ${definition.type.name}$[/log]
-        $[/if]
-$[/send]
-$[/function]
+        $[ else 
+               log fatal ]This template does not support a cache of type: ${definition.type.name}$[ endlog 
+           endif 
+   endsend 
+   endfunction ]

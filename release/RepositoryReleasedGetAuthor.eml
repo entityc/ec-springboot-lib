@@ -1,53 +1,53 @@
-$[ D summary, main "This template contains the authors that are responsible for generating the get object" ]
-$[ D summary, main "repository methods for composite entities in the Released realm." ]
-$[ publisher org.entityc.springboot.repository.get ]
-    $[ author to org.entityc.springboot.repository ]
-        $[ author to outlet methods
+$[ D summary, main "This template contains the authors that are responsible for generating the get object" 
+   D summary, main "repository methods for composite entities in the Released realm." 
+   publisher org.entityc.springboot.repository.get 
+       author to org.entityc.springboot.repository 
+           author to outlet methods
            D "Adds many get methods from get by ID to getting lists by parent relationships."
-        ]
-$[* Only process composite entities here. *]
-            $[ call CheckIfReleasedEntity(entity: entity)->(isReleasedEntity: isReleasedEntity) ]
-            $[ call GetReleaseEntityPKAttribute(entity: entity)->(releaseEntityPKAttribute: releaseEntityPKAttribute) ]
-            $[ if !isReleasedEntity ]
-                $[ return ]
-            $[/ if ]
-            $[ let binderEntity = entity.getConstituentEntity("binder") ]
-            $[ let objectEntity = entity.getConstituentEntity("object") ]
-            $[ let versionEntity = entity.getConstituentEntity("version") ]
-            $[ let releaseEntity = entity.getConstituentEntity("release") ]
-            $[ let objectPKColumnName = objectEntity.primaryKeyAttribute|domain:Database|name ]
-            $[ let versionPKColumnName = versionEntity.primaryKeyAttribute|domain:Database|name ]
-            $[ let releasePKColumnName = releaseEntity.primaryKeyAttribute|domain:Database|name ]
-            $[ let hasCreationDate = false ]
-            $[ foreach attribute in entity.effectiveAttributes|type single ]
-                $[ if attribute.isCreation ]
-                    $[ let hasCreationDate = true ]
-                    $[ let creationDateAttribute = attribute ]
-                    $[ break ]
-                $[/ if ]
-            $[/ foreach ]
-            $[ let sortByAttribute = null ]
-            $[ let ascending = true ]
-            $[ foreach attribute in entity.effectiveAttributes|type single ]
-                $[ if (attribute|domain).hasTag("sort:asc") ]
-                    $[ let sortByAttribute = attribute ]
-                    $[ let ascending = true ]
-                $[ elseif (attribute|domain).hasTag("sort:desc") ]
-                    $[ let sortByAttribute = attribute ]
-                    $[ let ascending = false ]
-                $[/ if ]
-                $[ if sortByAttribute != null ]
-                    $[ let sortTableAlias = versionEntity.hasAttributeNamed(sortByAttribute.name) ? "v":"o" ]
-                $[/ if ]
-            $[/ foreach ]
-            $[ if sortByAttribute == null && hasCreationDate ]
-                $[ let sortByAttribute = creationDateAttribute ]
-                $[ let ascending = false ]
-            $[/ if ]
-            $[ let responseEntity = entity ]
-            $[ let responseModelName = responseEntity|domain:Model|name ]
-            $[ let responseDatabaseName = responseEntity|domain:Database|name ]
-            $[ if responseEntity.hasPrimaryKey ]
+        
+               /* Only process composite entities here. */ 
+               call CheckIfReleasedEntity(entity: entity)->(isReleasedEntity: isReleasedEntity) 
+               call GetReleaseEntityPKAttribute(entity: entity)->(releaseEntityPKAttribute: releaseEntityPKAttribute) 
+               if !isReleasedEntity 
+                   return 
+               endif 
+               let binderEntity = entity.getConstituentEntity("binder") 
+               let objectEntity = entity.getConstituentEntity("object") 
+               let versionEntity = entity.getConstituentEntity("version") 
+               let releaseEntity = entity.getConstituentEntity("release") 
+               let objectPKColumnName = objectEntity.primaryKeyAttribute|domain:Database|name 
+               let versionPKColumnName = versionEntity.primaryKeyAttribute|domain:Database|name 
+               let releasePKColumnName = releaseEntity.primaryKeyAttribute|domain:Database|name 
+               let hasCreationDate = false 
+               foreach attribute in entity.effectiveAttributes|type single 
+                   if attribute.isCreation 
+                       let hasCreationDate = true 
+                       let creationDateAttribute = attribute 
+                       break 
+                   endif 
+               endforeach 
+               let sortByAttribute = null 
+               let ascending = true 
+               foreach attribute in entity.effectiveAttributes|type single 
+                   if (attribute|domain).hasTag("sort:asc") 
+                       let sortByAttribute = attribute 
+                       let ascending = true 
+                   elseif (attribute|domain).hasTag("sort:desc") 
+                       let sortByAttribute = attribute 
+                       let ascending = false 
+                   endif 
+                   if sortByAttribute != null 
+                       let sortTableAlias = versionEntity.hasAttributeNamed(sortByAttribute.name) ? "v":"o" 
+                   endif 
+               endforeach 
+               if sortByAttribute == null && hasCreationDate 
+                   let sortByAttribute = creationDateAttribute 
+                   let ascending = false 
+               endif 
+               let responseEntity = entity 
+               let responseModelName = responseEntity|domain:Model|name 
+               let responseDatabaseName = responseEntity|domain:Database|name 
+               if responseEntity.hasPrimaryKey ]
     /**
      * Gets a ${responseModelName} object from its ID.
      */
@@ -65,12 +65,12 @@ $[* Only process composite entities here. *]
           "JOIN ${versionEntity|domain:Database|name} v ON r.${versionPKColumnName} = v.${versionPKColumnName} " +
          "WHERE r.${releasePKColumnName} = ?1 AND o.${objectPKColumnName} = ?2", nativeQuery = true)
     Optional<${responseModelName}> getById(${releaseEntityPKAttribute.type|language} ${releaseEntityPKAttribute.name}, ${responseEntity.pkType|language} id);
-                $[/ if ]
-            $[/ if ]
-$[ send imports ]
+                $[ endif 
+               endif 
+   send imports ]
 import ${responseEntity|domain:Model|fullname};
 import org.springframework.data.repository.query.Param;
-$[/ send ]
+$[ endsend ]
     /**
      * Gets the full list of ${responseModelName} objects with paging.
      * @param start The starting index.
@@ -83,7 +83,7 @@ $[/ send ]
           "FROM ${objectEntity|domain:Database|name} " +
                 $[ if sortByAttribute != null ]
       "ORDER BY ${sortByAttribute|domain:Database|name} ${ascending ? "ASC":"DESC"} " +
-                $[/ if ]
+                $[ endif ]
       "LIMIT :limit OFFSET :start", nativeQuery = true)
     List<${responseModelName}> get${responseModelName}List(@Param("releaseId") ${releaseEntityPKAttribute.type|language} releaseId, @Param("start") long start, @Param("limit") int limit);
             $[ else ]
@@ -95,10 +95,10 @@ $[/ send ]
          "WHERE r.${releasePKColumnName} = :releaseId " +
                 $[ if sortByAttribute != null ]
       "ORDER BY ${sortTableAlias}.${sortByAttribute|domain:Database|name} ${ascending ? "ASC":"DESC"} " +
-                $[/ if ]
+                $[ endif ]
       "LIMIT :limit OFFSET :start", nativeQuery = true)
     List<${responseModelName}> get${responseModelName}List(@Param("releaseId") ${releaseEntityPKAttribute.type|language} ${releaseEntityPKAttribute.name}, @Param("start") long start, @Param("limit") int limit);
-            $[/ if ]
+            $[ endif ]
 
     /**
      * Gets the count of ${entity.name} objects for a release.
@@ -120,26 +120,26 @@ $[/ send ]
           "JOIN ${versionEntity|domain:Database|name} v ON r.${versionPKColumnName} = v.${versionPKColumnName} " +
          "WHERE r.${releasePKColumnName} = :releaseId ", nativeQuery = true)
     Long count(@Param("releaseId") ${releaseEntityPKAttribute.type|language} ${releaseEntityPKAttribute.name});
-            $[/ if ]
+            $[ endif ]
 
 $[ outlet methods
-   D "A good place to add additional repository get methods."
-]
-$[/ outlet ]
-            $[ foreach entity.attributes ]
-                $[ if attribute.isParent ]
-                    $[ if versionEntity == null ]
+   D "A good place to add additional repository get methods." 
+   endoutlet 
+               foreach entity.attributes 
+                   if attribute.isParent 
+                       if versionEntity == null ]
     @Query(value =
         "SELECT *, :releaseId AS ${releaseEntityPKAttribute|domain:Database|name} " +
           "FROM ${objectEntity|domain:Database|name} " +
          "WHERE ${attribute|domain:Database|name} = :attrValue " +
                         $[ if sortByAttribute != null ]
       "ORDER BY ${sortTableAlias}.${sortByAttribute|domain:Database|name} ${ascending ? "ASC":"DESC"} " +
-                        $[/ if ]
+                        $[ endif ]
       "LIMIT :limit OFFSET :start", nativeQuery = true)
-    List<${responseModelName}> get${responseModelName}ListBy${attribute.name|capitalize}(@Param("releaseId") ${releaseEntityPKAttribute.type|language} releaseId, @Param("attrValue") $[ if attribute.type.isEnumType() ]int$[ else ]${attribute.type|language}$[/ if ] ${attribute|domain|name}, @Param("start") long start, @Param("limit") int limit);
-                    $[ else ]
-                        $[ let tableAlias = versionEntity.hasAttributeNamed(attribute.name) ? "v":"o" ]
+    List<${responseModelName}> get${responseModelName}ListBy${attribute.name|capitalize}(@Param("releaseId") ${releaseEntityPKAttribute.type|language} releaseId, @Param("attrValue") $[ if attribute.type.isEnumType() ]int$[ else ]${attribute.type|language}$[ endif ] ${attribute|domain|name}, @Param("start") long start, @Param("limit") int limit);
+                    $[ else 
+                           let tableAlias = versionEntity.hasAttributeNamed(attribute.name) ? "v":"o"
+                ]
     /**
      * Gets the list of ${responseModelName} objects that all share the same value for attribute ${attribute.name}.
      * @param ${attribute|domain|name} The value for ${attribute.name}.
@@ -156,17 +156,17 @@ $[/ outlet ]
            "AND ${tableAlias}.${attribute|domain:Database|name} = :attrValue " +
                         $[ if sortByAttribute != null ]
       "ORDER BY ${sortTableAlias}.${sortByAttribute|domain:Database|name} ${ascending ? "ASC":"DESC"} " +
-                        $[/ if ]
+                        $[ endif ]
       "LIMIT :limit OFFSET :start", nativeQuery = true)
-    List<${responseModelName}> get${responseModelName}ListBy${attribute.name|capitalize}(@Param("releaseId") ${releaseEntityPKAttribute.type|language} ${releaseEntityPKAttribute.name}, @Param("attrValue") $[ if attribute.type.isEnumType() ]int$[ else ]${attribute.type|language}$[/ if ] ${attribute|domain|name}, @Param("start") long start, @Param("limit") int limit);
+    List<${responseModelName}> get${responseModelName}ListBy${attribute.name|capitalize}(@Param("releaseId") ${releaseEntityPKAttribute.type|language} ${releaseEntityPKAttribute.name}, @Param("attrValue") $[ if attribute.type.isEnumType() ]int$[ else ]${attribute.type|language}$[ endif ] ${attribute|domain|name}, @Param("start") long start, @Param("limit") int limit);
 
-                    $[/ if ]
-                $[/ if ]
-            $[/ foreach ]
-            $[ foreach relationship in entity.relationships ]
-                $[ let toEntity = relationship.to.entity ]
-                $[ if toEntity == null || toEntity.name == releaseEntity.name ]$[ continue ]$[/ if ]
-                $[ if relationship.to.isOne ]
+                    $[ endif 
+                   endif 
+               endforeach 
+               foreach relationship in entity.relationships 
+                   let toEntity = relationship.to.entity 
+                   if toEntity == null || toEntity.name == releaseEntity.name ]$[ continue ]$[ endif 
+                   if relationship.to.isOne ]
     /**
      * Gets the list of ${responseModelName} objects that all share the same reference to an object of ${relationship.to.entity.name}.
      * @param ${relationship|domain|name}Id The ID of the ${relationship.to.entity.name} object to which all results will share.
@@ -181,11 +181,11 @@ $[/ outlet ]
          "WHERE ${relationship|domain:Database|name}_id = :relationshipId " +
                         $[ if sortByAttribute != null ]
       "ORDER BY ${sortTableAlias}.${sortByAttribute|domain:Database|name} ${ascending ? "ASC":"DESC"} " +
-                        $[/ if ]
+                        $[ endif ]
          "LIMIT :limit OFFSET :start", nativeQuery = true)
     List<${responseModelName}> get${responseModelName}ListBy${relationship.name|capitalize}(@Param("releaseId") ${releaseEntityPKAttribute.type|language} releaseId, @Param("relationshipId") ${relationship.to.entity.primaryKey.type|language} ${relationship|domain|name}Id, @Param("start") long start, @Param("limit") int limit);
-                    $[ else ]
-                        $[ let tableAlias = versionEntity.hasRelationshipNamed(relationship.name) ? "v":"o" ]
+                    $[ else 
+                           let tableAlias = versionEntity.hasRelationshipNamed(relationship.name) ? "v":"o" ]
     @Query(value =
         "SELECT *, r.${releasePKColumnName} " +
           "FROM ${binderEntity|domain:Database|name} r " +
@@ -195,10 +195,10 @@ $[/ outlet ]
            "AND ${tableAlias}.${relationship|domain:Database|name}_id = :relationshipId " +
                         $[ if sortByAttribute != null ]
             "ORDER BY ${sortTableAlias}.${sortByAttribute|domain:Database|name} ${ascending ? "ASC":"DESC"} " +
-                        $[/ if ]
+                        $[ endif ]
          "LIMIT :limit OFFSET :start", nativeQuery = true)
     List<${responseModelName}> get${responseModelName}ListBy${relationship.name|capitalize}(@Param("releaseId") ${releaseEntityPKAttribute.type|language} ${releaseEntityPKAttribute.name}, @Param("relationshipId") ${relationship.to.entity.primaryKey.type|language} ${relationship|domain|name}Id, @Param("start") long start, @Param("limit") int limit);
-                    $[/ if ]
+                    $[ endif ]
 
     /**
      * Gets the count of ${responseModelName} objects that all share the same reference to an object of ${relationship.to.entity.name}.
@@ -224,26 +224,26 @@ $[/ outlet ]
            "AND ${tableAlias}.${relationship|domain:Database|name}_id = :relationshipId ", nativeQuery = true)
     Long count${responseModelName}By${relationship.name|capitalize}Id(@Param("releaseId") ${releaseEntityPKAttribute.type|language} ${releaseEntityPKAttribute.name}, @Param("relationshipId") ${relationship.to.entity.primaryKey.type|language} ${relationship|domain|name}Id);
 
-                    $[/ if ]
-                $[/ if ]
-            $[/ foreach ]
-            $[ let entityForQuery = entity ]
-            $[ if versionEntity == null ]
-                $[ if entity.hasConstituentEntity("object") ]
-                    $[ let entityForQuery = entity.getConstituentEntity("object") ]
-                $[/ if ]
+                    $[ endif 
+                   endif 
+               endforeach 
+               let entityForQuery = entity 
+               if versionEntity == null 
+                   if entity.hasConstituentEntity("object") 
+                       let entityForQuery = entity.getConstituentEntity("object") 
+                   endif ]
     // USE table name ${entityForQuery|domain:Database|name}
-            $[/ if ]
-            $[ foreach relationship in entityForQuery.implicitRelationships ]
-                $[ if relationship.to.entity.hasTag("internal:many-to-many") ]
-                    $[ let destMMEntity = relationship.implicitToEntity ]
-                    $[ let manyToManyEntity = relationship.to.entity ]
-                    $[ let sourcePKType = entityForQuery.pkType|language ]
-                    $[ let sourcePKVarName = entityForQuery.primaryKeyAttribute|domain|name ]
-                    $[ let sourcePKDBName = entityForQuery.primaryKeyAttribute|domain:Database|name ]
-                    $[ let destPKType = destMMEntity.pkType|language ]
-                    $[ let destPKVarName = destMMEntity.primaryKeyAttribute|domain|name ]
-                    $[ let destPKDBName = destMMEntity.primaryKeyAttribute|domain:Database|name ]
+            $[ endif 
+               foreach relationship in entityForQuery.implicitRelationships 
+                   if relationship.to.entity.hasTag("internal:many-to-many") 
+                       let destMMEntity = relationship.implicitToEntity 
+                       let manyToManyEntity = relationship.to.entity 
+                       let sourcePKType = entityForQuery.pkType|language 
+                       let sourcePKVarName = entityForQuery.primaryKeyAttribute|domain|name 
+                       let sourcePKDBName = entityForQuery.primaryKeyAttribute|domain:Database|name 
+                       let destPKType = destMMEntity.pkType|language 
+                       let destPKVarName = destMMEntity.primaryKeyAttribute|domain|name 
+                       let destPKDBName = destMMEntity.primaryKeyAttribute|domain:Database|name ]
     @Query(value =
             "SELECT pt.*, :releaseId AS ${releaseEntityPKAttribute|domain:Database|name} " +
             "FROM ${entityForQuery|domain:Database|name} pt " +
@@ -265,8 +265,8 @@ $[/ outlet ]
     default Long count${modelName}By${destMMEntity|domain:Model|name}Id(${releaseEntityPKAttribute.type|language} unused, ${destPKType} ${destPKVarName}) {
         return count${modelName}By${destMMEntity|domain:Model|name}Id_internal(${destPKVarName});
     }
-                $[/ if ]
-            $[/ foreach ]
-        $[/ author ]
-    $[/ author ]
-$[/ publisher ]
+                $[ endif 
+               endforeach 
+           endauthor 
+       endauthor 
+   endpublisher ]

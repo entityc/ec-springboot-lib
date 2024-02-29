@@ -1,45 +1,45 @@
-$[D summary, main "Generates code inside the methods of the Repository class to implement in-memory caching."]
-$[D "The caching code is generated based on information annotated in the `InMemoryCache`"]
-$[D "domain."]
-$[author to org.entityc.springboot]
-    $[author to repository]
-        $[author to outlet members phase = initial
-          D "This declares the member variables for the cache objects themselves - one for each"
-          D "relationship involved."
-        ]
-            $[let entityCacheEnabled = space.hasDomain("InMemoryCache") && (entity|domain:InMemoryCache).hasTag("enable")]
-            $[if entityCacheEnabled]
-                $[let keyClass = entity.pkType|language nullable]
-                $[let valueClass = entity|domain:Model|name]
-                $[let cacheSize = (entity|domain:InMemoryCache).tagValue("size")]
-                $[if cacheSize == null]$[let cacheSize = 10]$[/if]
-                $[let cacheName = "modelCache"]
-$[send imports]
+$[ D summary, main "Generates code inside the methods of the Repository class to implement in-memory caching." 
+   D "The caching code is generated based on information annotated in the `InMemoryCache`" 
+   D "domain." 
+   author to org.entityc.springboot 
+       author to repository 
+           author to outlet members phase = initial
+           D "This declares the member variables for the cache objects themselves - one for each"
+           D "relationship involved."
+        
+               let entityCacheEnabled = space.hasDomain("InMemoryCache") && (entity|domain:InMemoryCache).hasTag("enable") 
+               if entityCacheEnabled 
+                   let keyClass = entity.pkType|language nullable 
+                   let valueClass = entity|domain:Model|name 
+                   let cacheSize = (entity|domain:InMemoryCache).tagValue("size") 
+                   if cacheSize == null ]$[ let cacheSize = 10 ]$[ endif 
+                   let cacheName = "modelCache" 
+   send imports ]
 import ${(space.domain("Utils")).namespace}.LRUCache;
-$[/send]
+$[ endsend ]
     static final LRUCache<${keyClass}, ${valueClass}> ${cacheName} = new LRUCache<>(${cacheSize});
     static final Map<String,Long> cacheStats = new HashMap<>();
-$[send imports]
+$[ send imports ]
 import java.util.Map;
 import java.util.HashMap;
-$[/send]
-            $[/if]
-        $[/author]
+$[ endsend 
+               endif 
+           endauthor ]
 
-        $[author to save outlet postSave
-          D "After an object is saved, this will place the newly updated object back in the cache."
-        ]
-            $[if entityCacheEnabled]
+        $[ author to save outlet postSave
+   D "After an object is saved, this will place the newly updated object back in the cache." 
+               if entityCacheEnabled ]
         ${cacheName}.put(savedObject.getId(), savedObject);
-            $[/if]
-        $[/author]
-$[*        System.out.println("REPO_CACHE > SAVE > Putting ${entity.name} object into cache with ID: " + savedObject.getId()); *]
-        $[author to get outlet preGet
-          D "Looks for the object in the cache and sets `responseObject` to that if found."
-        ]
-            $[if entityCacheEnabled]
+            $[ endif 
+           endauthor 
+           /*        System.out.println("REPO_CACHE > SAVE > Putting ${entity.name} object into cache with ID: " + savedObject.getId()); */
+
+           author to get outlet preGet
+           D "Looks for the object in the cache and sets `responseObject` to that if found."
+        
+               if entityCacheEnabled ]
         if (${cacheName}.containsKey(id)) {
-$[*            Long cacheHits = cacheStats.get("hits");
+                $[ /*            Long cacheHits = cacheStats.get("hits");
             if (cacheHits == null) {
                 cacheHits = 0L;
             } else {
@@ -47,28 +47,28 @@ $[*            Long cacheHits = cacheStats.get("hits");
             }
             cacheStats.put("hits", cacheHits);
             Long cacheMisses = cacheStats.get("misses");
-            System.out.println("REPO_CACHE > CACHE_HIT " + cacheHits + " CACHE_MISS " + cacheMisses + " > FOUND ${entity.name} object in cache with ID: " + id); *]
+            System.out.println("REPO_CACHE > CACHE_HIT " + cacheHits + " CACHE_MISS " + cacheMisses + " > FOUND ${entity.name} object in cache with ID: " + id); */ ]
             return Optional.of(${cacheName}.get(id));
         }
-$[*        Long cacheMisses = cacheStats.get("misses");
+                $[ /*        Long cacheMisses = cacheStats.get("misses");
         if (cacheMisses == null) {
             cacheMisses = 0L;
         } else {
             cacheMisses++;
         }
         cacheStats.put("misses", cacheMisses);
-        System.out.println("REPO_CACHE > CACHE_MISS " + cacheMisses + " > ${entity.name}"); *]
-            $[/if]
-        $[/author]
-        $[author to get outlet postGet
-          D "Looks for the object in the cache and sets `responseObject` to that if found."
-        ]
-            $[if entityCacheEnabled]
+        System.out.println("REPO_CACHE > CACHE_MISS " + cacheMisses + " > ${entity.name}"); */ 
+               endif 
+           endauthor 
+           author to get outlet postGet
+           D "Looks for the object in the cache and sets `responseObject` to that if found." 
+               if entityCacheEnabled ]
         if (object.isPresent()) {
             ${cacheName}.put(object.get().getId(), object.get());
         }
-            $[/if]
-$[*            System.out.println("REPO_CACHE > GET > Putting ${entity.name} object into cache with ID: " + object.get().getId()); *]
-        $[/author]
-    $[/author]
-$[/author]
+            $[ endif 
+               /*            System.out.println("REPO_CACHE > GET > Putting ${entity.name} object into cache with ID: " + object.get().getId()); */
+            
+           endauthor 
+       endauthor 
+   endauthor ]

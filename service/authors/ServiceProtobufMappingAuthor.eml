@@ -1,76 +1,76 @@
 $[ language java ]
-$[ domain Service ]
-$[ import "service/ServiceFunctions" ]
-$[ import "util/AutoWired" ]
-$[ author to org.entityc.springboot.service ]
-    $[ author to outlet methods ]
-        $[ if space.hasDomain("ProtobufDTO") && !(entity.module|domain:ProtobufDTO).hasTag("noproto") ]
-            $[ let responseModelName = entity|domain:Model|name ]
-            $[ let protobufNamespace = (space.domain("ProtobufDTO")).namespace ]
-            $[ let protobufClassName = entity|domain:ProtobufDTO|name ]
-            $[ capture fullProtobufClassName ]${entity.module|domain:ProtobufDTO|name}.${protobufClassName}$[/ capture ]
-$[ send imports ]
+$[ domain Service 
+   import "service/ServiceFunctions" 
+   import "util/AutoWired" 
+   author to org.entityc.springboot.service 
+       author to outlet methods 
+           if space.hasDomain("ProtobufDTO") && !(entity.module|domain:ProtobufDTO).hasTag("noproto") 
+               let responseModelName = entity|domain:Model|name 
+               let protobufNamespace = (space.domain("ProtobufDTO")).namespace 
+               let protobufClassName = entity|domain:ProtobufDTO|name 
+               capture fullProtobufClassName ]${entity.module|domain:ProtobufDTO|name}.${protobufClassName}$[ endcapture 
+   send imports ]
 import ${protobufNamespace}.${entity.module.name|capitalize};
-$[/ send ]
+$[ endsend ]
     // [Template] ${__template.name}:${__outlet.name} < ${__author.template.name}
     public ${fullProtobufClassName} protobufFromModel(${responseModelName} modelObject, int levels) throws ServiceException {
-            $[ let _mapperDomainEntity = entity|domain:DTOMapper ]
-            $[ call addAutoWired(domainEntity: _mapperDomainEntity) ]
-            $[ let _mapperVariableName = _mapperDomainEntity|name|uncapitalize ]
+            $[ let _mapperDomainEntity = entity|domain:DTOMapper 
+               call addAutoWired(domainEntity: _mapperDomainEntity) 
+               let _mapperVariableName = _mapperDomainEntity|name|uncapitalize ]
         ${fullProtobufClassName} pbObject = ${_mapperVariableName}.toProtobufFromModel(modelObject);
         ${fullProtobufClassName}.Builder builder = ${fullProtobufClassName}.newBuilder(pbObject);
         if (levels > 0) {
-            $[ foreach relationship in (entity|domain:ProtobufDTO|view:APIGet).relationships|sort ]
-                $[ let _toEntity = relationship.to.entity ]
-                $[ let toSelf = _toEntity.entity.name == entity.name ]
-                $[ if _toEntity.entity.isImplicit || _toEntity.entity.isExtern || _toEntity.entity.isIncluded ]$[ continue ]$[/ if ]
-                $[ let includeChildEntities = _toEntity.space.name == entity.space.name && !_toEntity.isIncluded ]
-                $[ if !includeChildEntities ]$[ continue ]$[/ if ]
-                $[ let _toEntityDtoClassName = _toEntity|name ]
-                $[ let _toEntityModelClassName = _toEntity|domain:Model|name ]
-                $[ call CheckIfReleasedEntity(entity: _toEntity.entity)->(isReleasedEntity: isReleasedToEntity) ]
-$[ send imports ]
+            $[ foreach relationship in (entity|domain:ProtobufDTO|view:APIGet).relationships|sort 
+                   let _toEntity = relationship.to.entity 
+                   let toSelf = _toEntity.entity.name == entity.name 
+                   if _toEntity.entity.isImplicit || _toEntity.entity.isExtern || _toEntity.entity.isIncluded ]$[ continue ]$[ endif 
+                   let includeChildEntities = _toEntity.space.name == entity.space.name && !_toEntity.isIncluded 
+                   if !includeChildEntities ]$[ continue ]$[ endif 
+                   let _toEntityDtoClassName = _toEntity|name 
+                   let _toEntityModelClassName = _toEntity|domain:Model|name 
+                   call CheckIfReleasedEntity(entity: _toEntity.entity)->(isReleasedEntity: isReleasedToEntity) 
+   send imports ]
 import ${_toEntity|domain:Model|fullname};
-$[/ send ]
-                $[ call addAutoWired(domainEntity: _toEntity|domain:DTOMapper) ]
-                $[ let _toEntityMapperClassName = _toEntity|domain:DTOMapper|name ]
-                $[ let _toEntityMapperVariableName = _toEntityMapperClassName|uncapitalize ]
-                $[ let _toEntityRepository = _toEntity|domain:Repository ]
-                $[ if !toSelf ]
-                    $[ call addAutoWired(domainEntity: _toEntityRepository) ]
-                $[/ if ]
-                $[ if relationship.to.isOne && relationship.withViewName != "Reference" ]
+$[ endsend 
+                   call addAutoWired(domainEntity: _toEntity|domain:DTOMapper) 
+                   let _toEntityMapperClassName = _toEntity|domain:DTOMapper|name 
+                   let _toEntityMapperVariableName = _toEntityMapperClassName|uncapitalize 
+                   let _toEntityRepository = _toEntity|domain:Repository 
+                   if !toSelf 
+                       call addAutoWired(domainEntity: _toEntityRepository) 
+                   endif 
+                   if relationship.to.isOne && relationship.withViewName != "Reference" ]
             if (modelObject.get${relationship|domain:Model|name|capitalize}Id() != null) {
                 Optional<${_toEntityModelClassName}> fieldObject = ${_toEntityRepository|name|uncapitalize}.findById(modelObject.get${relationship|domain:Model|name|capitalize}Id());
                 if (!fieldObject.isPresent()) {
                     throw new EntityNotFoundException("${_toEntityModelClassName} not found.");
                 }
-                builder.set${relationship|domain:Model|name|capitalize}($[ if toSelf ]this$[ else ]${_toEntity|domain:Service|name|uncapitalize}$[/ if ].protobufFromModel(fieldObject.get(), levels-1));
-$[*                builder.set${relationship|domain:Model|name|capitalize}(${_toEntityMapperVariableName}.toProtobufFromModel(fieldObject.get()), levels); *]
+                builder.set${relationship|domain:Model|name|capitalize}($[ if toSelf ]this$[ else ]${_toEntity|domain:Service|name|uncapitalize}$[ endif ].protobufFromModel(fieldObject.get(), levels-1));
+                    $[ /*                builder.set${relationship|domain:Model|name|capitalize}(${_toEntityMapperVariableName}.toProtobufFromModel(fieldObject.get()), levels); */ ]
             }
-                $[ elseif relationship.to.isMany && relationship.withViewName != "Reference" ]
-                    $[ if isReleasedToEntity ]
-                        $[ let bySomething = "" ]
-                    $[ else ]
-                        $[ capture bySomething ]By${entity|domain:Model|name|capitalize}$[/ capture ]
-                    $[/ if ]
-                    $[ capture byArgument ]modelObject.get${entity.primaryKeyAttribute|domain:Model|name|capitalize}(), $[/ capture ]
-$[ send imports ]
+                $[ elseif relationship.to.isMany && relationship.withViewName != "Reference" 
+                       if isReleasedToEntity 
+                           let bySomething = "" 
+                       else 
+                           capture bySomething ]By${entity|domain:Model|name|capitalize}$[ endcapture 
+                       endif 
+                       capture byArgument ]modelObject.get${entity.primaryKeyAttribute|domain:Model|name|capitalize}(), $[ endcapture 
+   send imports ]
 import java.util.HashSet;
-$[/ send ]
-                    $[ if relationship.relationship.isImplicit ]
+$[ endsend 
+                       if relationship.relationship.isImplicit ]
             List<${_toEntityModelClassName}> items = ${_toEntityRepository|name|uncapitalize}.get${_toEntity|domain:Model|name|capitalize}ListAssociated${bySomething}(${byArgument}0, 10000);
             for( ${_toEntityModelClassName} item : items ) {
                 builder.add${relationship|domain:Model|name|capitalize}(${_toEntityMapperVariableName}.toProtobufFromModel(item, levels-1));
             }
                     $[ else ]
-            builder.addAll${relationship|domain:Model|name|capitalize}($[ if toSelf ]this$[ else ]${_toEntity|domain:Service|name|uncapitalize}$[/ if ].get${_toEntity|domain:ProtobufDTO|name|capitalize}PBList${bySomething}(${byArgument}0, 10000, levels-1).getItemList());
-                    $[/ if ]
-                $[/ if ]
-            $[/ foreach ]
+            builder.addAll${relationship|domain:Model|name|capitalize}($[ if toSelf ]this$[ else ]${_toEntity|domain:Service|name|uncapitalize}$[ endif ].get${_toEntity|domain:ProtobufDTO|name|capitalize}PBList${bySomething}(${byArgument}0, 10000, levels-1).getItemList());
+                    $[ endif 
+                   endif 
+               endforeach ]
         }
         return builder.build();
     }
-        $[/ if ]
-    $[/ author ]
-$[/ author ]
+        $[ endif 
+       endauthor 
+   endauthor ]

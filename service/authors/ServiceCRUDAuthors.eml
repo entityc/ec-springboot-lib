@@ -1,7 +1,7 @@
-$[D summary, main "This template simply imports the CRUD authors that are basic to the application."]
-$[import "service/authors/ServiceCreateAuthor"]
-$[import "service/authors/ServiceUpdateAuthor"]
-$[import "service/authors/ServiceGetAuthor"]
-$[import "service/authors/ServiceDeleteAuthor"]
-$[import "service/authors/ServiceMappingAuthor"]
-$[import "service/authors/ServiceAssociationAuthor"]
+$[ D summary, main "This template simply imports the CRUD authors that are basic to the application." 
+   import "service/authors/ServiceCreateAuthor" 
+   import "service/authors/ServiceUpdateAuthor" 
+   import "service/authors/ServiceGetAuthor" 
+   import "service/authors/ServiceDeleteAuthor" 
+   import "service/authors/ServiceMappingAuthor" 
+   import "service/authors/ServiceAssociationAuthor" ]

@@ -1,11 +1,11 @@
-$[D summary, main "This template generates a properties file for a spring boot application if one does not"]
-$[D summary, main "already exist."]
-$[D ""]
-$[D "> In the future it may be capable of merging with an existing application.properties file but"]
-$[D "for now it only. generates the initial version of the file."]
+$[ D summary, main "This template generates a properties file for a spring boot application if one does not" 
+   D summary, main "already exist." 
+   D "" 
+   D "> In the future it may be capable of merging with an existing application.properties file but" 
+   D "for now it only. generates the initial version of the file." ]
 
-$[let databaseName = space.getMetadataValue("databaseName")]
-$[file ifdoesnotexist "src/main/resources" "application" "yml"]
+$[ let databaseName = space.getMetadataValue("databaseName") 
+   file ifdoesnotexist "src/main/resources" "application" "yml" ]
 info:
   app:
     name: '@project.name@'
@@ -84,4 +84,4 @@ springdoc:
   api-docs:
     enabled: false
     path: /public/apix-docs
-$[/file]
+$[ endfile ]

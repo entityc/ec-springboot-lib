@@ -1,38 +1,38 @@
 $[ language java ]
-$[ domain Controller ]
-$[ D summary "This generates a controller class that has many normal CRUD operations along with asset" ]
-$[ D summary "upload operations - all based on **protobuf** objects instead of json." ]
-$[ D "This template is responsible for generating the protobuf-based Controller classes of the" ]
-$[ D "micro-service. These classes essentially define endpoints, perform some" ]
-$[ D "security/permission checks, then ultimately call methods on Service classes that service" ]
-$[ D "the endpoints." ]
+$[ domain Controller 
+   D summary "This generates a controller class that has many normal CRUD operations along with asset" 
+   D summary "upload operations - all based on **protobuf** objects instead of json." 
+   D "This template is responsible for generating the protobuf-based Controller classes of the" 
+   D "micro-service. These classes essentially define endpoints, perform some" 
+   D "security/permission checks, then ultimately call methods on Service classes that service" 
+   D "the endpoints." ]
 
-$[ import "controller/protobuf/CreateAuthor" ]
-$[ import "controller/protobuf/UpdateAuthor" ]
-$[ import "controller/protobuf/GetAuthor" ]
-$[* import "controller/protobuf/AssetAuthor" *]
-$[ import "controller/protobuf/AssociationAuthor"]
-$[ import "util/AutoWired" ]
-$[ import "doc/SourceHeaders" ]
+$[ import "controller/protobuf/CreateAuthor" 
+   import "controller/protobuf/UpdateAuthor" 
+   import "controller/protobuf/GetAuthor" 
+   /* import "controller/protobuf/AssetAuthor" */ 
+   import "controller/protobuf/AssociationAuthor" 
+   import "util/AutoWired" 
+   import "doc/SourceHeaders" ]
 
-$[ publisher org.entityc.springboot.controller.protobuf ]
-    $[ let apiPathPrefix = ((space|domain:APIPath).domain.tagValue("url:prefix:api")) ]
-    $[ let exceptionNamespace = (space.domain("Exception")).namespace ]
-    $[ let utilsNamespace = (space.domain("Utils")).namespace ]
-    $[ let securityNamespace = (space.domain("Security")).namespace ]
+$[ publisher org.entityc.springboot.controller.protobuf 
+       let apiPathPrefix = (space|domain:APIPath).domain.tagValue("url:prefix:api") 
+       let exceptionNamespace = (space.domain("Exception")).namespace 
+       let utilsNamespace = (space.domain("Utils")).namespace 
+       let securityNamespace = (space.domain("Security")).namespace ]
 
-    $[ foreach module in space.modules if !module.isIncluded && !(module|domain:ProtobufDTO).hasTag("noproto")]
-        $[ foreach entity in module.entities if !entity.isSecondary && !entity.isImplicit && !entity.isExtern && !entity.isTransient ]
-            $[ let domainEntity = entity|domain ]
-            $[ if domainEntity.hasTag("rest:none") ]$[ continue ]$[/ if ]
-            $[ let domainModule = entity.module|domain ]
-            $[ if domainModule.hasTag("rest:none") ]$[ continue ]$[/ if ]
-            $[ let className = entity|domain|name ]
-            $[ let modelName = entity|domain:Model|name ]
-            $[ let serviceClassName = entity|domain:Service|name ]
-            $[ let dtoClassName = entity|domain:ProtobufDTO|name ]
-            $[ file domain.namespace|path (entity|domain|name + "Proto") "java" ]
-                $[ call entityHeader(title:"This Controller class is responsible for implementing the Protobuf-based API endpoint for the following entity.") ]
+    $[ foreach module in space.modules if !module.isIncluded && !(module|domain:ProtobufDTO).hasTag("noproto") 
+           foreach entity in module.entities if !entity.isSecondary && !entity.isImplicit && !entity.isExtern && !entity.isTransient 
+               let domainEntity = entity|domain 
+               if domainEntity.hasTag("rest:none") ]$[ continue ]$[ endif 
+               let domainModule = entity.module|domain 
+               if domainModule.hasTag("rest:none") ]$[ continue ]$[ endif 
+               let className = entity|domain|name 
+               let modelName = entity|domain:Model|name 
+               let serviceClassName = entity|domain:Service|name 
+               let dtoClassName = entity|domain:ProtobufDTO|name 
+               file domain.namespace|path (entity|domain|name) + "Proto" "java" 
+                   call entityHeader(title: "This Controller class is responsible for implementing the Protobuf-based API endpoint for the following entity.") ]
 package ${domain.namespace};
 
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -47,7 +47,7 @@ import ${exceptionNamespace}.EntityNotFoundException;
 import ${exceptionNamespace}.ValidationException;
                 $[ if securityNamespace != null ]
 import ${securityNamespace}.UserDetailsMapper;
-                $[/ if ]
+                $[ endif ]
 
 import java.util.HashMap;
 import java.util.ArrayList;
@@ -71,15 +71,15 @@ public class ${className}Proto {
     @Autowired
     public UserDetailsMapper userDetailsMapper;
 
-                $[/ if ]
+                $[ endif ]
     @PostConstruct
     private void postConstruct() {
         mapper.getConfiguration().setAmbiguityIgnored(true);
     }
 
-                $[ let service = entity|domain:Service|name|uncapitalize ]
-                $[ let pbMapper = entity|domain:DTOMapper|name|uncapitalize ]
-$[ receive distinct memberDecl ]
+                $[ let service = entity|domain:Service|name|uncapitalize 
+                   let pbMapper = entity|domain:DTOMapper|name|uncapitalize 
+   receive distinct memberDecl ]
 
     @Autowired
     public ${className}Proto (
@@ -87,31 +87,30 @@ $[ receive distinct constructorArgs ]
     ) {
 $[ receive distinct constructorAssigns ]
     }
-                $[ let autoWiredDomainEntities = @[]@ ]
-                $[ call addAutoWired(domainEntity: entity|domain:Service) ]
-                $[ call addAutoWired(domainEntity: entity|domain:DTOMapper) ]
+                $[ let autoWiredDomainEntities = @[]@ 
+                   call addAutoWired(domainEntity: entity|domain:Service) 
+                   call addAutoWired(domainEntity: entity|domain:DTOMapper) ]
 
-$[* This outlet must be below the receivers so they can be referenced by the authors! *]
-$[ outlet members
+                $[ /* This outlet must be below the receivers so they can be referenced by the authors! */ 
+   outlet members
    D "Member variable declarations can be placed here."
-]
-$[/ outlet ]
 
-$[* TODO: We can effectively move this to where the endpoint is created and its needed *]
-                $[ if (entity|domain).hasTag("parent:service") && entity.hasParentRelationship ]
-                    $[ let parentEntity = entity.singleParentRelationship.to.entity ]
-                    $[ call addAutoWired(domainEntity: parentEntity|domain:Service) ]
-$[ send imports ]
+   endoutlet ]
+
+                $[ /* TODO: We can effectively move this to where the endpoint is created and its needed */ 
+                   if (entity|domain).hasTag("parent:service") && entity.hasParentRelationship 
+                       let parentEntity = entity.singleParentRelationship.to.entity 
+                       call addAutoWired(domainEntity: parentEntity|domain:Service) 
+   send imports ]
 import ${parentEntity|domain:Model|fullname};
-$[/ send ]
-                $[/ if ]
-$[ outlet methods
-   D "Methods can be placed here."
-]
-$[/ outlet ]
+$[ endsend 
+                   endif 
+   outlet methods
+   D "Methods can be placed here." 
+   endoutlet ]
 
 }
-            $[/ file ]
-        $[/ foreach ]
-    $[/ foreach ]
-$[/ publisher ]
+            $[ endfile 
+           endforeach 
+       endforeach 
+   endpublisher ]

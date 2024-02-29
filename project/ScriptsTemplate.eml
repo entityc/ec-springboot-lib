@@ -1,7 +1,7 @@
-$[file ifdoesnotexist "" "build" "sh"]
+$[ file ifdoesnotexist "" "build" "sh" ]
 mvn clean package spring-boot:repackage
-$[/file]
-$[file ifdoesnotexist "" "start" "sh"]
+$[ endfile 
+   file ifdoesnotexist "" "start" "sh" ]
 ./build.sh
 mvn spring-boot:run
-$[/file]
+$[ endfile ]

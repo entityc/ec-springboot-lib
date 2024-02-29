@@ -1,59 +1,59 @@
 $[ language java ]
-$[ domain Service ]
-$[ import "release/ReleaseFunctions" ]
-$[ import "util/AutoWired" ]
-$[ import "doc/SourceHeaders" ]
+$[ domain Service 
+   import "release/ReleaseFunctions" 
+   import "util/AutoWired" 
+   import "doc/SourceHeaders" ]
 
-$[ let exceptionNamespace = (space.domain("Exception")).namespace ]
-$[ let utilsNamespace = (space.domain("Utils")).namespace ]
-$[ let serviceNamespace = (space.domain("Service")).namespace ]
+$[ let exceptionNamespace = (space.domain("Exception")).namespace 
+   let utilsNamespace = (space.domain("Utils")).namespace 
+   let serviceNamespace = (space.domain("Service")).namespace ]
 
-$[*
+$[ /*
     This is the core part of the template where it generates the Service classes responsible for
     generating release deltas.
-*]
-$[ let useCache = true ]
-$[ foreach module in space.modules if !module.isIncluded ]
-    $[ foreach entity in module.entities if entity.isTransient && entity.hasTag("release:delta") ]
-$[* make sure it has correctly tagged relationships *]
-        $[ let fromRelationship = entity.relationshipTagged("release:delta:from") ]
-        $[ let addedRelationship = entity.relationshipTagged("release:delta:added") ]
-        $[ let changedRelationship = entity.relationshipTagged("release:delta:changed") ]
-        $[ let removedRelationship = entity.relationshipTagged("release:delta:removed") ]
-        $[ if fromRelationship == null || addedRelationship == null || changedRelationship == null || removedRelationship == null ]
-            $[ log info ]${entity.name} is tagged as a delta entity but its relationships are not properly tagged. Skipping...$[/ log ]
-            $[ continue ]
-        $[/ if ]
-        $[ let releaseEntity = fromRelationship.to.entity ]
-        $[ if releaseEntity.name != addedRelationship.to.entity.name || releaseEntity.name != changedRelationship.to.entity.name || releaseEntity.name != removedRelationship.to.entity.name ]
-            $[ log info ]${entity.name} is tagged as a delta entity but its tagged relationships are not all to the same entity. Skipping...$[/ log ]
-            $[ continue ]
-        $[/ if ]
-        $[ if !releaseEntity.hasTag("release:top") ]
-            $[ log info ]${entity.name} specifies a release entity ${releaseEntity.name} but that entity is not tagged as a release entity. Skipping...$[/ log ]
-            $[ continue ]
-        $[/ if ]
-        $[ let useDeltaCache = useCache && entity.hasPrimaryKey && (entity|domain).hasCache ]
-        $[ let className = entity|domain|name ]
-        $[ let modelName = entity|domain:Model|name ]
-        $[ let modelVariableName = entity|domain:Model|name|uncapitalize ]
-        $[ let repositoryClassName = entity|domain:Repository|name ]
-        $[ let repositoryVariableName = entity|domain:Repository|name|uncapitalize ]
-        $[ let responseEntity = entity ]
-        $[ let responseDtoName = responseEntity|domain:JSONDTO|name ]
-        $[ let protobufNamespace = (space.domain("ProtobufDTO")).namespace ]
-        $[ let protobufClassName = entity|domain:ProtobufDTO|name ]
-        $[ capture fullProtobufClassName ]${entity.module|domain:ProtobufDTO|name}.${protobufClassName}$[/ capture ]
-        $[ let responseModelName = responseEntity|domain:Model|name ]
-        $[ file domain.namespace|path entity|domain|name "java" ]
-            $[ call entityHeader(title:"This Service class is responsible for generating release delta associated with the following entity.") ]
+*/ 
+   let useCache = true 
+   foreach module in space.modules if !module.isIncluded 
+       foreach entity in module.entities if entity.isTransient && entity.hasTag("release:delta") 
+           /* make sure it has correctly tagged relationships */ 
+           let fromRelationship = entity.relationshipTagged("release:delta:from") 
+           let addedRelationship = entity.relationshipTagged("release:delta:added") 
+           let changedRelationship = entity.relationshipTagged("release:delta:changed") 
+           let removedRelationship = entity.relationshipTagged("release:delta:removed") 
+           if fromRelationship == null || addedRelationship == null || changedRelationship == null || removedRelationship == null 
+               log info ]${entity.name} is tagged as a delta entity but its relationships are not properly tagged. Skipping...$[ endlog 
+               continue 
+           endif 
+           let releaseEntity = fromRelationship.to.entity 
+           if releaseEntity.name != addedRelationship.to.entity.name || releaseEntity.name != changedRelationship.to.entity.name || releaseEntity.name != removedRelationship.to.entity.name 
+               log info ]${entity.name} is tagged as a delta entity but its tagged relationships are not all to the same entity. Skipping...$[ endlog 
+               continue 
+           endif 
+           if !releaseEntity.hasTag("release:top") 
+               log info ]${entity.name} specifies a release entity ${releaseEntity.name} but that entity is not tagged as a release entity. Skipping...$[ endlog 
+               continue 
+           endif 
+           let useDeltaCache = useCache && entity.hasPrimaryKey && (entity|domain).hasCache 
+           let className = entity|domain|name 
+           let modelName = entity|domain:Model|name 
+           let modelVariableName = entity|domain:Model|name|uncapitalize 
+           let repositoryClassName = entity|domain:Repository|name 
+           let repositoryVariableName = entity|domain:Repository|name|uncapitalize 
+           let responseEntity = entity 
+           let responseDtoName = responseEntity|domain:JSONDTO|name 
+           let protobufNamespace = (space.domain("ProtobufDTO")).namespace 
+           let protobufClassName = entity|domain:ProtobufDTO|name 
+           capture fullProtobufClassName ]${entity.module|domain:ProtobufDTO|name}.${protobufClassName}$[ endcapture 
+           let responseModelName = responseEntity|domain:Model|name 
+           file domain.namespace|path entity|domain|name "java" 
+               call entityHeader(title: "This Service class is responsible for generating release delta associated with the following entity.") ]
 package ${domain.namespace};
 
 import ${serviceNamespace}.asset.BinaryPersistence;
 import ${serviceNamespace}.asset.Metadata;
             $[ if useCache ]
 import ${utilsNamespace}.LRUCache;
-            $[/ if ]
+            $[ endif ]
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -69,13 +69,13 @@ import ${exceptionNamespace}.ServiceException;
 import ${exceptionNamespace}.DaoException;
 import ${exceptionNamespace}.EntityNotFoundException;
 
-$[ receive distinct imports ]
-$[ send imports ]
+$[ receive distinct imports 
+   send imports ]
 import ${entity|domain:JSONDTO|fullname};
 import ${releaseEntity|domain:Model|fullname};
 import ${releaseEntity|domain:JSONDTO|fullname};
 import ${protobufNamespace}.${entity.module.name|capitalize};
-$[/ send ]
+$[ endsend ]
 
 @Service
 @Transactional
@@ -95,15 +95,15 @@ $[ receive distinct constructorArgs ]
 $[ receive distinct constructorAssigns ]
     }
 
-            $[ let autoWiredDomainEntities = @[]@ ]
-            $[ if useCache ]
-$[ send caches ]
+            $[ let autoWiredDomainEntities = @[]@ 
+               if useCache 
+   send caches ]
     private final LRUCache<String, ${entity|domain:JSONDTO|name}> deltaJsonCache = new LRUCache<>(5);
     private final LRUCache<String, ${fullProtobufClassName}> deltaProtobufCache = new LRUCache<>(5);
-$[/ send ]
-            $[/ if ]
-            $[ call addAutoWired(domainEntity: releaseEntity|domain:Service, autoWiredDomainEntities: autoWiredDomainEntities) ]
-            $[ let releaseServiceVariableName = releaseEntity|domain:Service|name|uncapitalize ]
+$[ endsend 
+               endif 
+               call addAutoWired(domainEntity: releaseEntity|domain:Service, autoWiredDomainEntities: autoWiredDomainEntities) 
+               let releaseServiceVariableName = releaseEntity|domain:Service|name|uncapitalize ]
     public ${entity|domain:JSONDTO|name} getReleaseDeltaDto(${releaseEntity.pkType|language} fromReleaseId, ${releaseEntity.pkType|language} toReleaseId) throws ServiceException {
             $[ if useCache ]
         ${releaseEntity|domain:Model|name} fromRelease = ${releaseServiceVariableName}.get${releaseEntity|domain:Model|name}ById(fromReleaseId, 0 /*levels*/);
@@ -115,7 +115,7 @@ $[/ send ]
                 return deltaJsonCache.get(cacheKey);
             }
         }
-            $[/ if ]
+            $[ endif ]
         ${entity|domain:JSONDTO|name} delta = new ${entity|domain:JSONDTO|name}();
         // since we are going to fill in the details based on the delta, make these without hierarchy
         ${releaseEntity|domain:JSONDTO|name} fromDto = ${releaseServiceVariableName}.dtoFromModel(${releaseServiceVariableName}.get${releaseEntity|domain:Model|name}ById(fromReleaseId, 0 /*levels*/), 0 /*levels*/);
@@ -126,21 +126,21 @@ $[/ send ]
         delta.setRemoved(removedDto);
         delta.setChanged(changedDto);
         delta.setAdded(addedDto);
-            $[ foreach binderRelationship in releaseEntity.relationships|sort ]
-                $[ if binderRelationship.to.entity.hasTag("release:binder") ]
-                    $[ let binderEntity = binderRelationship.to.entity ]
-                    $[ call getReleaseBinderRelationships(versionReleaseEntity: binderEntity)->(results: results) ]
-                    $[ if results != null && results.count > 1 ]
-                        $[ let objectRelationship = results.get(1) ]
-                        $[ let objectEntity = objectRelationship.to.entity ]
-                        $[ call addAutoWired(domainEntity: binderEntity|domain:Repository, autoWiredDomainEntities: autoWiredDomainEntities) ]
-$[ send imports ]
+            $[ foreach binderRelationship in releaseEntity.relationships|sort 
+                   if binderRelationship.to.entity.hasTag("release:binder") 
+                       let binderEntity = binderRelationship.to.entity 
+                       call getReleaseBinderRelationships(versionReleaseEntity: binderEntity)->(results: results) 
+                       if results != null && results.count > 1 
+                           let objectRelationship = results.get(1) 
+                           let objectEntity = objectRelationship.to.entity 
+                           call addAutoWired(domainEntity: binderEntity|domain:Repository, autoWiredDomainEntities: autoWiredDomainEntities) 
+   send imports ]
 import ${binderEntity|domain:Model|fullname};
 import ${binderEntity|domain:JSONDTO|fullname};
 import java.util.HashSet;
-$[/ send ]
-                        $[ call addAutoWired(domainEntity: binderEntity|domain:Service, autoWiredDomainEntities: autoWiredDomainEntities) ]
-                        $[ let serviceVariableName = binderEntity|domain:Service|name|uncapitalize ]
+$[ endsend 
+                           call addAutoWired(domainEntity: binderEntity|domain:Service, autoWiredDomainEntities: autoWiredDomainEntities) 
+                           let serviceVariableName = binderEntity|domain:Service|name|uncapitalize ]
         // ${binderEntity.name|title|uppercase}
         {
             // ADDED
@@ -165,18 +165,18 @@ $[/ send ]
             }
             changedDto.set${binderEntity|domain:Model|name}(changedDtoSet);
         }
-                    $[/ if ]
-                $[/ if ]
-            $[/ foreach ]
-            $[ if useCache ]
+                    $[ endif 
+                   endif 
+               endforeach 
+               if useCache ]
         if (cacheKey != null) {
             deltaJsonCache.put(cacheKey, delta);
         }
-            $[/ if ]
+            $[ endif ]
         return delta;
     }
 
-            $[ capture fullReleaseProtobufClassName ]${releaseEntity.module|domain:ProtobufDTO|name}.${releaseEntity|domain:ProtobufDTO|name}$[/ capture ]
+            $[ capture fullReleaseProtobufClassName ]${releaseEntity.module|domain:ProtobufDTO|name}.${releaseEntity|domain:ProtobufDTO|name}$[ endcapture ]
     public ${fullProtobufClassName} getReleaseDeltaProtobuf(${releaseEntity.pkType|language} fromReleaseId, ${releaseEntity.pkType|language} toReleaseId) throws ServiceException {
             $[ if useCache ]
         ${releaseEntity|domain:Model|name} fromRelease = ${releaseServiceVariableName}.get${releaseEntity|domain:Model|name}ById(fromReleaseId, 0 /*levels*/);
@@ -188,7 +188,7 @@ $[/ send ]
                 return deltaProtobufCache.get(cacheKey);
             }
         }
-            $[/ if ]
+            $[ endif ]
         ${fullProtobufClassName}.Builder deltaBuilder = ${fullProtobufClassName}.newBuilder();
         // since we are going to fill in the details based on the delta, make these without hierarchy
         ${fullReleaseProtobufClassName} fromProtobuf = ${releaseServiceVariableName}.protobufFromModel(${releaseServiceVariableName}.get${releaseEntity|domain:Model|name}ById(fromReleaseId, 0 /*levels*/), 0 /*levels*/);
@@ -199,22 +199,22 @@ $[/ send ]
         deltaBuilder.setRemoved(removedProtobuf);
         deltaBuilder.setChanged(changedProtobuf);
         deltaBuilder.setAdded(addedProtobuf);
-            $[ foreach binderRelationship in releaseEntity.relationships|sort ]
-                $[ if binderRelationship.to.entity.hasTag("release:binder") ]
-                    $[ let binderEntity = binderRelationship.to.entity ]
-                    $[ call getReleaseBinderRelationships(versionReleaseEntity: binderEntity)->(results: results) ]
-                    $[ if results != null && results.count > 1 ]
-                        $[ let objectRelationship = results.get(1) ]
-                        $[ let objectEntity = objectRelationship.to.entity ]
-                        $[ call addAutoWired(domainEntity: binderEntity|domain:Repository, autoWiredDomainEntities: autoWiredDomainEntities) ]
-$[ send imports ]
+            $[ foreach binderRelationship in releaseEntity.relationships|sort 
+                   if binderRelationship.to.entity.hasTag("release:binder") 
+                       let binderEntity = binderRelationship.to.entity 
+                       call getReleaseBinderRelationships(versionReleaseEntity: binderEntity)->(results: results) 
+                       if results != null && results.count > 1 
+                           let objectRelationship = results.get(1) 
+                           let objectEntity = objectRelationship.to.entity 
+                           call addAutoWired(domainEntity: binderEntity|domain:Repository, autoWiredDomainEntities: autoWiredDomainEntities) 
+   send imports ]
 import ${binderEntity|domain:Model|fullname};
 import ${binderEntity|domain:JSONDTO|fullname};
 import java.util.HashSet;
-$[/ send ]
-                        $[ call addAutoWired(domainEntity: binderEntity|domain:Service, autoWiredDomainEntities: autoWiredDomainEntities) ]
-                        $[ let serviceVariableName = binderEntity|domain:Service|name|uncapitalize ]
-                        $[ capture fullBinderProtobufClassName ]${binderEntity.module|domain:ProtobufDTO|name}.${binderEntity|domain:ProtobufDTO|name}$[/ capture ]
+$[ endsend 
+                           call addAutoWired(domainEntity: binderEntity|domain:Service, autoWiredDomainEntities: autoWiredDomainEntities) 
+                           let serviceVariableName = binderEntity|domain:Service|name|uncapitalize 
+                           capture fullBinderProtobufClassName ]${binderEntity.module|domain:ProtobufDTO|name}.${binderEntity|domain:ProtobufDTO|name}$[ endcapture ]
         // ${binderEntity.name|title|uppercase}
         {
             // ADDED
@@ -239,18 +239,18 @@ $[/ send ]
             }
             changedProtobuf.toBuilder().addAll${binderEntity|domain:ProtobufDTO|name}(changedProtobufSet).build();
         }
-                    $[/ if ]
-                $[/ if ]
-            $[/ foreach ]
+                    $[ endif 
+                   endif 
+               endforeach ]
         ${fullProtobufClassName} delta = deltaBuilder.build();
             $[ if useCache ]
         if (cacheKey != null) {
             deltaProtobufCache.put(cacheKey, delta);
         }
-            $[/ if ]
+            $[ endif ]
         return delta;
     }
 }
-        $[/ file ]
-    $[/ foreach ]
-$[/ foreach ]
+        $[ endfile 
+       endforeach 
+   endforeach ]

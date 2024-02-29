@@ -1,14 +1,14 @@
-$[language xml]
-$[D summary, main "This template generates a `pom.xml` file that defines your microservice project."]
-$[D "This is where you place all the libraries that you want to download and install into your"]
-$[D "application. It has an outlet so that features can add their dependencies here."]
+$[ language xml 
+   D summary, main "This template generates a `pom.xml` file that defines your microservice project." 
+   D "This is where you place all the libraries that you want to download and install into your" 
+   D "application. It has an outlet so that features can add their dependencies here." ]
 
-$[let microserviceIdentifier = space.getMetadataValue("microserviceIdentifier")]
-$[let microserviceTitle = space.getMetadataValue("microserviceTitle")]
-$[let basePackage = space.getMetadataValue("basePackage")]
+$[ let microserviceIdentifier = space.getMetadataValue("microserviceIdentifier") 
+   let microserviceTitle = space.getMetadataValue("microserviceTitle") 
+   let basePackage = space.getMetadataValue("basePackage") ]
 
-$[publisher springboot.pom]
-    $[file "" "pom" "xml"]
+$[ publisher springboot.pom 
+       file "" "pom" "xml" ]
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
@@ -22,21 +22,21 @@ $[publisher springboot.pom]
     <name>${microserviceIdentifier}</name>
     <description>${microserviceTitle}</description>
 
-$[outlet project]
-$[/outlet]
+$[ outlet project 
+   endoutlet ]
 
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
         <version>2.5.5</version>
         <relativePath/> <!-- lookup parent from repository -->
-$[outlet parent]
-$[/outlet]
+$[ outlet parent 
+   endoutlet ]
     </parent>
 
     <properties>
-$[outlet properties]
-$[/outlet]
+$[ outlet properties 
+   endoutlet ]
         <servlet.version>4.0.0</servlet.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
@@ -63,8 +63,8 @@ $[/outlet]
             <artifactId>javax.servlet-api</artifactId>
             <version>${$}{servlet.version}</version>
         </dependency>
-$[outlet dependencies]
-$[/outlet]
+$[ outlet dependencies 
+   endoutlet ]
         <!-- Springboot Dependencies -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -167,7 +167,7 @@ $[/outlet]
     </dependencies>
 
     <profiles>
-$[outlet profiles]
+$[ outlet profiles ]
         <profile>
             <id>local</id>
             <properties>
@@ -197,7 +197,7 @@ $[outlet profiles]
                 </plugins>
             </build>
         </profile>
-$[/outlet]
+$[ endoutlet ]
     </profiles>
 
     <build>
@@ -213,11 +213,11 @@ $[/outlet]
                 <filtering>true</filtering>
             </testResource>
         </testResources>
-$[outlet build]
-$[/outlet]
+$[ outlet build 
+   endoutlet ]
         <plugins>
-$[outlet plugins]
-$[/outlet]
+$[ outlet plugins 
+   endoutlet ]
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
@@ -238,5 +238,5 @@ $[/outlet]
         </plugins>
     </build>
 </project>
-    $[/file]
-$[/publisher]
+    $[ endfile 
+   endpublisher ]

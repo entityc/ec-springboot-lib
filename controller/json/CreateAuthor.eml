@@ -1,34 +1,34 @@
-$[ language java ]
-$[ D summary, main "This contains an author that generates create endpoint methods for a controller class." ]
-$[ import "release/ReleaseFunctions" ]
+$[ language java 
+   D summary, main "This contains an author that generates create endpoint methods for a controller class." 
+   import "release/ReleaseFunctions" ]
 
-$[ author to org.entityc.springboot.controller ]
-    $[ author to outlet methods
+$[ author to org.entityc.springboot.controller 
+       author to outlet methods
        D "Adds create endpoints to the controller class for its entity."
-    ]
-$[* Composite entities can't be created. *]
-        $[ if entity.isCompositeEntity ]
-            $[ return ]
-        $[/ if ]
-$[ send imports ]
+    
+           /* Composite entities can't be created. */ 
+           if entity.isCompositeEntity 
+               return 
+           endif 
+   send imports ]
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestMethod;
-$[/ send ]
-        $[ call lookForReleaseStructure(topReleaseEntity: entity)->(results: releaseStructure) ]
-        $[ let isReleaseEntity = releaseStructure != null ]
-        $[ let paramOption = null ]
-        $[ let extraParentIdVarName = null ]
-        $[ if isReleaseEntity ]
-            $[ capture paramOption ], @RequestParam("populate") Boolean populate, @RequestParam("fromId") String fromId$[/ capture ]
-            $[ if entity.hasPrimaryParentRelationship ]
-                $[ let parentEntity = entity.primaryParentRelationship.to.entity ]
-                $[ capture extraParentIdVarName ], requestObject.get${parentEntity.primaryKeyAttribute|name|capitalize}()$[/ capture ]
-            $[/ if ]
-        $[/ if ]
-        $[ publisher org.entityc.springboot.controller.create ]
+$[ endsend 
+           call lookForReleaseStructure(topReleaseEntity: entity)->(results: releaseStructure) 
+           let isReleaseEntity = releaseStructure != null 
+           let paramOption = null 
+           let extraParentIdVarName = null 
+           if isReleaseEntity 
+               capture paramOption ], @RequestParam("populate") Boolean populate, @RequestParam("fromId") String fromId$[ endcapture 
+               if entity.hasPrimaryParentRelationship 
+                   let parentEntity = entity.primaryParentRelationship.to.entity 
+                   capture extraParentIdVarName ], requestObject.get${parentEntity.primaryKeyAttribute|name|capitalize}()$[ endcapture 
+               endif 
+           endif 
+           publisher org.entityc.springboot.controller.create ]
     // [Template] ${__template.name}:${__outlet.name} < ${__author.template.name}
     @RequestMapping(
         method = RequestMethod.POST,
@@ -37,9 +37,8 @@ $[/ send ]
     )
     @ResponseStatus(HttpStatus.ACCEPTED)
 $[ outlet annotation
-   D "Resides just above the method declaration in the annocation area."
-]
-$[/ outlet ]
+           D "Resides just above the method declaration in the annocation area." 
+   endoutlet ]
     public ${dtoClassName} create${modelName}(@RequestBody ${dtoClassName} requestDto${paramOption}) throws ServiceException {
         ${modelName} requestObject = mapper.map(requestDto, ${modelName}.class);
         ${modelName} resultObject = ${service}.create${modelName}(requestObject);
@@ -51,16 +50,17 @@ $[/ outlet ]
                 ${service}.resetReleaseToLatestVersions(resultObject.getId()${extraParentIdVarName});
             }
         }
-            $[/ if ]
+            $[ endif ]
         return mapper.map(resultObject, ${dtoClassName}.class);
     }
 
-        $[/ publisher ]
-        $[ if !entity.hasPrimaryParentRelationship ]$[/ if ]
-        $[ foreach entity.relationships ]
-$[* We are looking only for relationships that are: required parent one *]
-            $[ if !relationship.to.isOne || !relationship.isParent || relationship.isOptional ]$[ continue ]$[/ if ]
-            $[ publisher org.entityc.springboot.controller.createWithParent ]
+        $[ endpublisher 
+           if !entity.hasPrimaryParentRelationship ]$[ endif 
+           foreach entity.relationships 
+               /* We are looking only for relationships that are: required parent one */
+                                                                                                                         
+               if !relationship.to.isOne || !relationship.isParent || relationship.isOptional ]$[ continue ]$[ endif 
+               publisher org.entityc.springboot.controller.createWithParent ]
     // [Template] ${__template.name}:${__outlet.name} < ${__author.template.name}
     @RequestMapping(
         path = "/${relationship|domain:APIPath|name}/{id}",
@@ -69,21 +69,20 @@ $[* We are looking only for relationships that are: required parent one *]
     )
     @ResponseStatus(HttpStatus.ACCEPTED)
 $[ outlet annotation
-   D "Resides just above the method declaration in the annocation area."
-]
-$[/ outlet ]
+               D "Resides just above the method declaration in the annocation area." 
+   endoutlet ]
     public ${dtoClassName} create${modelName}With${relationship.name|capitalize}(@PathVariable("id") ${relationship.to.entity.primaryKey.type|language} id, @RequestBody ${dtoClassName} requestDto) throws ServiceException {
         ${modelName} requestObject = mapper.map(requestDto, ${modelName}.class);
         ${modelName} resultObject = ${service}.create${modelName}With${relationship.name|capitalize}(id, requestObject);
         return mapper.map(resultObject, ${dtoClassName}.class);
     }
 
-            $[/ publisher ]
-        $[/ foreach ]
-    $[/ author ]
-$[/ author ]
+            $[ endpublisher 
+           endforeach 
+       endauthor 
+   endauthor ]
 
-$[*function createBatch
+$[ /*function createBatch
   D "This is is a variant of the basic create() function that, relative to a parent entity, allows the"
   D "requester to send an array of objects to create."
   (entity               D "The entity corresponding to the object to be created by the endpoint.",
@@ -112,4 +111,5 @@ $[*function createBatch
     }
 
   $[/foreach]
-$[/function*]
+$[/function*/
+                                                                                                            ]

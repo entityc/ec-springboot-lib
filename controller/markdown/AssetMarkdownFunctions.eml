@@ -1,25 +1,25 @@
-$[ D "Functions that generate markdown documentation about endpoints used for uploading" ]
-$[ D "digital assets." ]
+$[ D "Functions that generate markdown documentation about endpoints used for uploading" 
+   D "digital assets." ]
 
 $[ function uploadMarkdown
    (entity
-    D "Generates markdown documentation for this entity." ,
+    D "Generates markdown documentation for this entity.",
     collectionAttribute
-    D "The assetup upload collection attribute if it is for a collection.." ,
+    D "The assetup upload collection attribute if it is for a collection..",
     attribute
-    D "The attribute associated with the asset." ,
+    D "The attribute associated with the asset.",
     role
-    D "The role that is required for uploading." ,
+    D "The role that is required for uploading.",
     apiUrlPrefix
-    D "The start of all admin URLs." 
-   ) ]
-    $[ if collectionAttribute == null ]
-        $[ capture assetPath ]${attribute|domain:APIPath|name}$[/ capture ]
+    D "The start of all admin URLs."
+   ) 
+       if collectionAttribute == null 
+           capture assetPath ]${attribute|domain:APIPath|name}$[ endcapture ]
 ## Upload ${entity|title} - ${attribute|title} - Multipart Form
-    $[ else ]
-        $[ capture assetPath ]${collectionAttribute|domain:APIPath|name}/${attribute|domain:APIPath|name}$[/ capture ]
+    $[ else 
+           capture assetPath ]${collectionAttribute|domain:APIPath|name}/${attribute|domain:APIPath|name}$[ endcapture ]
 ## Upload ${entity|title} - ${collectionAttribute|title} - ${attribute|title} - Multipart Form
-    $[/ if ]
+    $[ endif ]
 
 ${attribute.description}
 
@@ -42,7 +42,7 @@ The contents of the POST is the multipart form.
 ## Upload ${entity|title} - ${attribute|title} - Raw file bytes
     $[ else ]
 ## Upload ${entity|title} - ${collectionAttribute|title} - ${attribute|title} - Raw file bytes
-    $[/ if ]
+    $[ endif ]
 
 ${attribute.description}
 
@@ -61,4 +61,4 @@ Where:
 
 The contents of the POST is the file itself.
 
-$[/ function ]
+$[ endfunction ]

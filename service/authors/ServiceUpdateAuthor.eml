@@ -1,19 +1,19 @@
 $[ language java ]
-$[ domain Service ]
-$[ D summary, main "The update author adds an update and a save method at the service level for updating objects of" ]
-$[ D summary, main "an entity." ]
-$[ D "The save method has many outlets where you can insert code that needs to run when objects for an" ]
-$[ D "entity are being saved to the repository." ]
+$[ domain Service 
+   D summary, main "The update author adds an update and a save method at the service level for updating objects of" 
+   D summary, main "an entity." 
+   D "The save method has many outlets where you can insert code that needs to run when objects for an" 
+   D "entity are being saved to the repository." ]
 
-$[ publisher org.entityc.springboot.service.update ]
-    $[ import "service/ServiceFunctions" ]
-    $[ import "util/AutoWired" ]
-    $[ author to org.entityc.springboot.service ]
-        $[ author to outlet methods ]
-$[* Composite entities can't be updated. *]
-            $[ if entity.isCompositeEntity ]
-                $[ return ]
-            $[/ if ]
+$[ publisher org.entityc.springboot.service.update 
+       import "service/ServiceFunctions" 
+       import "util/AutoWired" 
+       author to org.entityc.springboot.service 
+           author to outlet methods 
+               /* Composite entities can't be updated. */ 
+               if entity.isCompositeEntity 
+                   return 
+               endif ]
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public ${modelName} update${entity.name}(${modelName} object) throws ServiceException {
         return save${entity.name}(object);
@@ -21,30 +21,27 @@ $[* Composite entities can't be updated. *]
 
 $[ send imports ]
 import ${exceptionNamespace}.DaoException;
-$[/ send ]
-$[ outlet aboveSave
-   D "This is just above the save method for an entity object update."
-]
-$[/ outlet ]
+$[ endsend 
+   outlet aboveSave
+   D "This is just above the save method for an entity object update." 
+   endoutlet ]
     private ${modelName} save${entity.name}(${modelName} object) throws ServiceException {
         try {
 $[ outlet saveTop
    D "This is just inside the save method for an update but before the object is saved to the"
    D "repository. You have the opportunity to look at or modify the model `object` variable before"
-   D "it is saved."
-]
-$[/ outlet ]
+   D "it is saved." 
+   endoutlet ]
             ${modelName} savedObject = ${repositoryVariableName}.save${modelName}(object);
 $[ outlet saved
    D "This is just after the object is saved to the repository. The variable is called"
-   D "`savedObject`."
-]
-$[/ outlet ]
+   D "`savedObject`." 
+   endoutlet ]
             return savedObject;
         } catch (DataAccessException ex) {
             throw new DaoException(ex.getMessage(), ex);
         }
     }
-        $[/ author ]
-    $[/ author ]
-$[/ publisher ]
+        $[ endauthor 
+       endauthor 
+   endpublisher ]

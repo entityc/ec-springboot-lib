@@ -1,132 +1,132 @@
 $[ language java ]
-$[ domain DTOMapper ]
-$[ import "release/ReleaseFunctions" ]
+$[ domain DTOMapper 
+   import "release/ReleaseFunctions" ]
 
-$[ author to org.entityc.springboot.mapper ]
-    $[ author to outlet methods ]
-        $[ if space.hasDomain("ProtobufDTO") && !(module|domain:ProtobufDTO).hasTag("noproto") ]
+$[ author to org.entityc.springboot.mapper 
+       author to outlet methods 
+           if space.hasDomain("ProtobufDTO") && !(module|domain:ProtobufDTO).hasTag("noproto") ]
 
-            $[ let protobufNamespace = (space.domain("ProtobufDTO")).namespace ]
-$[ send imports ]
+            $[ let protobufNamespace = (space.domain("ProtobufDTO")).namespace 
+   send imports ]
 import com.google.protobuf.ByteString;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.modelmapper.ModelMapper;
 import ${protobufNamespace}.${module.name|capitalize};
-$[/ send ]
-            $[ foreach entity.attributes ]
-                $[ if attribute.type.isEnumType ]
-$[ send imports ]
+$[ endsend 
+               foreach entity.attributes 
+                   if attribute.type.isEnumType 
+   send imports ]
 import ${protobufNamespace}.${attribute.type.module|domain:ProtobufDTO|name};
-$[/ send ]
-                $[/ if ]
-            $[/ foreach ]
-            $[ capture fullProtobufClassName ]${module.name|capitalize}.${entity|domain:ProtobufDTO|name}$[/ capture ]
-$[********************************************************************
+$[ endsend 
+                   endif 
+               endforeach 
+               capture fullProtobufClassName ]${module.name|capitalize}.${entity|domain:ProtobufDTO|name}$[ endcapture 
+               /********************************************************************
     PROTOBUF <== MODEL
-  ********************************************************************]
+  ********************************************************************/ ]
     public ${fullProtobufClassName} toProtobufFromModel(${modelDomainEntity.name} modelObject) {
         ${fullProtobufClassName}.Builder builder = ${fullProtobufClassName}.newBuilder();
 
-            $[ if entity.hasPrimaryKey ]
-                $[ switch entity.primaryKey.type ]
-                    $[ case uuid ]$[ let ending = ".toString()" ]
-                    $[ default ]$[ let ending = "" ]
-                $[/ switch ]
+            $[ if entity.hasPrimaryKey 
+                   switch entity.primaryKey.type 
+                       case uuid ]$[ let ending = ".toString()" 
+                       default ]$[ let ending = "" 
+                   endswitch ]
         // primary key
         builder.set${entity.primaryKeyAttribute|domain:ProtobufDTO|name|capitalize}(modelObject.get${entity.primaryKeyAttribute|domain:Model|name|capitalize}()${ending});
 
-            $[/ if ]
-            $[ let showAttributeComment = true ]
-            $[ foreach attribute in entity.attributes|sort if !attribute.isVirtual && !(attribute|domain:DTOMapper).hasTag("exclude") ]
-                $[ let nullable = attribute.type|language hasNullable ]
-                $[ let attributeType = attribute.type ]
-                $[ if attribute.isSecondaryEntityType ]
-                    $[ let attributeType = attribute.getTypeEntity() ]
-                    $[ let nullable = true ]
-                $[/ if ]
-                $[ if showAttributeComment ]
-                    $[ let showAttributeComment = false ]
+            $[ endif 
+               let showAttributeComment = true 
+               foreach attribute in entity.attributes|sort if !attribute.isVirtual && !(attribute|domain:DTOMapper).hasTag("exclude") 
+                   let nullable = attribute.type|language hasNullable 
+                   let attributeType = attribute.type 
+                   if attribute.isSecondaryEntityType 
+                       let attributeType = attribute.getTypeEntity() 
+                       let nullable = true 
+                   endif 
+                   if showAttributeComment 
+                       let showAttributeComment = false ]
         // attributes
-                $[/ if ]
-                $[ let indent = "" ]
-                $[ let modelAttributeNameInMethod = attribute|domain:Model|name|capitalize ]
-                $[ let protobufAttributeNameInMethod = attribute|domain:ProtobufDTO|name|capitalize ]
-                $[ if nullable ]
-                    $[ let indent = "    " ]
+                $[ endif 
+                   let indent = "" 
+                   let modelAttributeNameInMethod = attribute|domain:Model|name|capitalize 
+                   let protobufAttributeNameInMethod = attribute|domain:ProtobufDTO|name|capitalize 
+                   if nullable 
+                       let indent = "    " ]
         if (modelObject.get${modelAttributeNameInMethod}() != null) {
-                $[/ if ]
-                $[ if attribute.type.isAssetType ]
+                $[ endif 
+                   if attribute.type.isAssetType ]
         ${indent}builder.set${protobufAttributeNameInMethod}(modelObject.${getname}${modelAttributeNameInMethod}Url());
-                $[ elseif attribute.isArray ]
-                    $[ if attribute.type.isEnumType ]
-                        $[ if attribute.type.isExtern ]
+                $[ elseif attribute.isArray 
+                       if attribute.type.isEnumType 
+                           if attribute.type.isExtern ]
                         // extern ${attribute.type.module|domain:ProtobufDTO|name}
-                        $[/ if ]
-                        $[ let methodName = "getProtobufValue" ]
-                        $[ capture entityScope ]$[ if attribute.type.hasParentEntity ]${attribute.type.parentEntity|domain:ProtobufDTO|name}.$[/ if ]$[/ capture ]
+                        $[ endif 
+                           let methodName = "getProtobufValue" 
+                           capture entityScope ]$[ if attribute.type.hasParentEntity ]${attribute.type.parentEntity|domain:ProtobufDTO|name}.$[ endif ]$[ endcapture ]
         ${indent}builder.addAll${protobufAttributeNameInMethod}(modelObject.get${modelAttributeNameInMethod}().stream().map(s -> ${attribute.type.module|domain:ProtobufDTO|name}.${entityScope}${attribute.type|domain:ProtobufDTO|name}.valueOf(s.${methodName}())).collect(Collectors.toSet()));
-                    $[ elseif attribute.type.isEntityType ]
-                        $[ let localMapperClassName = attributeType|domain:DTOMapper|name ]
+                    $[ elseif attribute.type.isEntityType 
+                           let localMapperClassName = attributeType|domain:DTOMapper|name ]
         ${indent}${localMapperClassName} localMapper = new ${localMapperClassName}();
         ${indent}for (${attributeType|domain:Model|name} obj :  modelObject.get${modelAttributeNameInMethod}()) {
         ${indent}    builder.add${modelAttributeNameInMethod}(localMapper.toProtobufFromModel(obj));
         ${indent}}
                     $[ else ]
         ${indent}builder.addAll${protobufAttributeNameInMethod}(modelObject.get${modelAttributeNameInMethod}());
-                    $[/ if ]
-                $[ else ]$[* !attribute.isArray *]
-                    $[ if attribute.type.isEntityType ]
-$[ send mapperDecl ]
-                            $[ let localMapperClassName = attributeType|domain:DTOMapper|name ]
+                    $[ endif 
+                   else    /* !attribute.isArray */ 
+                       if attribute.type.isEntityType 
+   send mapperDecl 
+                               let localMapperClassName = attributeType|domain:DTOMapper|name ]
     @Autowired ${localMapperClassName} ${localMapperClassName|uncapitalize};
-$[/ send ]
+$[ endsend ]
         ${indent}builder.set${protobufAttributeNameInMethod}(${localMapperClassName|uncapitalize}.toProtobufFromModel(modelObject.get${modelAttributeNameInMethod}()));
-                    $[ elseif attribute.type.isEnumType ]
-                        $[ capture entityScope ]$[ if attribute.type.hasParentEntity ]${attribute.type.parentEntity|domain:ProtobufDTO|name}.$[/ if ]$[/ capture ]
-                        $[ let methodName = "getProtobufValue" ]
+                    $[ elseif attribute.type.isEnumType 
+                           capture entityScope ]$[ if attribute.type.hasParentEntity ]${attribute.type.parentEntity|domain:ProtobufDTO|name}.$[ endif ]$[ endcapture 
+                           let methodName = "getProtobufValue" ]
         ${indent}builder.set${protobufAttributeNameInMethod}(${attribute.type.module|domain:ProtobufDTO|name}.${entityScope}${attribute.type|domain:ProtobufDTO|name}.valueOf(modelObject.get${modelAttributeNameInMethod}().${methodName}()));
-                    $[ else ]$[* !attribute.type.isEnumType *]
-$[* we need to consider the data type here *]
-                        $[ capture ending ]$[/ capture ]
-                        $[ capture beginning ]$[/ capture ]
-                        $[ capture getname ]get$[/ capture ]
-                        $[ switch attribute.type ]
-                            $[ case date ]$[ capture ending ].getTime()$[/ capture ]
-                            $[ case boolean ]$[ capture ending ]$[/ capture ]$[ capture getname ]get$[/ capture ]$[ case byte ]$[ capture beginning ]ByteString.copyFrom($[/ capture ]$[ capture ending ])$[/ capture ]$[ case uuid ]$[ capture ending ].toString()$[/ capture ]
-                            $[ default ]$[ capture ending ]$[/ capture ]
-                        $[/ switch ]
+                    $[ else    /* !attribute.type.isEnumType */ 
+                           /* we need to consider the data type here */ 
+                           capture ending ]$[ endcapture 
+                           capture beginning ]$[ endcapture 
+                           capture getname ]get$[ endcapture 
+                           switch attribute.type 
+                               case date ]$[ capture ending ].getTime()$[ endcapture 
+                               case boolean ]$[ capture ending ]$[ endcapture ]$[ capture getname ]get$[ endcapture ]$[ case byte ]$[ capture beginning ]ByteString.copyFrom($[ endcapture ]$[ capture ending ])$[ endcapture ]$[ case uuid ]$[ capture ending ].toString()$[ endcapture 
+                               default ]$[ capture ending ]$[ endcapture 
+                           endswitch ]
         ${indent}builder.set${attribute|domain:ProtobufDTO|name|capitalize}(${beginning}modelObject.${getname}${attribute|domain:Model|name|capitalize}()${ending});
-                    $[/ if ]
-                $[/ if ]
-                $[ if nullable ]
+                    $[ endif 
+                   endif 
+                   if nullable ]
         }
-                $[/ if ]
-            $[/ foreach ]$[* attribute *]
-$[** RELATIONSHIPS **]
-            $[ let showRelationshipComment = true ]
-            $[ foreach relationship in entity.relationships ]
-                $[ let toEntity = relationship.to.entity ]
-                $[ if toEntity == null || toEntity.hasTag("release:top") ]$[ continue ]$[/ if ]
-                $[ if relationship.to.isOne ]
-                    $[ let isSelf = toEntity.name == entity.name ]
-                    $[ let includeChildEntities = toEntity.space.name == entity.space.name && !toEntity.isIncluded ]
-                    $[ if !includeChildEntities ]$[ continue ]$[/ if ]
-                    $[ if showRelationshipComment ]
+                $[ endif 
+               endforeach    /* attribute */ 
+               /** RELATIONSHIPS **/ 
+               let showRelationshipComment = true 
+               foreach relationship in entity.relationships 
+                   let toEntity = relationship.to.entity 
+                   if toEntity == null || toEntity.hasTag("release:top") ]$[ continue ]$[ endif 
+                   if relationship.to.isOne 
+                       let isSelf = toEntity.name == entity.name 
+                       let includeChildEntities = toEntity.space.name == entity.space.name && !toEntity.isIncluded 
+                       if !includeChildEntities ]$[ continue ]$[ endif 
+                       if showRelationshipComment ]
         // relationships
-                        $[ let showRelationshipComment = false ]
-                    $[/ if ]
-                    $[ let toEntityMapperClassName = toEntity|domain:DTOMapper|name ]
-                    $[ let toEntityMapperVariableName = toEntityMapperClassName|uncapitalize ]
-                    $[ if isSelf ]
-                        $[ let toEntityMapperVariableName = "this" ]
-                    $[ else ]
-$[ send mapperDecl ]
+                        $[ let showRelationshipComment = false 
+                       endif 
+                       let toEntityMapperClassName = toEntity|domain:DTOMapper|name 
+                       let toEntityMapperVariableName = toEntityMapperClassName|uncapitalize 
+                       if isSelf 
+                           let toEntityMapperVariableName = "this" 
+                       else 
+   send mapperDecl ]
     @Autowired ${toEntityMapperClassName} ${toEntityMapperVariableName};
-$[/ send ]
-$[ send imports ]
+$[ endsend 
+   send imports ]
 import ${toEntity|domain:Model|fullname};
-$[/ send ]
-                    $[/ if ]
+$[ endsend 
+                       endif ]
         if (modelObject.get${relationship|domain:Model|name|capitalize}Id() != null) {
             ${toEntity|domain:Model|name} refObject = new ${toEntity|domain:Model|name}();
             refObject.set${toEntity.primaryKeyAttribute|domain:Model|name|capitalize}(modelObject.get${relationship|domain:Model|name|capitalize}Id());
@@ -134,162 +134,161 @@ $[/ send ]
         }
 $[ send imports ]
 import ${protobufNamespace}.${toEntity.module.name|capitalize};
-$[/ send ]
-                $[/ if ]
-            $[/ foreach ]
+$[ endsend 
+                   endif 
+               endforeach ]
         return (${fullProtobufClassName})builder.build();
     }
 
-$[********************************************************************
+            $[ /********************************************************************
     PROTOBUF <== JSONDTO
-  ********************************************************************]
+  ********************************************************************/ ]
     public ${fullProtobufClassName} toProtobufFromDto(${dtoDomainEntity.name} dtoObject) {
         ${fullProtobufClassName}.Builder builder = ${fullProtobufClassName}.newBuilder();
 
-            $[ if entity.hasPrimaryKey ]
-                $[ switch entity.primaryKey.type ]
-                    $[ case uuid ]$[ let ending = ".toString()" ]
-                    $[ default ]$[ let ending = "" ]
-                $[/ switch ]
+            $[ if entity.hasPrimaryKey 
+                   switch entity.primaryKey.type 
+                       case uuid ]$[ let ending = ".toString()" 
+                       default ]$[ let ending = "" 
+                   endswitch ]
         // primary key
         builder.set${entity.primaryKeyAttribute|domain:ProtobufDTO|name|capitalize}(dtoObject.get${entity.primaryKeyAttribute|domain:JSONDTO|name|capitalize}()${ending});
 
-            $[/ if ]
-            $[ let showAttributeComment = true ]
-            $[ foreach attribute in entity.attributes if !attribute.isVirtual && !(attribute|domain:DTOMapper).hasTag("exclude") ]
-                $[ let nullable = attribute.type|language hasNullable ]
-                $[ let attributeType = attribute.type ]
-                $[ if attribute.isSecondaryEntityType ]
-                    $[ let attributeType = attribute.getTypeEntity() ]
-                    $[ let nullable = true ]
-                $[/ if ]
-                $[ if showAttributeComment ]
-                    $[ let showAttributeComment = false ]
+            $[ endif 
+               let showAttributeComment = true 
+               foreach attribute in entity.attributes if !attribute.isVirtual && !(attribute|domain:DTOMapper).hasTag("exclude") 
+                   let nullable = attribute.type|language hasNullable 
+                   let attributeType = attribute.type 
+                   if attribute.isSecondaryEntityType 
+                       let attributeType = attribute.getTypeEntity() 
+                       let nullable = true 
+                   endif 
+                   if showAttributeComment 
+                       let showAttributeComment = false ]
         // attributes
-                $[/ if ]
-                $[ let indent = "" ]
-                $[ let dtoAttributeNameInMethod = attribute|domain:JSONDTO|name|capitalize ]
-                $[ let protobufAttributeNameInMethod = attribute|domain:ProtobufDTO|name|capitalize ]
-                $[ if nullable ]
-                    $[ let indent = "    " ]
+                $[ endif 
+                   let indent = "" 
+                   let dtoAttributeNameInMethod = attribute|domain:JSONDTO|name|capitalize 
+                   let protobufAttributeNameInMethod = attribute|domain:ProtobufDTO|name|capitalize 
+                   if nullable 
+                       let indent = "    " ]
         if (dtoObject.get${dtoAttributeNameInMethod}() != null) {
-                $[/ if ]
-                $[ if attribute.type.isAssetType ]
+                $[ endif 
+                   if attribute.type.isAssetType ]
         ${indent}builder.set${protobufAttributeNameInMethod}(dtoObject.${getname}${dtoAttributeNameInMethod}Url());
-                $[ elseif attribute.isArray ]
-                    $[ if attribute.type.isEnumType ]
-                        $[ capture entityScope ]$[ if attribute.type.hasParentEntity ]${attribute.type.parentEntity|domain:ProtobufDTO|name}.$[/ if ]$[/ capture ]
+                $[ elseif attribute.isArray 
+                       if attribute.type.isEnumType 
+                           capture entityScope ]$[ if attribute.type.hasParentEntity ]${attribute.type.parentEntity|domain:ProtobufDTO|name}.$[ endif ]$[ endcapture ]
         ${indent}builder.addAll${protobufAttributeNameInMethod}(dtoObject.get${dtoAttributeNameInMethod}().stream().map(s -> ${attribute.type.module|domain:ProtobufDTO|name}.${entityScope}${attribute.type|domain:ProtobufDTO|name}.valueOf(s.toString())).collect(Collectors.toSet()));
-                    $[ elseif attribute.type.isEntityType ]
-$[ send mapperDecl ]
-                            $[ let localMapperClassName = attributeType|domain:DTOMapper|name ]
+                    $[ elseif attribute.type.isEntityType 
+   send mapperDecl 
+                               let localMapperClassName = attributeType|domain:DTOMapper|name ]
     @Autowired ${localMapperClassName} ${localMapperClassName|uncapitalize};
-$[/ send ]
+$[ endsend ]
         ${indent}for (${attributeType|domain:JSONDTO|name} obj :  dtoObject.get${dtoAttributeNameInMethod}()) {
         ${indent}    builder.add${dtoAttributeNameInMethod}(${localMapperClassName|uncapitalize}.toProtobufFromDto(obj));
         ${indent}}
                     $[ else ]
         ${indent}builder.addAll${protobufAttributeNameInMethod}(dtoObject.get${dtoAttributeNameInMethod}());
-                    $[/ if ]
-                $[ else ]$[* !attribute.isArray *]
-                    $[ if attribute.type.isEntityType ]
-$[ send mapperDecl ]
-                            $[ let localMapperClassName = attributeType|domain:DTOMapper|name ]
+                    $[ endif 
+                   else    /* !attribute.isArray */ 
+                       if attribute.type.isEntityType 
+   send mapperDecl 
+                               let localMapperClassName = attributeType|domain:DTOMapper|name ]
     @Autowired ${localMapperClassName} ${localMapperClassName|uncapitalize};
-$[/ send ]
+$[ endsend ]
         ${indent}builder.set${protobufAttributeNameInMethod}(${localMapperClassName|uncapitalize}.toProtobufFromDto(dtoObject.get${dtoAttributeNameInMethod}()));
-                    $[ elseif attribute.type.isEnumType ]
-                        $[ capture entityScope ]$[ if attribute.type.hasParentEntity ]${attribute.type.parentEntity|domain:ProtobufDTO|name}.$[/ if ]$[/ capture ]
+                    $[ elseif attribute.type.isEnumType 
+                           capture entityScope ]$[ if attribute.type.hasParentEntity ]${attribute.type.parentEntity|domain:ProtobufDTO|name}.$[ endif ]$[ endcapture ]
         ${indent}builder.set${protobufAttributeNameInMethod}(${attribute.type.module|domain:ProtobufDTO|name}.${entityScope}${attribute.type|domain:ProtobufDTO|name}.valueOf(dtoObject.get${dtoAttributeNameInMethod}().toString()));
-                    $[ else ]$[* !attribute.type.isEnumType *]
-$[* we need to consider the data type here *]
-                        $[ capture ending ]$[/ capture ]
-                        $[ capture beginning ]$[/ capture ]
-                        $[ capture getname ]get$[/ capture ]
-                        $[ switch attribute.type ]
-                            $[ case date ]$[ capture ending ].getTime()$[/ capture ]
-                            $[ case boolean ]$[ capture ending ]$[/ capture ]$[ capture getname ]get$[/ capture ]$[ case byte ]$[ capture beginning ]ByteString.copyFrom($[/ capture ]$[ capture ending ])$[/ capture ]$[ case uuid ]$[ capture ending ].toString()$[/ capture ]
-                            $[ default ]$[ capture ending ]$[/ capture ]
-                        $[/ switch ]
+                    $[ else    /* !attribute.type.isEnumType */ 
+                           /* we need to consider the data type here */ 
+                           capture ending ]$[ endcapture 
+                           capture beginning ]$[ endcapture 
+                           capture getname ]get$[ endcapture 
+                           switch attribute.type 
+                               case date ]$[ capture ending ].getTime()$[ endcapture 
+                               case boolean ]$[ capture ending ]$[ endcapture ]$[ capture getname ]get$[ endcapture ]$[ case byte ]$[ capture beginning ]ByteString.copyFrom($[ endcapture ]$[ capture ending ])$[ endcapture ]$[ case uuid ]$[ capture ending ].toString()$[ endcapture 
+                               default ]$[ capture ending ]$[ endcapture 
+                           endswitch ]
         ${indent}builder.set${attribute|domain:ProtobufDTO|name|capitalize}(${beginning}dtoObject.${getname}${attribute|domain:JSONDTO|name|capitalize}()${ending});
-                    $[/ if ]
-                $[/ if ]
-                $[ if nullable ]
+                    $[ endif 
+                   endif 
+                   if nullable ]
         }
-                $[/ if ]
-            $[/ foreach ]$[* attribute *]
-$[** RELATIONSHIPS **]
-            $[ let showRelationshipComment = true ]
-            $[ call CheckIfReleasedEntity(entity: entity)->(isReleasedEntity: isReleasedEntity) ]
-            $[ foreach relationship in entity.relationships ]
-                $[ let toEntity = relationship.to.entity ]
-                $[ if toEntity == null ]$[ continue ]$[/ if ]
-                $[ if isReleasedEntity && toEntity.hasTag("release:top") ]$[ continue ]$[/ if ]
-                $[ if relationship.to.isOne ]
-                    $[ let _toEntity = relationship.to.entity ]
-                    $[ let includeChildEntities = _toEntity.space.name == entity.space.name && !_toEntity.isIncluded ]
-                    $[ if !includeChildEntities ]$[ continue ]$[/ if ]
-                    $[ if showRelationshipComment ]
+                $[ endif 
+               endforeach    /* attribute */ 
+               /** RELATIONSHIPS **/ 
+               let showRelationshipComment = true 
+               call CheckIfReleasedEntity(entity: entity)->(isReleasedEntity: isReleasedEntity) 
+               foreach relationship in entity.relationships 
+                   let toEntity = relationship.to.entity 
+                   if toEntity == null ]$[ continue ]$[ endif 
+                   if isReleasedEntity && toEntity.hasTag("release:top") ]$[ continue ]$[ endif 
+                   if relationship.to.isOne 
+                       let _toEntity = relationship.to.entity 
+                       let includeChildEntities = _toEntity.space.name == entity.space.name && !_toEntity.isIncluded 
+                       if !includeChildEntities ]$[ continue ]$[ endif 
+                       if showRelationshipComment ]
         // relationships
-                        $[ let showRelationshipComment = false ]
-                    $[/ if ]
-                    $[ let _toEntityMapperClassName = _toEntity|domain:DTOMapper|name ]
-                    $[ let _toEntityMapperVariableName = _toEntityMapperClassName|uncapitalize ]
-$[ send mapperDecl ]
+                        $[ let showRelationshipComment = false 
+                       endif 
+                       let _toEntityMapperClassName = _toEntity|domain:DTOMapper|name 
+                       let _toEntityMapperVariableName = _toEntityMapperClassName|uncapitalize 
+   send mapperDecl ]
     @Autowired ${_toEntityMapperClassName} ${_toEntityMapperVariableName};
-$[/ send ]
+$[ endsend ]
         if (dtoObject.get${relationship|domain:JSONDTO|name|capitalize}() != null) {
             builder.set${relationship|domain:ProtobufDTO|name|capitalize}(${_toEntityMapperVariableName}.toProtobufFromDto(dtoObject.get${relationship|domain:JSONDTO|name|capitalize}()));
         }
 
-                $[/ if ]
-            $[/ foreach ]$[* relationship *]
+                $[ endif 
+               endforeach    /* relationship */ ]
         return (${fullProtobufClassName})builder.build();
     }
 
-$[********************************************************************
+            $[ /********************************************************************
     MODEL <== PROTOBUF
-  ********************************************************************]
+  ********************************************************************/ ]
     public ${modelDomainEntity|name} toModelFromProtobuf(${fullProtobufClassName} protobufObject) {
         ${modelDomainEntity|name} modelObject = new ${modelDomainEntity|name}();
 
             $[ if entity.hasPrimaryKey ]
         // primary key
-                $[ capture beginning ]$[/ capture ]
-                $[ capture ending ]$[/ capture ]
-                $[ switch entity.pkType ]
-                    $[ case uuid ]$[ let ending = ")" ]$[ let beginning = "UUID.fromString(" ]
-                    $[ default ]
-                $[/ switch ]
+                $[ capture beginning ]$[ endcapture 
+                   capture ending ]$[ endcapture 
+                   switch entity.pkType 
+                       case uuid ]$[ let ending = ")" ]$[ let beginning = "UUID.fromString(" 
+                       default 
+                   endswitch ]
         if (protobufObject.has${entity.primaryKeyAttribute|domain:ProtobufDTO|name|capitalize}()) {
             modelObject.set${entity.primaryKeyAttribute|domain:Model|name|capitalize}(${beginning}protobufObject.get${entity.primaryKeyAttribute|domain:ProtobufDTO|name|capitalize}()${ending});
         }
-            $[/ if ]
+            $[ endif ]
 
-            $[ let showAttributeComment = true ]
-            $[ foreach attribute in entity.attributes if
-!attribute.isVirtual && !(attribute|domain:DTOMapper).hasTag("exclude") ]
-                $[ let attributeType = attribute.type ]
-                $[ if attribute.isSecondaryEntityType ]
-                    $[ let attributeType = attribute.getTypeEntity() ]
-                $[/ if ]
-                $[ let indent = "" ]
-                $[ let nullable = attribute.type|language hasNullable ]
-                $[ if attribute.isArray ]$[ let nullable = false ]$[/ if ]
-                $[ let modelAttributeNameInMethod = attribute|domain:Model|name|capitalize ]
-                $[ let protobufAttributeNameInMethod = attribute|domain:ProtobufDTO|name|capitalize ]
-                $[ if showAttributeComment ]
-                    $[ let showAttributeComment = false ]
+            $[ let showAttributeComment = true 
+               foreach attribute in entity.attributes if !attribute.isVirtual && !(attribute|domain:DTOMapper).hasTag("exclude") 
+                   let attributeType = attribute.type 
+                   if attribute.isSecondaryEntityType 
+                       let attributeType = attribute.getTypeEntity() 
+                   endif 
+                   let indent = "" 
+                   let nullable = attribute.type|language hasNullable 
+                   if attribute.isArray ]$[ let nullable = false ]$[ endif 
+                   let modelAttributeNameInMethod = attribute|domain:Model|name|capitalize 
+                   let protobufAttributeNameInMethod = attribute|domain:ProtobufDTO|name|capitalize 
+                   if showAttributeComment 
+                       let showAttributeComment = false ]
         // attributes
-                $[/ if ]
-                $[ let indent = "" ]
-                $[ if nullable ]
-                    $[ let indent = "    " ]
+                $[ endif 
+                   let indent = "" 
+                   if nullable 
+                       let indent = "    " ]
         if (protobufObject.has${protobufAttributeNameInMethod}()) {
-                $[/ if ]
-                $[ if attribute.isArray ]
-                    $[ if attribute.type.isEnumType ]
-                        $[ let valueOfMethodName = "protobufValueOf" ]
+                $[ endif 
+                   if attribute.isArray 
+                       if attribute.type.isEnumType 
+                           let valueOfMethodName = "protobufValueOf" ]
         ${indent}modelObject.set${modelAttributeNameInMethod}(protobufObject.get${protobufAttributeNameInMethod}List().stream().map(s -> ${attribute.type|domain:Model|name}.${valueOfMethodName}(s.toString())).collect(Collectors.toSet()));
                     $[ elseif attribute.type.isEntityType ]
         {
@@ -298,112 +297,111 @@ $[********************************************************************
         }
                     $[ else ]
         ${indent}modelObject.set${modelAttributeNameInMethod}(protobufObject.get${protobufAttributeNameInMethod}List().stream().collect(Collectors.toSet()));
-                    $[/ if ]
-                $[ else ]$[* !attribute.isArray *]
-                    $[ if attribute.type.isEntityType ]
-                        $[ let localMapperClassName = attributeType|domain:DTOMapper|name ]
-$[ send mapperDecl ]
+                    $[ endif 
+                   else    /* !attribute.isArray */ 
+                       if attribute.type.isEntityType 
+                           let localMapperClassName = attributeType|domain:DTOMapper|name 
+   send mapperDecl ]
     @Autowired ${localMapperClassName} ${localMapperClassName|uncapitalize};
-$[/ send ]
+$[ endsend ]
         ${indent}modelObject.set${modelAttributeNameInMethod}(${localMapperClassName|uncapitalize}.toModelFromProtobuf(protobufObject.get${protobufAttributeNameInMethod}()));
-                    $[ elseif attribute.type.isEnumType ]
-                        $[ let valueOfMethodName = "protobufValueOf" ]
+                    $[ elseif attribute.type.isEnumType 
+                           let valueOfMethodName = "protobufValueOf" ]
         ${indent}modelObject.set${modelAttributeNameInMethod}(${attribute.type|domain:Model|name}.${valueOfMethodName}(protobufObject.get${protobufAttributeNameInMethod}().toString()));
-                    $[ else ]$[* !attribute.type.isEnumType *]
-$[* we need to consider the data type here *]
-                        $[ capture beginning ]$[/ capture ]
-                        $[ capture ending ]$[/ capture ]
-                        $[ switch attribute.type ]
-                            $[ case date ]$[ capture beginning ]new Date($[/ capture ]$[ capture ending ])$[/ capture ]
-                            $[ case byte ]$[ capture ending ].toByteArray()$[/ capture ]$[ case uuid ]$[ let ending = ")" ]$[ let beginning = "UUID.fromString(" ]
-                            $[ default ]$[ capture ending ]$[/ capture ]
-                        $[/ switch ]
+                    $[ else    /* !attribute.type.isEnumType */ 
+                           /* we need to consider the data type here */ 
+                           capture beginning ]$[ endcapture 
+                           capture ending ]$[ endcapture 
+                           switch attribute.type 
+                               case date ]$[ capture beginning ]new Date($[ endcapture ]$[ capture ending ])$[ endcapture 
+                               case byte ]$[ capture ending ].toByteArray()$[ endcapture ]$[ case uuid ]$[ let ending = ")" ]$[ let beginning = "UUID.fromString(" 
+                               default ]$[ capture ending ]$[ endcapture 
+                           endswitch ]
         ${indent}modelObject.set${attribute|domain:Model|name|capitalize}(${beginning}protobufObject.get${attribute|domain:ProtobufDTO|name|capitalize}()${ending});
-                    $[/ if ]
-                $[/ if ]
-                $[ if nullable ]
+                    $[ endif 
+                   endif 
+                   if nullable ]
         }
-                $[/ if ]
-            $[/ foreach ]
-            $[ if true ]
-                $[ let showRelationshipComment = true ]
-                $[ foreach entity.relationships ]
-                    $[ let toEntity = relationship.to.entity ]
-                    $[ if toEntity == null ]$[ continue ]$[/ if ]
-                    $[ if isReleasedEntity && toEntity.hasTag("release:top") ]$[ continue ]$[/ if ]
-                    $[ if relationship.to.isOne ]
-                        $[ let _toEntity = relationship.to.entity ]
-                        $[ let includeChildEntities = _toEntity.space.name == entity.space.name && !_toEntity.isIncluded ]
-                        $[ if !includeChildEntities ]$[ continue ]$[/ if ]
-                        $[ if showRelationshipComment ]
+                $[ endif 
+               endforeach 
+               if true 
+                   let showRelationshipComment = true 
+                   foreach entity.relationships 
+                       let toEntity = relationship.to.entity 
+                       if toEntity == null ]$[ continue ]$[ endif 
+                       if isReleasedEntity && toEntity.hasTag("release:top") ]$[ continue ]$[ endif 
+                       if relationship.to.isOne 
+                           let _toEntity = relationship.to.entity 
+                           let includeChildEntities = _toEntity.space.name == entity.space.name && !_toEntity.isIncluded 
+                           if !includeChildEntities ]$[ continue ]$[ endif 
+                           if showRelationshipComment ]
         // relationships
-                            $[ let showRelationshipComment = false ]
-                        $[/ if ]
-                        $[ switch relationship.to.entity.primaryKey.type ]
-                            $[ case uuid ]$[ let ending = ")" ]$[ let beginning = "UUID.fromString(" ]
-                            $[ default ]$[ let ending = "" ]$[ let beginning = "" ]
-                        $[/ switch ]
-                        $[ let _toEntityPKModelNameInMethod = (relationship|domain:Model|name|capitalize) + "Id" ]
-                        $[ if true || !relationship.isParent ]
-                            $[ let _toEntityPKNameInMethod = _toEntity.primaryKeyAttribute|domain:ProtobufDTO|name|capitalize ]
+                            $[ let showRelationshipComment = false 
+                           endif 
+                           switch relationship.to.entity.primaryKey.type 
+                               case uuid ]$[ let ending = ")" ]$[ let beginning = "UUID.fromString(" 
+                               default ]$[ let ending = "" ]$[ let beginning = "" 
+                           endswitch 
+                           let _toEntityPKModelNameInMethod = (relationship|domain:Model|name|capitalize) + "Id" 
+                           if true || !relationship.isParent 
+                               let _toEntityPKNameInMethod = _toEntity.primaryKeyAttribute|domain:ProtobufDTO|name|capitalize ]
         if (protobufObject.has${relationship|domain:ProtobufDTO|name|capitalize}()) {
             modelObject.set${_toEntityPKModelNameInMethod}(${beginning}protobufObject.get${relationship|domain:ProtobufDTO|name|capitalize}().get${_toEntityPKNameInMethod}()${ending});
         }
-                        $[ else ]
-                            $[ capture _toEntityPKNameInMethod ]${relationship|domain:ProtobufDTO|name|capitalize}Id$[/ capture ]
+                        $[ else 
+                               capture _toEntityPKNameInMethod ]${relationship|domain:ProtobufDTO|name|capitalize}Id$[ endcapture ]
         if (protobufObject.has${_toEntityPKNameInMethod}()) {
             modelObject.set${_toEntityPKModelNameInMethod}(${beginning}protobufObject.get${_toEntityPKNameInMethod}()${ending});
         }
-                        $[/ if ]
-                    $[/ if ]
-                $[/ foreach ]$[* relationship *]
-            $[/ if ]
+                        $[ endif 
+                       endif 
+                   endforeach    /* relationship */ 
+               endif ]
 
         return modelObject;
     }
 
-$[********************************************************************
+            $[ /********************************************************************
     JSONDTO <== PROTOBUF
-  ********************************************************************]
+  ********************************************************************/ ]
     public ${dtoDomainEntity|name} toDtoFromProtobuf(${fullProtobufClassName} protobufObject) {
         ${dtoDomainEntity|name} dtoObject = new ${dtoDomainEntity|name}();
 
             $[ if entity.hasPrimaryKey ]
         // primary key
-                $[ capture beginning ]$[/ capture ]
-                $[ capture ending ]$[/ capture ]
-                $[ switch entity.pkType ]
-                    $[ case uuid ]$[ let ending = ")" ]$[ let beginning = "UUID.fromString(" ]
-                    $[ default ]$[ let ending = "" ]$[ let beginning = "" ]
-                $[/ switch ]
+                $[ capture beginning ]$[ endcapture 
+                   capture ending ]$[ endcapture 
+                   switch entity.pkType 
+                       case uuid ]$[ let ending = ")" ]$[ let beginning = "UUID.fromString(" 
+                       default ]$[ let ending = "" ]$[ let beginning = "" 
+                   endswitch ]
         if (protobufObject.has${entity.primaryKeyAttribute|domain:ProtobufDTO|name|capitalize}()) {
             dtoObject.set${entity.primaryKeyAttribute|domain:JSONDTO|name|capitalize}(${beginning}protobufObject.get${entity.primaryKeyAttribute|domain:ProtobufDTO|name|capitalize}()${ending});
         }
-            $[/ if ]
+            $[ endif ]
 
-            $[ let showAttributeComment = true ]
-            $[ foreach attribute in entity.attributes if
-!attribute.isVirtual && !(attribute|domain:DTOMapper).hasTag("exclude") ]
-                $[ let attributeType = attribute.type ]
-                $[ if attribute.isSecondaryEntityType ]
-                    $[ let attributeType = attribute.getTypeEntity() ]
-                $[/ if ]
-                $[ let indent = "" ]
-                $[ let nullable = attribute.type|language hasNullable ]
-                $[ if attribute.isArray ]$[ let nullable = false ]$[/ if ]
-                $[ let dtoAttributeNameInMethod = attribute|domain:JSONDTO|name|capitalize ]
-                $[ let protobufAttributeNameInMethod = attribute|domain:ProtobufDTO|name|capitalize ]
-                $[ if showAttributeComment ]
-                    $[ let showAttributeComment = false ]
+            $[ let showAttributeComment = true 
+               foreach attribute in entity.attributes if !attribute.isVirtual && !(attribute|domain:DTOMapper).hasTag("exclude") 
+                   let attributeType = attribute.type 
+                   if attribute.isSecondaryEntityType 
+                       let attributeType = attribute.getTypeEntity() 
+                   endif 
+                   let indent = "" 
+                   let nullable = attribute.type|language hasNullable 
+                   if attribute.isArray ]$[ let nullable = false ]$[ endif 
+                   let dtoAttributeNameInMethod = attribute|domain:JSONDTO|name|capitalize 
+                   let protobufAttributeNameInMethod = attribute|domain:ProtobufDTO|name|capitalize 
+                   if showAttributeComment 
+                       let showAttributeComment = false ]
         // attributes
-                $[/ if ]
-                $[ let indent = "" ]
-                $[ if nullable ]
-                    $[ let indent = "    " ]
+                $[ endif 
+                   let indent = "" 
+                   if nullable 
+                       let indent = "    " ]
         if (protobufObject.has${protobufAttributeNameInMethod}()) {
-                $[/ if ]
-                $[ if attribute.isArray ]
-                    $[ if attribute.type.isEnumType ]
+                $[ endif 
+                   if attribute.isArray 
+                       if attribute.type.isEnumType ]
         ${indent}dtoObject.set${dtoAttributeNameInMethod}(protobufObject.get${protobufAttributeNameInMethod}List().stream().map(s -> ${attribute.type|domain:JSONDTO|name}.valueOf(s.toString())).collect(Collectors.toSet()));
                     $[ elseif attribute.type.isEntityType ]
         {
@@ -412,58 +410,58 @@ $[********************************************************************
         }
                     $[ else ]
         ${indent}dtoObject.set${dtoAttributeNameInMethod}(protobufObject.get${protobufAttributeNameInMethod}List().stream().collect(Collectors.toSet()));
-                    $[/ if ]
-                $[ else ]$[* !attribute.isArray *]
-                    $[ if attribute.type.isEntityType ]
-                        $[ let localMapperClassName = attributeType|domain:DTOMapper|name ]
-$[ send mapperDecl ]
+                    $[ endif 
+                   else    /* !attribute.isArray */ 
+                       if attribute.type.isEntityType 
+                           let localMapperClassName = attributeType|domain:DTOMapper|name 
+   send mapperDecl ]
     @Autowired ${localMapperClassName} ${localMapperClassName|uncapitalize};
-$[/ send ]
+$[ endsend ]
         ${indent}dtoObject.set${dtoAttributeNameInMethod}(${localMapperClassName|uncapitalize}.toDtoFromProtobuf(protobufObject.get${protobufAttributeNameInMethod}()));
                     $[ elseif attribute.type.isEnumType ]
         ${indent}dtoObject.set${dtoAttributeNameInMethod}(${attribute.type|domain:JSONDTO|name}.valueOf(protobufObject.get${protobufAttributeNameInMethod}().toString()));
-                    $[ else ]$[* !attribute.type.isEnumType *]
-$[* we need to consider the data type here *]
-                        $[ capture beginning ]$[/ capture ]
-                        $[ capture ending ]$[/ capture ]
-                        $[ switch attribute.type ]
-                            $[ case date ]$[ capture beginning ]new Date($[/ capture ]$[ capture ending ])$[/ capture ]
-                            $[ case byte ]$[ capture ending ].toByteArray()$[/ capture ]$[ case uuid ]$[ let ending = ")" ]$[ let beginning = "UUID.fromString(" ]
-                            $[ default ]$[ capture ending ]$[/ capture ]
-                        $[/ switch ]
+                    $[ else    /* !attribute.type.isEnumType */ 
+                           /* we need to consider the data type here */ 
+                           capture beginning ]$[ endcapture 
+                           capture ending ]$[ endcapture 
+                           switch attribute.type 
+                               case date ]$[ capture beginning ]new Date($[ endcapture ]$[ capture ending ])$[ endcapture 
+                               case byte ]$[ capture ending ].toByteArray()$[ endcapture ]$[ case uuid ]$[ let ending = ")" ]$[ let beginning = "UUID.fromString(" 
+                               default ]$[ capture ending ]$[ endcapture 
+                           endswitch ]
         ${indent}dtoObject.set${attribute|domain:JSONDTO|name|capitalize}(${beginning}protobufObject.get${attribute|domain:ProtobufDTO|name|capitalize}()${ending});
-                    $[/ if ]
-                $[/ if ]
-                $[ if nullable ]
+                    $[ endif 
+                   endif 
+                   if nullable ]
         }
-                $[/ if ]
-            $[/ foreach ]
-            $[ if true ]
-                $[ let showRelationshipComment = true ]
-                $[ foreach entity.relationships ]
-                    $[ if !relationship.isParent && relationship.to.isOne ]
-                        $[ let _toEntity = relationship.to.entity ]
-                        $[ let includeChildEntities = _toEntity.space.name == entity.space.name && !_toEntity.isIncluded ]
-                        $[ if !includeChildEntities ]$[ continue ]$[/ if ]
-                        $[ if showRelationshipComment ]
+                $[ endif 
+               endforeach 
+               if true 
+                   let showRelationshipComment = true 
+                   foreach entity.relationships 
+                       if !relationship.isParent && relationship.to.isOne 
+                           let _toEntity = relationship.to.entity 
+                           let includeChildEntities = _toEntity.space.name == entity.space.name && !_toEntity.isIncluded 
+                           if !includeChildEntities ]$[ continue ]$[ endif 
+                           if showRelationshipComment ]
         // relationships
-                            $[ let showRelationshipComment = false ]
-                        $[/ if ]
-                        $[ let _toEntityMapperClassName = _toEntity|domain:DTOMapper|name ]
-                        $[ let _toEntityMapperVariableName = _toEntityMapperClassName|uncapitalize ]
-$[ send mapperDecl ]
+                            $[ let showRelationshipComment = false 
+                           endif 
+                           let _toEntityMapperClassName = _toEntity|domain:DTOMapper|name 
+                           let _toEntityMapperVariableName = _toEntityMapperClassName|uncapitalize 
+   send mapperDecl ]
     @Autowired ${_toEntityMapperClassName} ${_toEntityMapperVariableName};
-$[/ send ]
+$[ endsend ]
         if (protobufObject.has${relationship|domain:ProtobufDTO|name|capitalize}()) {
             dtoObject.set${relationship|domain:JSONDTO|name|capitalize}(${_toEntityMapperVariableName}.toDtoFromProtobuf(protobufObject.get${relationship|domain:ProtobufDTO|name|capitalize}()));
         }
-                    $[/ if ]
-                $[/ foreach ]$[* relationship *]
-            $[/ if ]
+                    $[ endif 
+                   endforeach    /* relationship */ 
+               endif ]
 
         return dtoObject;
     }
 
-        $[/ if ]
-    $[/ author ]
-$[/ author ]
+        $[ endif 
+       endauthor 
+   endauthor ]

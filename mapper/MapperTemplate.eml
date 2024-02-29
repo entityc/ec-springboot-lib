@@ -1,15 +1,15 @@
 $[ language java ]
-$[ domain DTOMapper ]
-$[ D summary, main "Generates code associated with mapping data from a JSON DTO to a Model and vice versa." ]
-$[*
+$[ domain DTOMapper 
+   D summary, main "Generates code associated with mapping data from a JSON DTO to a Model and vice versa." 
+   /*
     Generate README.md file for all Services.
-*]
-$[ let destDir = domain.namespace|path ]
-$[ install "mapper/ModelMapperConfig.java" destDir ]
-$[ import "doc/SourceHeaders" ]
-$[ import "mapper/MapperProtoTemplate" ]
-$[ publisher org.entityc.springboot.mapper ]
-    $[ file destDir "README" "md" ]
+*/ 
+   let destDir = domain.namespace|path 
+   install "mapper/ModelMapperConfig.java" destDir 
+   import "doc/SourceHeaders" 
+   import "mapper/MapperProtoTemplate" 
+   publisher org.entityc.springboot.mapper 
+       file destDir "README" "md" ]
 # Mapper Classes
 
 The classes in this directory are Mapper classes used to map between different object representations of entities.
@@ -18,20 +18,20 @@ These mapper classes support the following mappings:
 
 * JSON to Model
 * Model to JSON
-$[ outlet readmeMappingBullets ]
-$[/ outlet ]
-    $[/ file ]
+$[ outlet readmeMappingBullets 
+   endoutlet 
+       endfile ]
 
-    $[ foreach space.modules ]
-        $[ if module.isIncluded ]$[ continue ]$[/ if ]
-        $[ foreach module.entities ]
-            $[ if entity.isImplicit || entity.isExtern || entity.isIncluded || entity.isTransient ]$[ continue ]$[/ if ]
-            $[ let dtoDomainEntity = entity|domain:JSONDTO ]
-            $[ let modelDomainEntity = entity|domain:Model ]
-            $[ let modelNamespace = (space.domain("Model")).namespace ]
-            $[ let mapperClassName = entity|domain:DTOMapper|name ]
-            $[ file domain.namespace|path mapperClassName "java" ]
-                $[ call entityHeader(title: "This Mapper class is responsible for mapping between various representations of the following entity.") ]
+    $[ foreach space.modules 
+           if module.isIncluded ]$[ continue ]$[ endif 
+           foreach module.entities 
+               if entity.isImplicit || entity.isExtern || entity.isIncluded || entity.isTransient ]$[ continue ]$[ endif 
+               let dtoDomainEntity = entity|domain:JSONDTO 
+               let modelDomainEntity = entity|domain:Model 
+               let modelNamespace = (space.domain("Model")).namespace 
+               let mapperClassName = entity|domain:DTOMapper|name 
+               file domain.namespace|path mapperClassName "java" 
+                   call entityHeader(title: "This Mapper class is responsible for mapping between various representations of the following entity.") ]
 package ${domain.namespace};
 
 import java.util.Date;
@@ -43,24 +43,24 @@ import java.util.stream.Collectors;
 import org.springframework.stereotype.Component;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.modelmapper.ModelMapper;
-$[ receive distinct imports ]
-                $[ foreach entity.attributes ]
-                    $[ if attribute.type.isEnumType ]
+$[ receive distinct imports 
+                   foreach entity.attributes 
+                       if attribute.type.isEnumType ]
 import ${attribute.type|domain:Model|fullname};
-                    $[/ if ]
-                $[/ foreach ]
+                    $[ endif 
+                   endforeach ]
 import ${dtoDomainEntity|fullname};
 import ${modelDomainEntity|fullname};
-                $[ foreach attribute in entity.attributes|sort ]
-                    $[ let attributeType = attribute.type ]
-                    $[ if attribute.isSecondaryEntityType ]
-                        $[ let attributeType = attribute.getTypeEntity() ]
-$[ send imports ]
+                $[ foreach attribute in entity.attributes|sort 
+                       let attributeType = attribute.type 
+                       if attribute.isSecondaryEntityType 
+                           let attributeType = attribute.getTypeEntity() 
+   send imports ]
 import ${attributeType|domain:Model|fullname};
 import ${attributeType|domain:JSONDTO|fullname};
-$[/ send ]
-                    $[/ if ]
-                $[/ foreach ]
+$[ endsend 
+                       endif 
+                   endforeach ]
 
 @Component
 public class ${mapperClassName}
@@ -68,46 +68,45 @@ public class ${mapperClassName}
     @Autowired ModelMapper mapper;
 $[ receive distinct mapperDecl ]
 
-$[********************************************************************
+                $[ /********************************************************************
     JSONDTO <== MODEL
-  ********************************************************************]
+  ********************************************************************/ ]
     public ${dtoDomainEntity|name} toDtoFromModel(${modelDomainEntity|name} modelObject) {
         ${dtoDomainEntity|name} dtoObject = new ${dtoDomainEntity|name}();
                 $[ if entity.hasPrimaryKey ]
         // primary key
         dtoObject.set${entity.primaryKeyAttribute|domain:JSONDTO|name|capitalize}(modelObject != null ? modelObject.get${entity.primaryKeyAttribute|domain:Model|name|capitalize}() : null);
 
-                $[/ if ]
-                $[ let showAttributeComment = true ]
-                $[ foreach domainAttribute in (entity|domain:JSONDTO|view:APIGet).attributes|sort if
-!domainAttribute.attribute.isVirtual && !(domainAttribute.attribute|domain:DTOMapper).hasTag("exclude") ]
-                    $[ let attribute = domainAttribute.attribute ]
-                    $[ let nullable = attribute.type|language hasNullable ]
-                    $[ let attributeType = attribute.type ]
-                    $[ if attribute.isSecondaryEntityType ]
-                        $[ let attributeType = attribute.getTypeEntity() ]
-                        $[ let nullable = false ]
-                    $[/ if ]
-                    $[ if showAttributeComment ]
-                        $[ let showAttributeComment = false ]
+                $[ endif 
+                   let showAttributeComment = true 
+                   foreach domainAttribute in (entity|domain:JSONDTO|view:APIGet).attributes|sort if !domainAttribute.attribute.isVirtual && !(domainAttribute.attribute|domain:DTOMapper).hasTag("exclude") 
+                       let attribute = domainAttribute.attribute 
+                       let nullable = attribute.type|language hasNullable 
+                       let attributeType = attribute.type 
+                       if attribute.isSecondaryEntityType 
+                           let attributeType = attribute.getTypeEntity() 
+                           let nullable = false 
+                       endif 
+                       if showAttributeComment 
+                           let showAttributeComment = false ]
         // attributes
-                    $[/ if ]
-                    $[ let indent = "" ]
-                    $[ let modelAttributeNameInMethod = attribute|domain:Model|name|capitalize ]
-                    $[ let dtoAttributeNameInMethod = attribute|domain:JSONDTO|name|capitalize ]
-                    $[ if nullable ]
-                        $[ let indent = "    " ]
+                    $[ endif 
+                       let indent = "" 
+                       let modelAttributeNameInMethod = attribute|domain:Model|name|capitalize 
+                       let dtoAttributeNameInMethod = attribute|domain:JSONDTO|name|capitalize 
+                       if nullable 
+                           let indent = "    " ]
         if (modelObject != null && modelObject.get${modelAttributeNameInMethod}() != null) {
-                    $[/ if ]
-                    $[ if attribute.isArray ]
-                        $[ if attribute.type.isEnumType ]
-                            $[ capture entityScope ]$[ if attribute.type.hasParentEntity ]${attribute.type.parentEntity|domain:JSONDTO|name}.$[/ if ]$[/ capture ]
+                    $[ endif 
+                       if attribute.isArray 
+                           if attribute.type.isEnumType 
+                               capture entityScope ]$[ if attribute.type.hasParentEntity ]${attribute.type.parentEntity|domain:JSONDTO|name}.$[ endif ]$[ endcapture ]
         ${indent}dtoObject.set${dtoAttributeNameInMethod}(modelObject.get${modelAttributeNameInMethod}().stream().map(s -> ${entityScope}${attribute.type|domain:JSONDTO|name}.valueOf(s.toString())).collect(Collectors.toSet()));
-                        $[ elseif attribute.type.isEntityType ]
-$[ send imports ]
+                        $[ elseif attribute.type.isEntityType 
+   send imports ]
 import java.util.HashSet;
-$[/ send ]
-                            $[ let localMapperClassName = attributeType|domain:DTOMapper|name ]
+$[ endsend 
+                               let localMapperClassName = attributeType|domain:DTOMapper|name ]
         ${indent}${localMapperClassName} localMapper = new ${localMapperClassName}();
         ${indent}HashSet<${attributeType|domain:JSONDTO|name}> dtoObjects = new HashSet<>();
         ${indent}for (${attributeType|domain:Model|name} obj :  modelObject.get${modelAttributeNameInMethod}()) {
@@ -116,65 +115,65 @@ $[/ send ]
         ${indent}dtoObject.set${dtoAttributeNameInMethod}(dtoObjects);
                         $[ else ]
         ${indent}dtoObject.set${dtoAttributeNameInMethod}(modelObject.get${modelAttributeNameInMethod}());
-                        $[/ if ]
-                    $[ else ]$[* !attribute.isArray *]
-                        $[ if attribute.type.isEntityType ]
-$[ send mapperDecl ]
-                                $[ let localMapperClassName = attributeType|domain:DTOMapper|name ]
+                        $[ endif 
+                       else    /* !attribute.isArray */ 
+                           if attribute.type.isEntityType 
+   send mapperDecl 
+                                   let localMapperClassName = attributeType|domain:DTOMapper|name ]
     @Autowired ${localMapperClassName} ${localMapperClassName|uncapitalize};
-$[/ send ]
+$[ endsend ]
         ${indent}dtoObject.set${dtoAttributeNameInMethod}(${localMapperClassName|uncapitalize}.toDtoFromModel(modelObject != null ? modelObject.get${modelAttributeNameInMethod}() : null));
-                        $[ elseif attribute.type.isEnumType ]
-                            $[ capture entityScope ]$[ if attribute.type.hasParentEntity ]${attribute.type.parentEntity|domain:JSONDTO|name}.$[/ if ]$[/ capture ]
+                        $[ elseif attribute.type.isEnumType 
+                               capture entityScope ]$[ if attribute.type.hasParentEntity ]${attribute.type.parentEntity|domain:JSONDTO|name}.$[ endif ]$[ endcapture ]
         ${indent}dtoObject.set${dtoAttributeNameInMethod}(modelObject != null ? modelObject.get${modelAttributeNameInMethod}() : null);
-                        $[ else ]$[* !attribute.type.isEnumType *]
-$[* we need to consider the data type here *]
-                            $[ capture ending ]$[/ capture ]
-                            $[ capture beginning ]$[/ capture ]
-                            $[ capture getname ]get$[/ capture ]
-                            $[ if !(attribute.type|language hasNullable) ]
-                                $[ switch attribute.type ]
-                                    $[ case boolean ]$[ capture ending ]$[/ capture ]$[ capture getname ]is$[/ capture ]
-                                    $[ default ]$[ capture ending ]$[/ capture ]
-                                $[/ switch ]
-                            $[/ if ]
+                        $[ else    /* !attribute.type.isEnumType */ 
+                               /* we need to consider the data type here */ 
+                               capture ending ]$[ endcapture 
+                               capture beginning ]$[ endcapture 
+                               capture getname ]get$[ endcapture 
+                               if !(attribute.type|language hasNullable) 
+                                   switch attribute.type 
+                                       case boolean ]$[ capture ending ]$[ endcapture ]$[ capture getname ]is$[ endcapture 
+                                       default ]$[ capture ending ]$[ endcapture 
+                                   endswitch 
+                               endif ]
         ${indent}dtoObject.set${attribute|domain:JSONDTO|name|capitalize}(${beginning}(modelObject != null ? modelObject.${getname}${attribute|domain:Model|name|capitalize}() : null)${ending});
-                        $[/ if ]
-                    $[/ if ]
-                    $[ if nullable ]
+                        $[ endif 
+                       endif 
+                       if nullable ]
         }
-                    $[/ if ]
-                $[/ foreach ]$[* attribute *]
-$[** RELATIONSHIPS **]
-                $[ foreach relationship in (entity|domain:JSONDTO|view:APIGet).relationships if relationship.to.isOne && relationship.withViewName == "Reference" ]
-                    $[ if relationship#first ]
+                    $[ endif 
+                   endforeach    /* attribute */ 
+                   /** RELATIONSHIPS **/ 
+                   foreach relationship in (entity|domain:JSONDTO|view:APIGet).relationships if relationship.to.isOne && relationship.withViewName == "Reference" 
+                       if relationship#first ]
         // to-one relationships
         // --------------------
-                    $[/ if ]
-                    $[ let _toEntity = relationship.to.entity ]
+                    $[ endif 
+                       let _toEntity = relationship.to.entity ]
         // ${_toEntity.entity.name}
-                    $[ let includeChildEntities = _toEntity.entity.space.name == entity.space.name && !_toEntity.entity.isIncluded ]
-                    $[ if !includeChildEntities ]$[ continue ]$[/ if ]
-                    $[ let _toEntityMapperClassName = _toEntity|domain:DTOMapper|name ]
-                    $[ let _toEntityMapperVariableName = _toEntityMapperClassName|uncapitalize ]
-$[ send mapperDecl ]
+                    $[ let includeChildEntities = _toEntity.entity.space.name == entity.space.name && !_toEntity.entity.isIncluded 
+                       if !includeChildEntities ]$[ continue ]$[ endif 
+                       let _toEntityMapperClassName = _toEntity|domain:DTOMapper|name 
+                       let _toEntityMapperVariableName = _toEntityMapperClassName|uncapitalize 
+   send mapperDecl ]
     @Autowired ${_toEntityMapperClassName} ${_toEntityMapperVariableName};
-$[/ send ]
-$[ send imports ]
+$[ endsend 
+   send imports ]
 import ${_toEntity|domain:Model|fullname};
-$[/ send ]
+$[ endsend ]
         if (modelObject != null && modelObject.get${relationship|domain:Model|name|capitalize}Id() != ${_toEntity.pkType.isUUIDType ? "null":"0"}) {
             ${_toEntity|domain:Model|name} refObject = new ${_toEntity|domain:Model|name}();
             refObject.set${_toEntity.primaryKeyAttribute|domain:Model|name|capitalize}(modelObject.get${relationship|domain:Model|name|capitalize}Id());
             dtoObject.set${relationship|name|capitalize}(${_toEntityMapperVariableName}.toDtoFromModel(refObject));
         }
-                $[/ foreach ]
+                $[ endforeach ]
         return dtoObject;
     }
 
-$[********************************************************************
+                $[ /********************************************************************
     MODEL <== JSONDTO
-  ********************************************************************]
+  ********************************************************************/ ]
     public ${modelDomainEntity|name} toModelFromDto(${dtoDomainEntity|name} dtoObject) {
         // for now do this, but since names can be quite different potentially we should
         // really do attribute by attribute code like the others.
@@ -183,11 +182,11 @@ $[********************************************************************
 
 $[ outlet methods
    D "This is where you can insert new mapping methods."
-]
-$[/ outlet ]
+
+   endoutlet ]
 }
 
-            $[/ file ]
-        $[/ foreach ]$[* entity *]
-    $[/ foreach ]$[* module *]
-$[/ publisher ]
+            $[ endfile 
+           endforeach    /* entity */ 
+       endforeach    /* module */ 
+   endpublisher ]

@@ -1,24 +1,24 @@
 $[ language java ]
-$[ domain JSONDTO ]
-$[ D summary "This template generates the DTO classes for all entites in your space." ]
-$[ D "This template generates the DTO classes for all entites in your space as well as creating a" ]
-$[ D "README file for the directory that contains them." ]
-$[ publisher org.entityc.springboot.dto ]
-    $[ foreach module in space.modules ]
-        $[ if module.isIncluded ]$[ continue ]$[/ if ]
-        $[ foreach entity in module.entities ]
-            $[ if entity.isImplicit || entity.isExtern ]$[ continue ]$[/ if ]
+$[ domain JSONDTO 
+   D summary "This template generates the DTO classes for all entites in your space." 
+   D "This template generates the DTO classes for all entites in your space as well as creating a" 
+   D "README file for the directory that contains them." 
+   publisher org.entityc.springboot.dto 
+       foreach module in space.modules 
+           if module.isIncluded ]$[ continue ]$[ endif 
+           foreach entity in module.entities 
+               if entity.isImplicit || entity.isExtern ]$[ continue ]$[ endif ]
 
-            $[ let _isUserEntity = space.hasDomain("Security") && (entity|domain:Security).hasTag("user") ]
-            $[ let domainEntity = entity|domain:JSONDTO ]
-            $[ capture dtoClassName ]${domainEntity|name}$[/ capture ]
-            $[ if domainEntity.domain == null ]
-                $[ log fatal ]Domain entity ${domainEntity.name} has no domain!!$[/ log ]
-            $[/ if ]
-            $[ if domainEntity.domain.namespace == null ]
-                $[ log fatal ]Domain ${domainEntity.domain.name} has no namespace!!$[/ log ]
-            $[/ if ]
-            $[ file domainEntity.domain.namespace|path dtoClassName "java" ]
+            $[ let _isUserEntity = space.hasDomain("Security") && (entity|domain:Security).hasTag("user") 
+               let domainEntity = entity|domain:JSONDTO 
+               capture dtoClassName ]${domainEntity|name}$[ endcapture 
+               if domainEntity.domain == null 
+                   log fatal ]Domain entity ${domainEntity.name} has no domain!!$[ endlog 
+               endif 
+               if domainEntity.domain.namespace == null 
+                   log fatal ]Domain ${domainEntity.domain.name} has no namespace!!$[ endlog 
+               endif 
+               file domainEntity.domain.namespace|path dtoClassName "java" ]
 //
 // This is the DTO class for entity:
 //
@@ -26,10 +26,10 @@ $[ publisher org.entityc.springboot.dto ]
 //     Name:        ${entity|name}
                 $[ if entity.hasDescription ]
 //     Description: ${entity.description|wrap}
-                $[/ if ]
-                $[ if entity.hasTags ]
+                $[ endif 
+                   if entity.hasTags ]
 //     Tags:        [${entity.tagsSeparatedBy("][")}]
-                $[/ if ]
+                $[ endif ]
 //
 // THIS FILE IS GENERATED. DO NOT EDIT!!
 //
@@ -44,88 +44,86 @@ $[ receive distinct imports ]
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.Data;
-$[* Import referenced enums *]
-                $[ foreach entity.attributes ]
-                    $[ if attribute.type.isEnumType ]
+                $[ /* Import referenced enums */ 
+                   foreach entity.attributes 
+                       if attribute.type.isEnumType ]
 import ${attribute.type|domain:Model|fullname};
-                    $[/ if ]
-                $[/ foreach ]
+                    $[ endif 
+                   endforeach ]
 
-$[* Top of the class definition *]
+                $[ /* Top of the class definition */ ]
 @Data
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class ${dtoClassName}
 {
-                $[ if entity.hasPrimaryKey ]
-$[* Primary Key *]
-                    $[ let _primaryKeyAttribute = entity.primaryKeyAttribute ]
-                    $[ if _primaryKeyAttribute.hasDescription ]
+                $[ if entity.hasPrimaryKey 
+                       /* Primary Key */ 
+                       let _primaryKeyAttribute = entity.primaryKeyAttribute 
+                       if _primaryKeyAttribute.hasDescription ]
     // ${_primaryKeyAttribute.description}
                     $[ else ]
     // PRIMARY KEY
-                    $[/ if ]
+                    $[ endif ]
     private ${_primaryKeyAttribute.type|language} ${_primaryKeyAttribute|domain:JSONDTO|name};
 
-                $[/ if ]
-$[* Attributes *]
-                $[ foreach domainAttribute in (entity|domain:JSONDTO|view:Default).attributes|sort ]
-                    $[ if _isUserEntity && (domainAttribute|domain:Security).hasTag("login:password") ]$[ continue ]$[/ if ]
-                    $[ let attributeName = domainAttribute|name ]
-                    $[ let attributeType = domainAttribute.attribute.type|language nullable ]
-                    $[ if domainAttribute.attribute.type.isEntityType ]
-                        $[ let attributeEntity = domainAttribute.attribute.type ]
-                        $[ let attributeType = attributeEntity|domain:JSONDTO|name ]
-                    $[/ if ]
-                    $[ if domainAttribute.attribute.hasDescription ]
+                $[ endif 
+                   /* Attributes */ 
+                   foreach domainAttribute in (entity|domain:JSONDTO|view:Default).attributes|sort 
+                       if _isUserEntity && (domainAttribute|domain:Security).hasTag("login:password") ]$[ continue ]$[ endif 
+                       let attributeName = domainAttribute|name 
+                       let attributeType = domainAttribute.attribute.type|language nullable 
+                       if domainAttribute.attribute.type.isEntityType 
+                           let attributeEntity = domainAttribute.attribute.type 
+                           let attributeType = attributeEntity|domain:JSONDTO|name 
+                       endif 
+                       if domainAttribute.attribute.hasDescription ]
     // ${domainAttribute.attribute.description}
-                    $[/ if ]
-                    $[ if domainAttribute.attribute.isArray ]
+                    $[ endif 
+                       if domainAttribute.attribute.isArray ]
     private Set<${attributeType}> ${attributeName};
                     $[ else ]
     private ${attributeType} ${attributeName};
-                    $[/ if ]
+                    $[ endif ]
 
-                $[/ foreach ]
-$[* Relationships *]
-                $[ let showRelationshipComment = true ]
-                $[ foreach domainRelationship in (entity|domain:JSONDTO|view:Default).relationships ]
-                    $[ let _toEntity = domainRelationship.to.entity.entity ]
-                    $[ if _toEntity == null || _toEntity.isImplicit || _toEntity.isExtern || _toEntity.isIncluded ]$[ continue ]$[/ if ]
-                    $[ let includeChildEntities = _toEntity.space.name == entity.space.name ]
-                    $[ if showRelationshipComment ]
+                $[ endforeach 
+                   /* Relationships */ 
+                   let showRelationshipComment = true 
+                   foreach domainRelationship in (entity|domain:JSONDTO|view:Default).relationships 
+                       let _toEntity = domainRelationship.to.entity.entity 
+                       if _toEntity == null || _toEntity.isImplicit || _toEntity.isExtern || _toEntity.isIncluded ]$[ continue ]$[ endif 
+                       let includeChildEntities = _toEntity.space.name == entity.space.name 
+                       if showRelationshipComment ]
     // RELATIONSHIPS
-                        $[ let showRelationshipComment = false ]
-                    $[/ if ]
-                    $[ if domainRelationship.hasDescription ]
+                        $[ let showRelationshipComment = false 
+                       endif 
+                       if domainRelationship.hasDescription ]
     // ${domainRelationship.description}
-                    $[/ if ]
-                    $[ if domainRelationship.to.isOne ]
-                        $[ let typeName = "String" ]
-                        $[ if _toEntity.pkType != null ]
-                            $[ let typeName = _toEntity.pkType|language ]
-                        $[/ if ]
-                        $[ if !includeChildEntities || domainRelationship.isWithPrimaryKey ]
+                    $[ endif 
+                       if domainRelationship.to.isOne 
+                           let typeName = "String" 
+                           if _toEntity.pkType != null 
+                               let typeName = _toEntity.pkType|language 
+                           endif 
+                           if !includeChildEntities || domainRelationship.isWithPrimaryKey ]
     private ${typeName} ${domainRelationship.name}Id;
                         $[ else ]
     private ${_toEntity|domain:JSONDTO|name} ${domainRelationship.name};
-                        $[/ if ]
-                    $[ elseif domainRelationship.to.isMany ]
-                        $[ if includeChildEntities ]
+                        $[ endif 
+                       elseif domainRelationship.to.isMany 
+                           if includeChildEntities ]
     private Set<${_toEntity|domain:JSONDTO|name}> ${domainRelationship.name};
-                        $[/ if ]
-                    $[/ if ]
-                $[/ foreach ]
-$[ outlet members
-   D "Member variables can be declared here."
-]
-$[/ outlet ]
-$[ outlet methods
-   D "Methods can be declared here."
-]
-$[/ outlet ]
+                        $[ endif 
+                       endif 
+                   endforeach 
+   outlet members
+                           D "Member variables can be declared here." 
+   endoutlet 
+   outlet methods
+                           D "Methods can be declared here." 
+   endoutlet ]
 }
-            $[/ file ]
+            $[ endfile ]
 
-        $[/ foreach ]
-    $[/ foreach ]
-$[/ publisher ]
+        $[ endforeach 
+       endforeach 
+   endpublisher ]

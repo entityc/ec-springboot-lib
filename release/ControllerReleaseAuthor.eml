@@ -1,13 +1,13 @@
 $[ language java ]
 $[ domain Controller ]
 
-$[ author to org.entityc.springboot.controller ]
-$[*--------------------------------------------------------------------------------------------*]
-$[* Clear Release - endpoint to clear (gut contents but leave release object). *]
-$[*--------------------------------------------------------------------------------------------*]
-    $[ author to outlet methods ]
-        $[ if entity.hasTag("release:top") && entity.hasRelationshipToEntityTagged("release:binder") ]
-            $[ publisher org.entityc.springboot.controller.release ]
+$[ author to org.entityc.springboot.controller 
+       /*--------------------------------------------------------------------------------------------*/ 
+       /* Clear Release - endpoint to clear (gut contents but leave release object). */ 
+       /*--------------------------------------------------------------------------------------------*/ 
+       author to outlet methods 
+           if entity.hasTag("release:top") && entity.hasRelationshipToEntityTagged("release:binder") 
+               publisher org.entityc.springboot.controller.release ]
     @RequestMapping(
         path = "/{id}/release/clear",
         method = RequestMethod.PUT,
@@ -16,65 +16,65 @@ $[*-----------------------------------------------------------------------------
     @ResponseStatus(HttpStatus.ACCEPTED)
 $[ outlet annotation
    D "Resides just above the method declaration in the annocation area."
-]
-$[/ outlet ]
-                $[ let pkidtype = entity.pkType|language ]
+
+   endoutlet 
+                   let pkidtype = entity.pkType|language ]
     public void clearRelease${modelName}(@PathVariable("id") ${pkidtype} id) throws ServiceException {
         ${service}.clearRelease(id);
     }
 
-            $[/ publisher ]
-        $[/ if ]
-    $[/ author ]
-$[*--------------------------------------------------------------------------------------------*]
-$[* Get Release List - This will take several authors to construct. Basically adding "locked"
-$[* flavors of get list methods when the user passes a "lockedOnly" option to the endpoint.
-$[* The "locked" flavor of the get only gets....
-$[*--------------------------------------------------------------------------------------------*]
-$[* The first author simply sets the hasLockAttribute for all the other authors to use. *]
-    $[ author to outlet methods phase = initial
+            $[ endpublisher 
+           endif 
+       endauthor 
+       /*--------------------------------------------------------------------------------------------*/ 
+       /* Get Release List - This will take several authors to construct. Basically adding "locked"
+/* flavors of get list methods when the user passes a "lockedOnly" option to the endpoint.
+/* The "locked" flavor of the get only gets....
+/*--------------------------------------------------------------------------------------------*/ 
+       /* The first author simply sets the hasLockAttribute for all the other authors to use. */ 
+       author to outlet methods phase = initial
        D "Determine if it has a lock attribute before places that add lock related code is run (thus"
        D "phase=initial)."
-    ]
-        $[ let hasLockAttribute = entity.hasAttributeTagged("release:lock") ]
-        $[ let dtoNameInMethod = entity|domain:JSONDTO|name|capitalize ]
-    $[/ author ]
-$[* Here we add the "lockedOnly" parameter to the endpoint. *]
-    $[ author to getList outlet parameters ]
-        $[ if hasLockAttribute ]
+    
+           let hasLockAttribute = entity.hasAttributeTagged("release:lock") 
+           let dtoNameInMethod = entity|domain:JSONDTO|name|capitalize 
+       endauthor 
+       /* Here we add the "lockedOnly" parameter to the endpoint. */ 
+       author to getList outlet parameters 
+           if hasLockAttribute ]
         @RequestParam(value = "lockedOnly", required = false) Boolean lockedOnly,
-        $[/ if ]
-    $[/ author ]
-$[* We need to default it to a value of true if not used. *]
-    $[ author to getList outlet declarations ]
-        $[ if hasLockAttribute ]
+        $[ endif 
+       endauthor 
+       /* We need to default it to a value of true if not used. */ 
+       author to getList outlet declarations 
+           if hasLockAttribute ]
         final boolean queryLockedOnly = ResourceUtils.defaultTo(lockedOnly, true);
-        $[/ if ]
-    $[/ author ]
-$[* Now we used the "lockedOnly" option to call the appropriate service method for when a parent object is specified. *]
-    $[ author to getList outlet parentGet ]
-        $[ if hasLockAttribute ]
+        $[ endif 
+       endauthor 
+       /* Now we used the "lockedOnly" option to call the appropriate service method for when a parent object is specified. */ 
+       author to getList outlet parentGet 
+           if hasLockAttribute ]
             if (queryLockedOnly) {
-                results = ${service}.getLocked${dtoNameInMethod}ListBy${parentName}($[ if isReleasedEntity ]releaseId, $[/ if ]${parentIdArg}, queryStart, queryLimit, queryLevels);
+                results = ${service}.getLocked${dtoNameInMethod}ListBy${parentName}($[ if isReleasedEntity ]releaseId, $[ endif ]${parentIdArg}, queryStart, queryLimit, queryLevels);
             } else {
-                results = ${service}.get${dtoNameInMethod}ListBy${parentName}($[ if isReleasedEntity ]releaseId, $[/ if ]${parentIdArg}, queryStart, queryLimit, queryLevels);
+                results = ${service}.get${dtoNameInMethod}ListBy${parentName}($[ if isReleasedEntity ]releaseId, $[ endif ]${parentIdArg}, queryStart, queryLimit, queryLevels);
             }
         $[ else ]
-            results = ${service}.get${dtoNameInMethod}ListBy${parentName}($[ if isReleasedEntity ]releaseId, $[/ if ]${parentIdArg}, queryStart, queryLimit, queryLevels);
-        $[/ if ]
-    $[/ author ]
-$[* Now we used the "lockedOnly" option to call the appropriate service method for when a parent object is NOT specified. *]
-    $[ author to getList outlet noParentGet ]
-        $[ if hasLockAttribute ]
+            results = ${service}.get${dtoNameInMethod}ListBy${parentName}($[ if isReleasedEntity ]releaseId, $[ endif ]${parentIdArg}, queryStart, queryLimit, queryLevels);
+        $[ endif 
+       endauthor 
+       /* Now we used the "lockedOnly" option to call the appropriate service method for when a parent object is NOT specified. */ 
+       author to getList outlet noParentGet 
+           if hasLockAttribute ]
             if (queryLockedOnly) {
-                results = ${service}.getLocked${dtoNameInMethod}List($[ if isReleasedEntity ]releaseId, $[/ if ]queryStart, queryLimit, queryLevels);
+                results = ${service}.getLocked${dtoNameInMethod}List($[ if isReleasedEntity ]releaseId, $[ endif ]queryStart, queryLimit, queryLevels);
             } else {
-                results = ${service}.get${dtoNameInMethod}List($[ if isReleasedEntity ]releaseId, $[/ if ]queryStart, queryLimit, queryLevels);
+                results = ${service}.get${dtoNameInMethod}List($[ if isReleasedEntity ]releaseId, $[ endif ]queryStart, queryLimit, queryLevels);
             }
         $[ else ]
-            results = ${service}.get${dtoNameInMethod}List($[ if isReleasedEntity ]releaseId, $[/ if ]queryStart, queryLimit, queryLevels);
-        $[/ if ]
-    $[/ author ]
+            results = ${service}.get${dtoNameInMethod}List($[ if isReleasedEntity ]releaseId, $[ endif ]queryStart, queryLimit, queryLevels);
+        $[ endif 
+       endauthor ]
 
-$[/ author ]
+$[ endauthor ]
 

@@ -1,14 +1,14 @@
-$[language java]
-$[D summary, main "Used to convert protobuf DTOs so they can be sent via HTTP."]
-$[domain Converter]
-$[let protobufNamespace = (space.domain("ProtobufDTO")).namespace]
-$[foreach space.modules|sort]
-    $[if module.isIncluded]$[continue]$[/if]
-    $[foreach module.entities|sort]
-        $[if entity.isImplicit || entity.isExtern]$[continue]$[/if]
-        $[let protobufClassName = entity|domain:ProtobufDTO|name]
-        $[capture fullProtobufClassName]${module|domain:ProtobufDTO|name}.${protobufClassName}$[/capture]
-        $[file domain.namespace|path entity|domain|name "java"]
+$[ language java ]
+$[ domain Converter 
+   D summary, main "Used to convert protobuf DTOs so they can be sent via HTTP." 
+   let protobufNamespace = (space.domain("ProtobufDTO")).namespace 
+   foreach space.modules|sort 
+       if module.isIncluded ]$[ continue ]$[ endif 
+       foreach module.entities|sort 
+           if entity.isImplicit || entity.isExtern ]$[ continue ]$[ endif 
+           let protobufClassName = entity|domain:ProtobufDTO|name 
+           capture fullProtobufClassName ]${module|domain:ProtobufDTO|name}.${protobufClassName}$[ endcapture 
+           file domain.namespace|path entity|domain|name "java" ]
 
 package ${domain.namespace};
 
@@ -54,11 +54,11 @@ public class ${entity|domain|name} extends AbstractHttpMessageConverter<${fullPr
         codedOutputStream.flush();
     }
 }
-        $[/file]
-    $[/foreach]
-$[/foreach]
+        $[ endfile 
+       endforeach 
+   endforeach ]
 
-$[file domain.namespace|path "PBLConverterConfig" "java"]
+$[ file domain.namespace|path "PBLConverterConfig" "java" ]
 package ${domain.namespace};
 
 import org.springframework.context.annotation.Bean;
@@ -67,17 +67,17 @@ import org.springframework.http.converter.protobuf.ProtobufHttpMessageConverter;
 
 @Configuration
 public class PBLConverterConfig {
-    $[foreach space.modules|sort]
-        $[if module.isIncluded]$[continue]$[/if]
-        $[foreach module.entities|sort]
-            $[if entity.isImplicit || entity.isExtern]$[continue]$[/if]
+    $[ foreach space.modules|sort 
+           if module.isIncluded ]$[ continue ]$[ endif 
+           foreach module.entities|sort 
+               if entity.isImplicit || entity.isExtern ]$[ continue ]$[ endif ]
     @Bean
     ${entity|domain|name} ${entity|domain|name|uncapitalize}() {
         return new ${entity|domain|name}();
     }
 
-        $[/foreach]
-    $[/foreach]
+        $[ endforeach 
+       endforeach ]
     @Bean
     ProtobufLiteConverter protobufLiteConverter() {
         return new ProtobufLiteConverter();
@@ -85,4 +85,4 @@ public class PBLConverterConfig {
 
 }
 
-$[/file]
+$[ endfile ]

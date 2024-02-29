@@ -1,35 +1,35 @@
-$[language java]
-$[domain Repository]
-$[D summary, main "Generates code that interfaces model classes with the database."]
-$[publisher org.entityc.springboot.repository]
-    $[import "release/ReleaseFunctions"]
-    $[import "repository/authors/RepositoryGetAuthor"]
-    $[import "repository/authors/RepositorySaveAuthor"]
-    $[import "repository/authors/RepositoryDeleteAuthor"]
-    $[import "repository/authors/RepositoryAssociationAuthor"]
-    $[import "repository/authors/RepositoryCacheAuthor"]
-$[outlet veryTop
-  D "This is above all the loops so you can loop through all the entities here if you want."
-]
-$[/outlet]
-    $[foreach space.modules]
-        $[if module.isIncluded]$[continue]$[/if]
-        $[foreach module.entities]
-            $[if entity.isImplicit || entity.isSecondary || entity.isExtern || entity.isTransient]$[continue]$[/if]
-            $[let className = entity|domain|name]
-            $[let modelName = entity|domain:Model|name]
-            $[let tableName = entity|domain:Database|name]
-            $[file domain.namespace|path className "java"]
+$[ language java ]
+$[ domain Repository 
+   D summary, main "Generates code that interfaces model classes with the database." 
+   publisher org.entityc.springboot.repository 
+       import "release/ReleaseFunctions" 
+       import "repository/authors/RepositoryGetAuthor" 
+       import "repository/authors/RepositorySaveAuthor" 
+       import "repository/authors/RepositoryDeleteAuthor" 
+       import "repository/authors/RepositoryAssociationAuthor" 
+       import "repository/authors/RepositoryCacheAuthor" 
+   outlet veryTop
+   D "This is above all the loops so you can loop through all the entities here if you want."
+
+   endoutlet 
+       foreach space.modules 
+           if module.isIncluded ]$[ continue ]$[ endif 
+           foreach module.entities 
+               if entity.isImplicit || entity.isSecondary || entity.isExtern || entity.isTransient ]$[ continue ]$[ endif 
+               let className = entity|domain|name 
+               let modelName = entity|domain:Model|name 
+               let tableName = entity|domain:Database|name 
+               file domain.namespace|path className "java" ]
 //
 // This Repository class is responsible for performing database accesses for the following entity:
 //
 //   Name:        ${entity.name}
-                $[if entity.hasDescription]
+                $[ if entity.hasDescription ]
 //   Description: ${entity.description|wrap}
-                $[/if]
-                $[if entity.hasTags]
+                $[ endif 
+                   if entity.hasTags ]
 //   Tags:        [${entity.tagsSeparatedBy("][")}]
-                $[/if]
+                $[ endif ]
 //
 //   Template:    ${__template.name}
 //
@@ -46,53 +46,52 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.Date;
-                $[foreach entity.attributes]
-                    $[if attribute.type.isEnumType]
+                $[ foreach entity.attributes 
+                       if attribute.type.isEnumType ]
 import ${attribute.type|domain:Model|fullname};
-                    $[/if]
-                $[/foreach]
+                    $[ endif 
+                   endforeach ]
 
-$[receive imports]
+$[ receive imports ]
 
-$[send imports]
+$[ send imports ]
 import ${entity|domain:Model|fullname};
-$[/send]
+$[ endsend ]
 @Repository
 public interface ${className} extends CrudRepository<${modelName}, ${entity.pkType.isUUIDType ? "UUID":"Long"}> {
 
-$[outlet members
-  D "This is the top section of the class where member variables typically are placed."
-]
+$[ outlet members
+   D "This is the top section of the class where member variables typically are placed." ]
     // no members
-$[/outlet]
+$[ endoutlet ]
 
-$[outlet methods
-  D "This outlet is where authors place the build of generated code. Some of these authors may also"
-  D "be publishers to give access to specific methods."
-]
+$[ outlet methods
+   D "This outlet is where authors place the build of generated code. Some of these authors may also"
+   D "be publishers to give access to specific methods." ]
     // no methods
-$[/outlet]
+$[ endoutlet ]
 }
-            $[/file]
-        $[/foreach]
-    $[/foreach]
-$[/publisher]
-$[file domain.namespace|path "README" "md"]
+            $[ endfile 
+           endforeach 
+       endforeach 
+   endpublisher 
+   file domain.namespace|path "README" "md" ]
 # Repository Classes
 
 The classes in this directory are Repository classes as part of the Spring Framework.
 
 | Class | Description |
 |-------|-------------|
-    $[foreach module in space.modules if !module.isIncluded]
-        $[foreach entity in module.entities if !entity.isSecondary && !entity.isImplicit && !entity.isExtern && !entity.isTransient]
-            $[let domainEntity = entity|domain]
+    $[ foreach module in space.modules if !module.isIncluded 
+           foreach entity in module.entities if !entity.isSecondary && !entity.isImplicit && !entity.isExtern && !entity.isTransient 
+               let domainEntity = entity|domain
+]
 | `${domainEntity.name}` | The repository class providing a layer of persistent storage for the `${entity.name}` entity. This entity can be described as: ${entity.description} |
-        $[/foreach]
-    $[/foreach]
+        $[ endforeach 
+       endforeach ]
 
 ## Generated by
 
 Template: `${__template.name}`
 
-$[/file]
+$[ endfile ]

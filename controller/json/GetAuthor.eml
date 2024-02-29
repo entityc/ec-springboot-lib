@@ -1,15 +1,15 @@
-$[ language java ]
-$[ D summary, main "This contains an author that generates various get endpoint methods for a controller class." ]
-$[ import "release/ReleaseFunctions" ]
+$[ language java 
+   D summary, main "This contains an author that generates various get endpoint methods for a controller class." 
+   import "release/ReleaseFunctions" ]
 
-$[ author to org.entityc.springboot.controller ]
-    $[ author to outlet methods
+$[ author to org.entityc.springboot.controller 
+       author to outlet methods
        D "Adds get endpoints to the controller class for its entity."
-    ]
-        $[ let defaultStart = 0 ]
-        $[ let defaultLimit = 10 ]
-        $[ let defaultLevels = 1 ]
-$[ send imports ]
+    
+           let defaultStart = 0 
+           let defaultLimit = 10 
+           let defaultLevels = 1 
+   send imports ]
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -17,13 +17,13 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.http.HttpStatus;
-$[/ send ]
-        $[ publisher org.entityc.springboot.controller.getById
-           D "Get by ID endpoint"
-        ]
-            $[ if entity.hasPrimaryKey ]
-        $[ call CheckIfReleasedEntity(entity: entity)->(isReleasedEntity: isReleasedEntity) ]
-        $[ call GetReleaseEntityPKAttribute(entity: entity)->(releaseEntityPKAttribute: releaseEntityPKAttribute) ]
+$[ endsend 
+           publisher org.entityc.springboot.controller.getById
+           D "Get by ID endpoint" 
+               if entity.hasPrimaryKey 
+                   call CheckIfReleasedEntity(entity: entity)->(isReleasedEntity: isReleasedEntity)
+
+                   call GetReleaseEntityPKAttribute(entity: entity)->(releaseEntityPKAttribute: releaseEntityPKAttribute) ]
     // [Template] ${__template.name}:${__outlet.name} < ${__author.template.name}
     @RequestMapping(
         path = "/{id}",
@@ -32,25 +32,25 @@ $[/ send ]
     )
 $[ outlet annotation
    D "Resides just above the method declaration in the annocation area."
-]
-$[/ outlet ]
+
+   endoutlet ]
     public ${dtoClassName} get${modelName}ById(
                 $[ if isReleasedEntity ]
         @RequestParam(value = "releaseId", required = true) ${releaseEntityPKAttribute.type|language} releaseId,
-                $[/ if ]
+                $[ endif ]
         @PathVariable("id") ${entity.pkType|language} id,
         @RequestParam(value = "levels", required = false) Integer levels
     ) throws ServiceException {
-        return ${service}.get${entity|domain:JSONDTO|name|capitalize}ById($[ if isReleasedEntity ]releaseId, $[/ if ]id,  ResourceUtils.defaultTo(levels, ${defaultLevels}));
+        return ${service}.get${entity|domain:JSONDTO|name|capitalize}ById($[ if isReleasedEntity ]releaseId, $[ endif ]id,  ResourceUtils.defaultTo(levels, ${defaultLevels}));
     }
 
-            $[/ if ]
-        $[/ publisher ]
+            $[ endif 
+           endpublisher ]
 
-$[**********************************
+        $[ /**********************************
           * GET (full) LIST
-          **********************************]
-        $[ publisher org.entityc.springboot.controller.getList
+          **********************************/ 
+           publisher org.entityc.springboot.controller.getList
            D "Get List endpoint"
         ]
     // [Template] ${__template.name}:${__outlet.name} < ${__author.template.name}
@@ -60,75 +60,74 @@ $[**********************************
     )
 $[ outlet annotation
    D "Resides just above the method declaration in the annocation area."
-]
-$[/ outlet ]
+
+   endoutlet ]
     public ResponseEntity<List<${dtoClassName}>> get${modelName}List(
             $[ if isReleasedEntity ]
         @RequestParam(value = "releaseId", required = true) ${releaseEntityPKAttribute.type|language} releaseId,
-            $[/ if ]
-            $[ let hasParentId = entity.hasPrimaryParentRelationship ]
-            $[ if hasParentId ]
-                $[ let relationship = entity.primaryParentRelationship ]
-                $[ let parentEntity = relationship.to.entity ]
-                $[ capture parentId ]${relationship|domain:Model|name}Id$[/ capture ]
-                $[ let isNativeId = true ]
-                $[ switch parentEntity.primaryKey.type ]
-                    $[ case uuid ]$[ capture parentIdArg ]UUID.fromString(${parentId})$[/ capture ]$[ let parentIdType = "String" ]$[ let isNativeId = false ]
-                    $[ default ]$[ capture parentIdArg ]${parentId}$[/ capture ]$[ let parentIdType = parentEntity.primaryKey.type|language ]
-                $[/ switch ]
-                $[ capture parentName ]${relationship.name|capitalize}$[/ capture ]
+            $[ endif 
+               let hasParentId = entity.hasPrimaryParentRelationship 
+               if hasParentId 
+                   let relationship = entity.primaryParentRelationship 
+                   let parentEntity = relationship.to.entity 
+                   capture parentId ]${relationship|domain:Model|name}Id$[ endcapture 
+                   let isNativeId = true 
+                   switch parentEntity.primaryKey.type 
+                       case uuid ]$[ capture parentIdArg ]UUID.fromString(${parentId})$[ endcapture ]$[ let parentIdType = "String" ]$[ let isNativeId = false 
+                       default ]$[ capture parentIdArg ]${parentId}$[ endcapture ]$[ let parentIdType = parentEntity.primaryKey.type|language 
+                   endswitch 
+                   capture parentName ]${relationship.name|capitalize}$[ endcapture ]
         @RequestParam(value = "${parentId}", required = false) ${parentIdType} ${parentId},
-            $[/ if ]
-$[ outlet parameters
-   D "This is where you want to include request parameters on the get<Model>List endpoint."
-]
-$[/ outlet ]
+            $[ endif 
+   outlet parameters
+                   D "This is where you want to include request parameters on the get<Model>List endpoint." 
+   endoutlet ]
         @RequestParam(value = "start", required = false) Integer start,
         @RequestParam(value = "limit", required = false) Integer limit,
         @RequestParam(value = "levels", required = false) Integer levels)
         throws ServiceException {
 $[ outlet declarations
-   D "This is where you want to include variable declarations."
-]
-$[/ outlet ]
+                   D "This is where you want to include variable declarations." 
+   endoutlet ]
         final int queryStart = ResourceUtils.defaultTo(start, ${defaultStart});
         final int queryLimit = ResourceUtils.defaultTo(limit, ${defaultLimit});
         final int queryLevels = ResourceUtils.defaultTo(levels, ${defaultLevels});
         List<${dtoClassName}> results = null;
-            $[ let indent = hasParentId ? "    ":"" ]
-            $[ if hasParentId ]
+            $[ let indent = hasParentId ? "    ":""
+                
+               if hasParentId ]
         if (${parentId} != ${isNativeId ? "0":"null"}) {
 $[ outlet parentGet ]
-            results = ${service}.get${entity|domain:JSONDTO|name|capitalize}ListBy${parentName}($[ if isReleasedEntity ]releaseId, $[/ if ]${parentIdArg}, queryStart, queryLimit, queryLevels);
-$[/ outlet ]
+            results = ${service}.get${entity|domain:JSONDTO|name|capitalize}ListBy${parentName}($[ if isReleasedEntity ]releaseId, $[ endif ]${parentIdArg}, queryStart, queryLimit, queryLevels);
+$[ endoutlet ]
         } else {
-            $[/ if ]
-$[ outlet noParentGet ]
-        ${indent}results = ${service}.get${entity|domain:JSONDTO|name|capitalize}List($[ if isReleasedEntity ]releaseId, $[/ if ]queryStart, queryLimit, ResourceUtils.defaultTo(levels, ${defaultLevels}));
-$[/ outlet ]
-            $[ if hasParentId ]
+            $[ endif 
+   outlet noParentGet ]
+        ${indent}results = ${service}.get${entity|domain:JSONDTO|name|capitalize}List($[ if isReleasedEntity ]releaseId, $[ endif ]queryStart, queryLimit, ResourceUtils.defaultTo(levels, ${defaultLevels}));
+$[ endoutlet 
+               if hasParentId ]
         }
-            $[/ if ]
+            $[ endif ]
         HttpHeaders headers = new HttpHeaders();
         headers.add("X-Total-Count", "" + results.size());
         headers.add("Access-Control-Expose-Headers", "X-Total-Count");
         return new ResponseEntity(results, headers, HttpStatus.OK);
     }
 
-        $[/ publisher ]
-$[**********************************
+        $[ endpublisher 
+           /**********************************
           * GET LIST BY ATTRIBUTE
-          **********************************]
-        $[ publisher org.entityc.springboot.controller.getListByAttribute
+          **********************************/ 
+           publisher org.entityc.springboot.controller.getListByAttribute
            D "Get List by Attribute Endpoint"
-        ]
-            $[ foreach attribute in entity.attributes ]
-                $[ if attribute.isParent && !attribute.isSequential ]
-                    $[ if attribute.type.isEnumType ]
-$[ send imports ]
+        
+               foreach attribute in entity.attributes 
+                   if attribute.isParent && !attribute.isSequential 
+                       if attribute.type.isEnumType 
+   send imports ]
 import ${attribute.type|domain:Model|fullname};
-$[/ send ]
-                    $[/ if ]
+$[ endsend 
+                       endif ]
     // [Template] ${__template.name}:${__outlet.name} < ${__author.template.name}
     @RequestMapping(
         path = "/${attribute|domain:APIPath|name}/{value}",
@@ -136,13 +135,12 @@ $[/ send ]
         produces = "application/json"
     )
 $[ outlet annotation
-   D "Resides just above the method declaration in the annocation area."
-]
-$[/ outlet ]
+   D "Resides just above the method declaration in the annocation area." 
+   endoutlet ]
     public ResponseEntity<List<${dtoClassName}>> get${modelName}ListBy${attribute.name|capitalize}(
                     $[ if isReleasedEntity ]
         @RequestParam(value = "releaseId", required = true) ${releaseEntityPKAttribute.type|language} releaseId,
-                    $[/ if ]
+                    $[ endif ]
         @PathVariable("value") ${attribute.type|language} value,
         @RequestParam(value = "start", required = false) Integer start,
         @RequestParam(value = "limit", required = false) Integer limit,
@@ -151,27 +149,28 @@ $[/ outlet ]
         final int queryStart = ResourceUtils.defaultTo(start, ${defaultStart});
         final int queryLimit = ResourceUtils.defaultTo(limit, ${defaultLimit});
         final int queryLevels = ResourceUtils.defaultTo(levels, ${defaultLevels});
-        List<${dtoClassName}> results = ${service}.get${entity|domain:JSONDTO|name|capitalize}ListBy${attribute.name|capitalize}($[ if isReleasedEntity ]releaseId, $[/ if ]value, queryStart, queryLimit, queryLevels);
+        List<${dtoClassName}> results = ${service}.get${entity|domain:JSONDTO|name|capitalize}ListBy${attribute.name|capitalize}($[ if isReleasedEntity ]releaseId, $[ endif ]value, queryStart, queryLimit, queryLevels);
         HttpHeaders headers = new HttpHeaders();
         headers.add("X-Total-Count", "" + results.size());
         headers.add("Access-Control-Expose-Headers", "X-Total-Count");
         return new ResponseEntity(results, headers, HttpStatus.OK);
     }
 
-                $[/ if ]
-            $[/ foreach ]
-        $[/ publisher ]
-$[**********************************
+                $[ endif 
+               endforeach 
+           endpublisher 
+           /**********************************
           * GET LIST BY RELATIONSHIP
-          **********************************]
-        $[ publisher org.entityc.springboot.controller.getListByRelationship
+          **********************************/
+
+           publisher org.entityc.springboot.controller.getListByRelationship
            D "Get List by Relationship Endpoint"
-        ]
-            $[ foreach relationship in entity.relationships ]
-                $[ let toEntity = relationship.to.entity ]
-                $[ if toEntity == null ]$[ continue ]$[/ if ]
-                $[ if toEntity == null || toEntity.hasTag("release:top") ]$[ continue ]$[/ if ]
-                $[ if relationship.isParent ]
+        
+               foreach relationship in entity.relationships 
+                   let toEntity = relationship.to.entity 
+                   if toEntity == null ]$[ continue ]$[ endif 
+                   if toEntity == null || toEntity.hasTag("release:top") ]$[ continue ]$[ endif 
+                   if relationship.isParent ]
     // [Template] ${__template.name}:${__outlet.name} < ${__author.template.name}
     @RequestMapping(
         path = "/${relationship|domain:APIPath|name}/{id}",
@@ -179,13 +178,12 @@ $[**********************************
         produces = "application/json"
     )
 $[ outlet annotation
-   D "Resides just above the method declaration in the annocation area."
-]
-$[/ outlet ]
+                   D "Resides just above the method declaration in the annocation area." 
+   endoutlet ]
     public ResponseEntity<List<${dtoClassName}>> get${modelName}ListBy${relationship.name|capitalize}(
                     $[ if isReleasedEntity ]
         @RequestParam(value = "releaseId", required = true) ${releaseEntityPKAttribute.type|language} releaseId,
-                    $[/ if ]
+                    $[ endif ]
         @PathVariable("id") ${relationship.to.entity.primaryKey.type|language} ${relationship.name}Id,
         @RequestParam(value = "start", required = false) Integer start,
         @RequestParam(value = "limit", required = false) Integer limit,
@@ -194,15 +192,15 @@ $[/ outlet ]
         final int queryStart = ResourceUtils.defaultTo(start, ${defaultStart});
         final int queryLimit = ResourceUtils.defaultTo(limit, ${defaultLimit});
         final int queryLevels = ResourceUtils.defaultTo(levels, ${defaultLevels});
-        List<${dtoClassName}> results = ${service}.get${entity|domain:JSONDTO|name|capitalize}ListBy${relationship.name|capitalize}($[ if isReleasedEntity ]releaseId, $[/ if ]${relationship.name}Id, queryStart, queryLimit, queryLevels);
+        List<${dtoClassName}> results = ${service}.get${entity|domain:JSONDTO|name|capitalize}ListBy${relationship.name|capitalize}($[ if isReleasedEntity ]releaseId, $[ endif ]${relationship.name}Id, queryStart, queryLimit, queryLevels);
         HttpHeaders headers = new HttpHeaders();
         headers.add("X-Total-Count", "" + results.size());
         headers.add("Access-Control-Expose-Headers", "X-Total-Count");
         return new ResponseEntity(results, headers, HttpStatus.OK);
     }
 
-                $[/ if ]
-            $[/ foreach ]
-        $[/ publisher ]
-    $[/ author ]
-$[/ author ]
+                $[ endif 
+               endforeach 
+           endpublisher 
+       endauthor 
+   endauthor ]

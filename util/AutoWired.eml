@@ -1,8 +1,7 @@
-$[D summary "Helps to generate constructor based @Autowired code."]
-$[function addAutoWired
-  D "Helps send up imports and constructor parameters for auto-wired variables to services or"
-  D "repositories."
-  D "
+$[ function addAutoWired
+   D "Helps send up imports and constructor parameters for auto-wired variables to services or"
+   D "repositories."
+   D "
 To use this function you must embed four receivers in your code:
 
 | Receive | Description |
@@ -29,61 +28,56 @@ $[receive distinct constructorAssigns]
     }
 $[let autoWiredDomainEntities = @[]@]
 ```
-" 
-  (domainEntity
-   D "The domain entity representing what is to be auto wired." ,
-   autoWiredDomainEntities
-   D "This is used by this function to keep track of what has already been auto wired. This allows it"
-   D "to eliminate duplicates and helps with code formatting." 
-  )
-]
-    $[let firstAutoWired = autoWiredDomainEntities.isEmpty()]
-    $[if ! autoWiredDomainEntities.contains(domainEntity|fullname)]
-        $[do autoWiredDomainEntities.add(domainEntity|fullname)]
-        $[let variableName = domainEntity|name|uncapitalize]
-$[send imports]
+"
+   (domainEntity
+    D "The domain entity representing what is to be auto wired.",
+    autoWiredDomainEntities
+    D "This is used by this function to keep track of what has already been auto wired. This allows it"
+    D "to eliminate duplicates and helps with code formatting."
+   )
+
+       let firstAutoWired = autoWiredDomainEntities.isEmpty() 
+       if !autoWiredDomainEntities.contains(domainEntity|fullname) 
+           do autoWiredDomainEntities.add(domainEntity|fullname) 
+           let variableName = domainEntity|name|uncapitalize 
+   send imports ]
 import ${domainEntity|fullname};
-$[/send]
-$[send memberDecl]
+$[ endsend 
+   send memberDecl ]
     private final ${domainEntity|name} ${variableName};
-$[/send]
-$[send constructorArgs]${firstAutoWired ? "        ":",
-        "}${domainEntity|name} ${variableName}$[/send]
-$[send constructorAssigns]
+$[ endsend 
+   send constructorArgs ]${firstAutoWired ? "        ":",\n        "}${domainEntity|name} ${variableName}$[ endsend 
+   send constructorAssigns ]
         this.${variableName} = ${variableName};
-$[/send]
-    $[/if]
-$[/function]
-$[function addAutoWiredClass
-  D "Helps send up imports and constructor parameters for auto-wired variables to services or"
-  D "repositories. This is just like `addAutoWired` except that it access just a class name and package name."
-  (package
-   D "The package of the class to auto wire." ,
-   className
-   D "The name of the class to auto wire." ,
-   autoWiredDomainEntities
+$[ endsend 
+       endif 
+   endfunction 
+   function addAutoWiredClass
+   D "Helps send up imports and constructor parameters for auto-wired variables to services or"
+   D "repositories. This is just like `addAutoWired` except that it access just a class name and"
+   D "package name."(package
+   D "The package of the class to auto wire.",className
+   D "The name of the class to auto wire.",autoWiredDomainEntities
    D "This is used by this function to keep track of what has already been auto wired. This allows it"
-   D "to eliminate duplicates and helps with code formatting."
-  )
-]
-    $[let classFullname = package + "." + className]
-    $[let firstAutoWired = autoWiredDomainEntities.isEmpty()]
-    $[if autoWiredDomainEntities == null]
-        $[log fatal]The array autoWiredDomainEntities is not available in this context.$[/log]
-    $[/if]
-    $[if ! autoWiredDomainEntities.contains(classFullname)]
-        $[do autoWiredDomainEntities.add(classFullname)]
-        $[let variableName = className|uncapitalize]
-$[send imports]
+   D "to eliminate duplicates and helps with code formatting.") 
+       let classFullname = package + "." + className
+
+       let firstAutoWired = autoWiredDomainEntities.isEmpty() 
+       if autoWiredDomainEntities == null 
+           log fatal ]The array autoWiredDomainEntities is not available in this context.$[ endlog 
+       endif 
+       if !autoWiredDomainEntities.contains(classFullname) 
+           do autoWiredDomainEntities.add(classFullname) 
+           let variableName = className|uncapitalize 
+   send imports ]
 import ${classFullname};
-$[/send]
-$[send memberDecl]
+$[ endsend 
+   send memberDecl ]
     private final ${className} ${variableName};
-$[/send]
-$[send constructorArgs]${firstAutoWired ? "        ":",
-        "}${className} ${variableName}$[/send]
-$[send constructorAssigns]
+$[ endsend 
+   send constructorArgs ]${firstAutoWired ? "        ":",\n        "}${className} ${variableName}$[ endsend 
+   send constructorAssigns ]
         this.${variableName} = ${variableName};
-$[/send]
-    $[/if]
-$[/function]
+$[ endsend 
+       endif 
+   endfunction ]

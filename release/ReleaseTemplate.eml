@@ -1,11 +1,11 @@
-$[ import "release/ControllerReleaseAuthor"]
-$[ import "release/ServiceReleaseAuthor"]
-$[ import "release/RepositoryReleaseAuthor"]
-$[ import "release/RepositoryReleasedGetAuthor"]
-$[* import "release/ReleasedUnifiedObjectsAuthor"]
-$[ import "release/ReleasedDtoTemplate"*]
+$[ import "release/ControllerReleaseAuthor" 
+   import "release/ServiceReleaseAuthor" 
+   import "release/RepositoryReleaseAuthor" 
+   import "release/RepositoryReleasedGetAuthor" 
+   /* import "release/ReleasedUnifiedObjectsAuthor"]
+$[ import "release/ReleasedDtoTemplate"*/ ]
 
-$[* TODO - This came from the service class get list endpoints, instead of modifying regular get list endoints
+$[ /* TODO - This came from the service class get list endpoints, instead of modifying regular get list endoints
   new ones should be created specifically for locking.
 
   $[let hasLockAttribute = entity.hasAttributeTagged("release:lock")]
@@ -51,4 +51,4 @@ $[* TODO - This came from the service class get list endpoints, instead of modif
               throw new DaoException(ex.getMessage(), ex);
           }
       }
-*]
+*/ ]

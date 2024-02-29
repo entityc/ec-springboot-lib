@@ -1,76 +1,70 @@
 $[ language java ]
-$[ domain Service ]
-$[ import "service/ServiceFunctions" ]
-$[ import "util/AutoWired" ]
-$[ author to org.entityc.springboot.service ]
-    $[ author to outlet methods ]
-$[* Composite entities can't be uploaded. *]
-        $[ if entity.isCompositeEntity ]
-            $[ return ]
-        $[/ if ]
-        $[ function uploadAssetFile
-           (entity,
-            collectionAttribute,
-            attribute,
-            modelName,
-            modelVariableName
-           ) ]
-            $[ let hasCollection = collectionAttribute != null ]
-            $[ if hasCollection ]
-                $[ let collectionName = collectionAttribute|domain:Model|name ]
-            $[/ if ]
-            $[ if attribute.secondaryEntityIsTagged("asset:file") ]
-$[ send imports ]
-                    $[ let serviceNamespace = (entity.space.domain("Service")).namespace ]
+$[ domain Service 
+   import "service/ServiceFunctions" 
+   import "util/AutoWired" 
+   author to org.entityc.springboot.service 
+       author to outlet methods 
+           /* Composite entities can't be uploaded. */ 
+           if entity.isCompositeEntity 
+               return 
+           endif 
+           function uploadAssetFile(entity,collectionAttribute,attribute,modelName,modelVariableName) 
+               let hasCollection = collectionAttribute != null 
+               if hasCollection 
+                   let collectionName = collectionAttribute|domain:Model|name 
+               endif 
+               if attribute.secondaryEntityIsTagged("asset:file") 
+   send imports 
+                       let serviceNamespace = (entity.space.domain("Service")).namespace ]
 import ${serviceNamespace}.asset.BinaryPersistence;
 import ${serviceNamespace}.asset.Metadata;
 import java.io.ByteArrayInputStream;
-$[/ send ]
-                $[ let secondaryAttributeEntity = attribute.getTypeEntity() ]
-                $[ let secondaryAttributeEntityClassName = secondaryAttributeEntity|domain:Model|name ]
-                $[ let includeHash = secondaryAttributeEntity.hasTag("hashed") && secondaryAttributeEntity.hasAttributeTagged("md5") ]
-                $[ let attributeNameCapitalized = attribute|domain:Model|name|capitalize ]
-                $[ let methodName = attribute|domain:Model|name|capitalize ]
-                $[ if hasCollection ]
-                    $[ capture methodName ]${collectionName|capitalize}${methodName}$[/ capture ]
-                $[/ if ]
+$[ endsend 
+                   let secondaryAttributeEntity = attribute.getTypeEntity() 
+                   let secondaryAttributeEntityClassName = secondaryAttributeEntity|domain:Model|name 
+                   let includeHash = secondaryAttributeEntity.hasTag("hashed") && secondaryAttributeEntity.hasAttributeTagged("md5") 
+                   let attributeNameCapitalized = attribute|domain:Model|name|capitalize 
+                   let methodName = attribute|domain:Model|name|capitalize 
+                   if hasCollection 
+                       capture methodName ]${collectionName|capitalize}${methodName}$[ endcapture 
+                   endif ]
     /**
         Uploads a file associated with the ${attribute.name} attribute.
         [Template] ${__template.name}:${__outlet.name} < ${__author.template.name}
      */
     public void upload${methodName}(${modelName} ${modelVariableName}, String contentType, byte[] dataArray, String fileExtension) throws ServiceException {
-$[* TODO: Handle constraints here *]
+                $[ /* TODO: Handle constraints here */ ]
         final ByteArrayInputStream is = new ByteArrayInputStream(dataArray);
         final Metadata metadata = new Metadata(dataArray.length, contentType);
-                $[ let assetName = attribute|domain:Model|name ]
-                $[ if hasCollection ]
-                    $[ capture assetName ]${collectionName}-${assetName}$[/ capture ]
-                $[/ if ]
+                $[ let assetName = attribute|domain:Model|name 
+                   if hasCollection 
+                       capture assetName ]${collectionName}-${assetName}$[ endcapture 
+                   endif ]
         final String filename = "${entity|domain:APIPath|name}/" + ${modelVariableName}.get${entity.primaryKeyAttribute|domain:Model|name|capitalize}() + "/${assetName}" + (fileExtension != null ? ("." + fileExtension) : "");
 
         binaryPersistence.save(bucketName, filename, is, metadata);
 
 $[ send imports ]
 import ${secondaryAttributeEntity|domain:Model|fullname};
-$[/ send ]
+$[ endsend ]
         ${secondaryAttributeEntityClassName} asset = new ${secondaryAttributeEntityClassName}();
                 $[ if secondaryAttributeEntity.hasAttributeTagged("url") ]
         asset.set${secondaryAttributeEntity.attributeTagged("url")|name|capitalize}(binaryPersistence.getUrl(bucketName, filename));
-                $[/ if ]
-                $[ if secondaryAttributeEntity.hasAttributeTagged("path") ]
+                $[ endif 
+                   if secondaryAttributeEntity.hasAttributeTagged("path") ]
         asset.set${secondaryAttributeEntity.attributeTagged("path")|name|capitalize}(filename);
-                $[/ if ]
-                $[ if secondaryAttributeEntity.hasAttributeTagged("bucketName") ]
+                $[ endif 
+                   if secondaryAttributeEntity.hasAttributeTagged("bucketName") ]
         asset.set${secondaryAttributeEntity.attributeTagged("bucketName")|name|capitalize}(bucketName);
-                $[/ if ]
-                $[ if secondaryAttributeEntity.hasAttributeTagged("size") ]
+                $[ endif 
+                   if secondaryAttributeEntity.hasAttributeTagged("size") ]
         asset.set${secondaryAttributeEntity.attributeTagged("size")|name|capitalize}(Long.valueOf(dataArray.length));
-                $[/ if ]
-                $[ if includeHash ]
-$[ send imports ]
+                $[ endif 
+                   if includeHash 
+   send imports ]
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-$[/ send ]
+$[ endsend ]
         try {
             MessageDigest md = MessageDigest.getInstance("MD5");
             byte[] md5digest = md.digest(dataArray);
@@ -78,46 +72,46 @@ $[/ send ]
         } catch (NoSuchAlgorithmException e) {
             throw new ServiceException("Not able to obtain MD5 message digest function.");
         }
-                $[/ if ]
-                $[ if hasCollection ]
-                    $[ let collectionEntity = attribute.entity ]
-$[ send imports ]
+                $[ endif 
+                   if hasCollection 
+                       let collectionEntity = attribute.entity 
+   send imports ]
 import ${collectionEntity|domain:Model|fullname};
-$[/ send ]
+$[ endsend ]
         if (${modelVariableName}.get${collectionName|capitalize}() == null) {
             ${modelVariableName}.set${collectionName|capitalize}(new ${collectionEntity|domain:Model|name}());
         }
         ${modelVariableName}.get${collectionName|capitalize}().set${attribute|domain:Model|name|capitalize}(asset);
                 $[ else ]
         ${modelVariableName}.set${attribute|domain:Model|name|capitalize}(asset);
-                $[/ if ]
+                $[ endif ]
 
         save${modelName}(${modelVariableName});
     }
 
-            $[/ if ]
-        $[/ function ]
-        $[ foreach entity.attributes ]
-            $[ if attribute.secondaryEntityIsTagged("asset:collection") || attribute.secondaryEntityIsTagged("asset:file") ]
-$[ send imports ]
+            $[ endif 
+           endfunction 
+           foreach entity.attributes 
+               if attribute.secondaryEntityIsTagged("asset:collection") || attribute.secondaryEntityIsTagged("asset:file") 
+   send imports ]
 import org.springframework.beans.factory.annotation.Value;
-$[/ send ]
-$[ send memberDecl ]
+$[ endsend 
+   send memberDecl ]
     @Autowired private BinaryPersistence binaryPersistence;
     @Value("${$}{aws.s3.bucket}") private String bucketName;
-$[/ send ]
-                $[ break ]
-            $[/ if ]
-        $[/ foreach ]
-        $[ foreach attribute in entity.attributes ]
-            $[ if attribute.secondaryEntityIsTagged("asset:collection") ]
-                $[ let secondaryAttributeEntity = attribute.getTypeEntity() ]
-                $[ foreach secondaryAttribute in secondaryAttributeEntity.attributes ]
-                    $[ call uploadAssetFile(modelName: modelName, collectionAttribute: attribute, attribute: secondaryAttribute, entity: entity, modelVariableName: modelVariableName) ]
-                $[/ foreach ]
-            $[ else ]
-                $[ call uploadAssetFile(modelName: modelName, collectionAttribute: null, attribute: attribute, entity: entity, modelVariableName: modelVariableName) ]
-            $[/ if ]
-        $[/ foreach ]
-    $[/ author ]
-$[/ author ]
+$[ endsend 
+                   break 
+               endif 
+           endforeach 
+           foreach attribute in entity.attributes 
+               if attribute.secondaryEntityIsTagged("asset:collection") 
+                   let secondaryAttributeEntity = attribute.getTypeEntity() 
+                   foreach secondaryAttribute in secondaryAttributeEntity.attributes 
+                       call uploadAssetFile(modelName: modelName, collectionAttribute: attribute, attribute: secondaryAttribute, entity: entity, modelVariableName: modelVariableName) 
+                   endforeach 
+               else 
+                   call uploadAssetFile(modelName: modelName, collectionAttribute: null, attribute: attribute, entity: entity, modelVariableName: modelVariableName) 
+               endif 
+           endforeach 
+       endauthor 
+   endauthor ]

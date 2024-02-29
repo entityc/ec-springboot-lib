@@ -1,87 +1,87 @@
 $[ language java ]
-$[ domain Service ]
-$[ import "service/ServiceFunctions" ]
-$[ import "util/AutoWired" ]
-$[ import "release/ReleaseFunctions" ]
-$[ publisher org.entityc.springboot.service.mapping ]
-    $[ author to org.entityc.springboot.service ]
-        $[ author to outlet methods
+$[ domain Service 
+   import "service/ServiceFunctions" 
+   import "util/AutoWired" 
+   import "release/ReleaseFunctions" 
+   publisher org.entityc.springboot.service.mapping 
+       author to org.entityc.springboot.service 
+           author to outlet methods
            D "Adds methods to map model objects into DTO objects."
-        ]
-            $[ let responseDtoName = entity|domain:JSONDTO|name ]
-            $[ let responseModelName = entity|domain:Model|name ]
-            $[ let repositoryVariableName = entity|domain:Repository|name|uncapitalize ]
-$[ receive methodDescriptionReceiver ]
+        
+               let responseDtoName = entity|domain:JSONDTO|name 
+               let responseModelName = entity|domain:Model|name 
+               let repositoryVariableName = entity|domain:Repository|name|uncapitalize 
+   receive methodDescriptionReceiver ]
     public ${responseDtoName} dtoFromModel(${responseModelName} modelObject, int levels) throws ServiceException {
-            $[ let _mapperDomainEntity = entity|domain:DTOMapper ]
-            $[ call addAutoWired(domainEntity: _mapperDomainEntity) ]
-            $[ let _mapperVariableName = _mapperDomainEntity|name|uncapitalize ]
-            $[ call GetRelationshipToReleaseEntity(entity: entity)->(relationship: relationshipToReleaseEntity) ]
-            $[ call GetReleaseEntity()->(releaseEntity: releaseEntity) ]
+            $[ let _mapperDomainEntity = entity|domain:DTOMapper 
+               call addAutoWired(domainEntity: _mapperDomainEntity) 
+               let _mapperVariableName = _mapperDomainEntity|name|uncapitalize 
+               call GetRelationshipToReleaseEntity(entity: entity)->(relationship: relationshipToReleaseEntity) 
+               call GetReleaseEntity()->(releaseEntity: releaseEntity) ]
         ${responseDtoName} dtoObject = ${_mapperVariableName}.toDtoFromModel(modelObject);
 $[ outlet dtoFromModelTop
    D "At the top of the `dtoFromModel()` method just after the `dtoObject` was initially mapped"
    D "from the `modelObject` and above the `levels > 0` if block."
-]
-$[/ outlet ]
-            $[ let copiedEntities = @[]@ ]
-$[* String indent = ""; for (int i=0; i<levels; i++) { indent += "    "; }
-        System.out.println(indent + "dtoFromModel(${responseModelName} modelObject, int levels = " + levels + ")");*]
-            $[ foreach relationship in (entity|domain:JSONDTO|view:APIGet).relationships|sort ]
-                $[ let ignoreLevels = (relationship|domain:DTO).hasTag("levels:all") ]
-                $[ let levelsIfStart = ignoreLevels ? "// always map " + relationship.name:"if (levels > 0) {" ]
-                $[ let levelsIfIndent = ignoreLevels ? "":"    " ]
-                $[ let levelsIfEnd = ignoreLevels ? "":"}" ]
-                $[ let _toEntity = relationship.to.entity ]
-                $[ if _toEntity.entity.isImplicit || _toEntity.entity.isExtern || _toEntity.entity.isIncluded ]$[ continue ]$[/ if ]
-                $[ let toSelf = _toEntity.entity.name == entity.name ]
-                $[ let includeChildEntities = _toEntity.entity.space.name == entity.space.name && !_toEntity.entity.isIncluded ]
-                $[ if !includeChildEntities ]$[ continue ]$[/ if ]
-                $[ let _toEntityDtoClassName = _toEntity|name ]
-                $[ let _toEntityModelClassName = _toEntity|domain:Model|name ]
-                $[ call CheckIfReleasedEntity(entity: _toEntity.entity)->(isReleasedEntity: isReleasedToEntity) ]
-$[ send imports ]
+
+   endoutlet 
+               let copiedEntities = @[]@ 
+               /* String indent = ""; for (int i=0; i<levels; i++) { indent += "    "; }
+        System.out.println(indent + "dtoFromModel(${responseModelName} modelObject, int levels = " + levels + ")");*/ 
+               foreach relationship in (entity|domain:JSONDTO|view:APIGet).relationships|sort 
+                   let ignoreLevels = (relationship|domain:DTO).hasTag("levels:all") 
+                   let levelsIfStart = ignoreLevels ? "// always map " + relationship.name:"if (levels > 0) {" 
+                   let levelsIfIndent = ignoreLevels ? "":"    " 
+                   let levelsIfEnd = ignoreLevels ? "":"}" 
+                   let _toEntity = relationship.to.entity 
+                   if _toEntity.entity.isImplicit || _toEntity.entity.isExtern || _toEntity.entity.isIncluded ]$[ continue ]$[ endif 
+                   let toSelf = _toEntity.entity.name == entity.name 
+                   let includeChildEntities = _toEntity.entity.space.name == entity.space.name && !_toEntity.entity.isIncluded 
+                   if !includeChildEntities ]$[ continue ]$[ endif 
+                   let _toEntityDtoClassName = _toEntity|name 
+                   let _toEntityModelClassName = _toEntity|domain:Model|name 
+                   call CheckIfReleasedEntity(entity: _toEntity.entity)->(isReleasedEntity: isReleasedToEntity) 
+   send imports ]
 import ${_toEntity|domain:Model|fullname};
 import ${_toEntity|domain:JSONDTO|fullname};
-$[/ send ]
-                $[ let _toEntityRepository = _toEntity|domain:Repository ]
-                $[ if relationship.to.isOne && relationship.withViewName != "Reference" ]
-                    $[ if _toEntity.name != entity.name ]
-                        $[ call addAutoWired(domainEntity: _toEntityRepository) ]
-                    $[/ if ]
-                    $[ do copiedEntities.add(relationship.to.entity) ]
-                    $[ if !toSelf ]
-                        $[ call addAutoWired(domainEntity: _toEntity|domain:Service) ]
-                    $[/ if ]
-                    $[ call GetRelationshipToReleaseEntity(entity: _toEntity.entity)->(relationship: relationshipToReleaseEntity) ]
+$[ endsend 
+                   let _toEntityRepository = _toEntity|domain:Repository 
+                   if relationship.to.isOne && relationship.withViewName != "Reference" 
+                       if _toEntity.name != entity.name 
+                           call addAutoWired(domainEntity: _toEntityRepository) 
+                       endif 
+                       do copiedEntities.add(relationship.to.entity) 
+                       if !toSelf 
+                           call addAutoWired(domainEntity: _toEntity|domain:Service) 
+                       endif 
+                       call GetRelationshipToReleaseEntity(entity: _toEntity.entity)->(relationship: relationshipToReleaseEntity) ]
         // Relationship to one ${_toEntity.name}, filling in the whole ${_toEntity.name} object
         ${levelsIfStart}
         ${levelsIfIndent}if (modelObject.get${relationship|domain:Model|name|capitalize}Id() != ${relationship.to.entity.pkType.isUUIDType ? "null":"0"}) {
-        ${levelsIfIndent}    Optional<${_toEntityModelClassName}> fieldObjectOptional = ${_toEntityRepository|name|uncapitalize}.getById($[ if isReleasedToEntity ]modelObject.get${relationshipToReleaseEntity|name|capitalize}Id(), $[/ if ]modelObject.get${relationship|domain:Model|name|capitalize}Id());
+        ${levelsIfIndent}    Optional<${_toEntityModelClassName}> fieldObjectOptional = ${_toEntityRepository|name|uncapitalize}.getById($[ if isReleasedToEntity ]modelObject.get${relationshipToReleaseEntity|name|capitalize}Id(), $[ endif ]modelObject.get${relationship|domain:Model|name|capitalize}Id());
         ${levelsIfIndent}    if (!fieldObjectOptional.isPresent()) {
         ${levelsIfIndent}        throw new EntityNotFoundException("${_toEntityModelClassName} not found.");
         ${levelsIfIndent}    }
-        ${levelsIfIndent}    dtoObject.set${relationship|domain:Model|name|capitalize}($[ if toSelf ]this$[ else ]${_toEntity|domain:Service|name|uncapitalize}$[/ if ].dtoFromModel(fieldObjectOptional.get(), levels-1));
+        ${levelsIfIndent}    dtoObject.set${relationship|domain:Model|name|capitalize}($[ if toSelf ]this$[ else ]${_toEntity|domain:Service|name|uncapitalize}$[ endif ].dtoFromModel(fieldObjectOptional.get(), levels-1));
         ${levelsIfIndent}}
         ${levelsIfEnd}
-                $[ elseif relationship.isOneToMany && relationship.withViewName != "Reference" ]
-                    $[ if isReleasedToEntity ]
-                        $[ if entity.name == releaseEntity.name ]
-                            $[* TODO: we have decided to special case this although we probably shouldn't *]
-                            $[ capture bySomething ]$[/ capture ]
-                            $[ capture byArgument ]modelObject.get${entity.primaryKeyAttribute|domain:Model|name|capitalize}(), $[/ capture ]
-                        $[ else ]
-                            $[ capture bySomething ]By${relationship.relationship.reverseRelationship|domain:Model|name|capitalize}$[/ capture ]
-                            $[ capture byArgument ]modelObject.get${relationshipToReleaseEntity|domain:Model|name|capitalize}Id(), modelObject.get${entity.primaryKeyAttribute|domain:Model|name|capitalize}(), $[/ capture ]
-                        $[/ if ]
-                    $[ else ]
-                        $[ capture bySomething ]By${relationship.relationship.reverseRelationship|domain:Model|name|capitalize}$[/ capture ]
-                        $[ capture byArgument ]modelObject.get${entity.primaryKeyAttribute|domain:Model|name|capitalize}(), $[/ capture ]
-                    $[/ if ]
-$[ send imports ]
+                $[ elseif relationship.isOneToMany && relationship.withViewName != "Reference" 
+                       if isReleasedToEntity 
+                           if entity.name == releaseEntity.name 
+                               /* TODO: we have decided to special case this although we probably shouldn't */ 
+                               capture bySomething ]$[ endcapture 
+                               capture byArgument ]modelObject.get${entity.primaryKeyAttribute|domain:Model|name|capitalize}(), $[ endcapture 
+                           else 
+                               capture bySomething ]By${relationship.relationship.reverseRelationship|domain:Model|name|capitalize}$[ endcapture 
+                               capture byArgument ]modelObject.get${relationshipToReleaseEntity|domain:Model|name|capitalize}Id(), modelObject.get${entity.primaryKeyAttribute|domain:Model|name|capitalize}(), $[ endcapture 
+                           endif 
+                       else 
+                           capture bySomething ]By${relationship.relationship.reverseRelationship|domain:Model|name|capitalize}$[ endcapture 
+                           capture byArgument ]modelObject.get${entity.primaryKeyAttribute|domain:Model|name|capitalize}(), $[ endcapture 
+                       endif 
+   send imports ]
 import java.util.HashSet;
-$[/ send ]
-$[*if false]
+$[ endsend 
+                       /*if false]
             {
                 List<${_toEntityModelClassName}> items = ${_toEntityRepository|name|uncapitalize}.get${_toEntity|domain:Model|name|capitalize}List${bySomething}(${byArgument}0, 10000);
                 HashSet<${_toEntityDtoClassName}> dtoItems = new HashSet<>();
@@ -90,23 +90,23 @@ $[*if false]
                 }
                 dtoObject.set${relationship|domain:Model|name|capitalize}(dtoItems);
             }
-$[else*]
-                    $[ if !toSelf ]
-                        $[ call addAutoWired(domainEntity: _toEntity|domain:Service) ]
-                    $[/ if ]
+$[else*/ 
+                       if !toSelf 
+                           call addAutoWired(domainEntity: _toEntity|domain:Service) 
+                       endif ]
         ${levelsIfStart}
-        ${levelsIfIndent}dtoObject.set${relationship|domain:Model|name|capitalize}(new HashSet<>($[ if toSelf ]this$[ else ]${_toEntity|domain:Service|name|uncapitalize}$[/ if ].get${_toEntity|domain:JSONDTO|name|capitalize}List${bySomething}(${byArgument}0, 10000, levels-1)));
+        ${levelsIfIndent}dtoObject.set${relationship|domain:Model|name|capitalize}(new HashSet<>($[ if toSelf ]this$[ else ]${_toEntity|domain:Service|name|uncapitalize}$[ endif ].get${_toEntity|domain:JSONDTO|name|capitalize}List${bySomething}(${byArgument}0, 10000, levels-1)));
         ${levelsIfEnd}
-$[*/if*]
-                $[ elseif relationship.isManyToMany && relationship.withViewName != "Reference" ]
-$[ send imports ]
+                    $[ /*/if*/ 
+                   elseif relationship.isManyToMany && relationship.withViewName != "Reference" 
+   send imports ]
 import java.util.HashSet;
 import java.util.List;
-$[/ send ]
-                    $[ if !toSelf ]
-                        $[ call addAutoWired(domainEntity: _toEntity|domain:Repository) ]
-                        $[ call addAutoWired(domainEntity: _toEntity|domain:Service) ]
-                    $[/ if ]
+$[ endsend 
+                       if !toSelf 
+                           call addAutoWired(domainEntity: _toEntity|domain:Repository) 
+                           call addAutoWired(domainEntity: _toEntity|domain:Service) 
+                       endif ]
         ${levelsIfStart}
         ${levelsIfIndent}List<${_toEntityModelClassName}> associatedObjectList = ${_toEntity|domain:Repository|name|uncapitalize}.get${_toEntityModelClassName}ListAssociatedWith${responseModelName}(modelObject.getId(), 0, 1000);
         ${levelsIfIndent}HashSet<${_toEntityDtoClassName}> associatedDtoList = new HashSet<>();
@@ -115,24 +115,23 @@ $[/ send ]
         ${levelsIfIndent}}
         ${levelsIfIndent}dtoObject.set${relationship|domain:Model|name|capitalize}(associatedDtoList);
         ${levelsIfEnd}
-                $[/ if ]
-            $[/ foreach ]
-$[ outlet dtoFromModelMiddle
-   D "Inside `levels > 0` if block, near the bottom of it. The dto object is `dtoObject`."
-]
-$[/ outlet ]
+                $[ endif 
+               endforeach 
+   outlet dtoFromModelMiddle
+   D "Inside `levels > 0` if block, near the bottom of it. The dto object is `dtoObject`." 
+   endoutlet ]
 
         return dtoObject;
     }
 
-            $[ capture methodDesc ]Creates a DTO object from a Model object.$[ if !copiedEntities.isEmpty() ] It also includes full objects for referenced $[ if copiedEntities.count == 1 ]entity $[ else ]entities $[/ if ]$[ foreach ce in copiedEntities.values ]$[ if ce#last ]and $[/ if ]${ce|domain:Model|name}$[ if !ce#last ], $[/ if ]$[/ foreach ].$[/ if ]$[/ capture ]
-$[ send methodDescriptionReceiver ]
+            $[ capture methodDesc ]Creates a DTO object from a Model object.$[ if !copiedEntities.isEmpty() ] It also includes full objects for referenced $[ if copiedEntities.count == 1 ]entity $[ else ]entities $[ endif ]$[ foreach ce in copiedEntities.values ]$[ if ce#last ]and $[ endif ]${ce|domain:Model|name}$[ if !ce#last ], $[ endif ]$[ endforeach ].$[ endif ]$[ endcapture 
+   send methodDescriptionReceiver ]
     /**
      * ${methodDesc|join|wrap:("     * ")}
      * [Template] ${__template.name}:${__outlet.name} < ${__author.template.name}
      */
-$[/ send ]
+$[ endsend ]
 
-        $[/ author ]
-    $[/ author ]
-$[/ publisher ]
+        $[ endauthor 
+       endauthor 
+   endpublisher ]

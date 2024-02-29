@@ -1,111 +1,111 @@
-$[ D summary, main "This setup template will establish a basic web application that contains an REST API, web" ]
-$[ D summary, main "admin portal and simple custom web page." ]
-$[ D "" ]
-$[ D "After this template runs, you will have a directory containing the necessary entity" ]
-$[ D "compiler input files to generate the application." ]
+$[ D summary, main "This setup template will establish a basic web application that contains an REST API, web" 
+   D summary, main "admin portal and simple custom web page." 
+   D "" 
+   D "After this template runs, you will have a directory containing the necessary entity" 
+   D "compiler input files to generate the application." ]
 
-$[ let repoTag = "production" ]
-$[ let stdLibRepoName = "ec-std-lib" ]
-$[ let stdLibRepoTag = "v0.10.0" ]
-$[ let appFolderName = (#SetupDirectoryName:"BasicWebApp") ]
+$[ let repoTag = "production" 
+   let stdLibRepoName = "ec-std-lib" 
+   let stdLibRepoTag = "v0.10.0" 
+   let appFolderName = (#SetupDirectoryName:"BasicWebApp") ]
 
-$[* -------------- PROMPTS -------------- *]
-$[ log ]
+$[ /* -------------- PROMPTS -------------- */ 
+   log ]
 
 ----------------------------------------------------------------------------------
  Configure your Microservice
 ----------------------------------------------------------------------------------
 
-$[/ log ]
+$[ endlog ]
 
-$[* APPLICATION NAME *]
-$[ let appName = (#appName:"MyApp") ]
-$[ prompt appName: string ]Enter the name of the application [${appName}]: $[/ prompt ]
-$[ if !(appName|is:identifier) ]
-    $[ log fatal ]The application name must start with a capital letter and only contain letters and numbers.$[/ log ]
-$[/ if ]
-$[ if appName|is:uncapitalized ]
-    $[ let appName = appName|capitalize ]
-    $[ log info ]Capitalizing application name: ${appName}$[/ log ]
-$[/ if ]
+$[ /* APPLICATION NAME */ 
+   let appName = (#appName:"MyApp") 
+   prompt appName: string ]Enter the name of the application [${appName}]: $[ endprompt 
+   if !(appName|is:identifier) 
+       log fatal ]The application name must start with a capital letter and only contain letters and numbers.$[ endlog 
+   endif 
+   if appName|is:uncapitalized 
+       let appName = appName|capitalize 
+       log info ]Capitalizing application name: ${appName}$[ endlog 
+   endif ]
 
-$[ log ]$[/ log ]
+$[ log ]$[ endlog ]
 
-$[* API PREFIX NAMESPACE *]
-$[ let urlPrefix = (#urlPrefix:"my/app") ]
-$[ prompt urlPrefix: string ]Enter optional URL prefix for the application [${urlPrefix}]: $[/ prompt ]
-$[ if urlPrefix == null ]
-    $[ let urlPrefix = "" ]
-$[/ if ]
-$[ if !(urlPrefix|is:path) ]
-    $[ log fatal ]The URL prefix must be a valid URL path (letters, numbers, '-' and '/').$[/ log ]
-$[/ if ]
+$[ /* API PREFIX NAMESPACE */ 
+   let urlPrefix = (#urlPrefix:"my/app") 
+   prompt urlPrefix: string ]Enter optional URL prefix for the application [${urlPrefix}]: $[ endprompt 
+   if urlPrefix == null 
+       let urlPrefix = "" 
+   endif 
+   if !(urlPrefix|is:path) 
+       log fatal ]The URL prefix must be a valid URL path (letters, numbers, '-' and '/').$[ endlog 
+   endif ]
 
-$[ log ]$[/ log ]
+$[ log ]$[ endlog ]
 
-$[* APP BASE JAVA PACKAGE *]
-$[ let appBasePackage = (#appBasePackage:"com.example.service") ]
-$[ prompt appBasePackage: string ]Enter the base Java package for all installed/generated source files [${appBasePackage}]: $[/ prompt ]
-$[ if appBasePackage == null || appBasePackage.length == 0 ]
-    $[ log fatal ]You must specify at least one level of package.$[/ log ]
-$[/ if ]
-$[ if !(appBasePackage|is:namespace) ]
-    $[ log fatal ]The specified package is not a valid Java package.$[/ log ]
-$[/ if ]
+$[ /* APP BASE JAVA PACKAGE */ 
+   let appBasePackage = (#appBasePackage:"com.example.service") 
+   prompt appBasePackage: string ]Enter the base Java package for all installed/generated source files [${appBasePackage}]: $[ endprompt 
+   if appBasePackage == null || appBasePackage.length == 0 
+       log fatal ]You must specify at least one level of package.$[ endlog 
+   endif 
+   if !(appBasePackage|is:namespace) 
+       log fatal ]The specified package is not a valid Java package.$[ endlog 
+   endif ]
 
-$[ log ]$[/ log ]
+$[ log ]$[ endlog ]
 
-$[* DATABASE NAME *]
-$[ let databaseName = (#databaseName:"postgres") ]
-$[ prompt databaseName: string ]Enter the name of the postgres database to use [${databaseName}]: $[/ prompt ]
-$[ if !(databaseName|is:identifier) ]
-    $[ log fatal ]The database name must start with a letter and contain only letters and numbers.$[/ log ]
-$[/ if ]
+$[ /* DATABASE NAME */ 
+   let databaseName = (#databaseName:"postgres") 
+   prompt databaseName: string ]Enter the name of the postgres database to use [${databaseName}]: $[ endprompt 
+   if !(databaseName|is:identifier) 
+       log fatal ]The database name must start with a letter and contain only letters and numbers.$[ endlog 
+   endif ]
 
-$[ log ]$[/ log ]
+$[ log ]$[ endlog ]
 
-$[* ENTITY NAME *]
-$[ let entityName = (#entityName:"Widget") ]
-$[ prompt entityName: string ]Enter an entity name to get things started [${entityName}]: $[/ prompt ]
-$[ if !(entityName|is:identifier) ]
-    $[ log fatal ]The entity name must start with a letter and only contain letters and numbers.$[/ log ]
-$[/ if ]
-$[ if entityName|is:uncapitalized ]
-    $[ let entityName = entityName|capitalize ]
-    $[ log info ]Capitalizing entity name: ${entityName}$[/ log ]
-$[/ if ]
+$[ /* ENTITY NAME */ 
+   let entityName = (#entityName:"Widget") 
+   prompt entityName: string ]Enter an entity name to get things started [${entityName}]: $[ endprompt 
+   if !(entityName|is:identifier) 
+       log fatal ]The entity name must start with a letter and only contain letters and numbers.$[ endlog 
+   endif 
+   if entityName|is:uncapitalized 
+       let entityName = entityName|capitalize 
+       log info ]Capitalizing entity name: ${entityName}$[ endlog 
+   endif ]
 
-$[ log ]$[/ log ]
+$[ log ]$[ endlog ]
 
-$[ let protobufOption = (#protobuf:"n") ]
-$[ prompt protobufOption: boolean ]Would you like to include Protobuf support (y/n)? [${protobufOption}]: $[/ prompt ]
+$[ let protobufOption = (#protobuf:"n") 
+   prompt protobufOption: boolean ]Would you like to include Protobuf support (y/n)? [${protobufOption}]: $[ endprompt ]
 
-$[ let extraDomains = @[]@ ]
-$[ if protobufOption ]
-    $[ do extraDomains.add("ProtobufDTO") ]
-$[/ if ]
+$[ let extraDomains = @[]@ 
+   if protobufOption 
+       do extraDomains.add("ProtobufDTO") 
+   endif ]
 
-$[ log ]$[/ log ]
+$[ log ]$[ endlog ]
 
-$[* -------------- INSTALLS -------------- *]
+$[ /* -------------- INSTALLS -------------- */ ]
 
-$[* Entities *]
-$[ install "entities/App.edl" "entities" ]
-$[ install "entities/Platform.edl" "entities" ]
+$[ /* Entities */ 
+   install "entities/App.edl" "entities" 
+   install "entities/Platform.edl" "entities" ]
 
-$[* Domains *]
-$[ install "domains/AdminUIDomain.edl" "domains" ]
-$[ install "domains/SecurityDomain.edl" "domains" ]
-$[ install "domains/SpecializedDomains.edl" "domains" ]
+$[ /* Domains */ 
+   install "domains/AdminUIDomain.edl" "domains" 
+   install "domains/SecurityDomain.edl" "domains" 
+   install "domains/SpecializedDomains.edl" "domains" ]
 
-$[* Authors *]
-$[ install "authors/PomAuthor.eml" "authors" ]
+$[ /* Authors */ 
+   install "authors/PomAuthor.eml" "authors" ]
 
-$[* Base *]
-$[ install "basicWebApp/Configuration.edl" "" ]
-$[ install "basicWebApp/Space.edl" "" ]
+$[ /* Base */ 
+   install "basicWebApp/Configuration.edl" "" 
+   install "basicWebApp/Space.edl" "" ]
 
-$[log]
+$[ log ]
 
 ----------------------------------------------------------------------------------
  Build and Bring up Microservice
@@ -142,10 +142,10 @@ An Entity Compiler project has been created in a folder named "${appFolderName}"
 8) Bring up the microservice again:
      % ./start.sh
 
-$[let prefix = urlPrefix != "" ? urlPrefix + "/" : ""]
+    $[ let prefix = urlPrefix != "" ? urlPrefix + "/":"" ]
 9) Open a web browser to http://localhost:8080/${prefix}auth/login
    You will need to login with:
        Email: admin@example.com
        Password: admin
    This will bring you to the main admin page where you can see a button for your entity "${entityName}"
-$[/log]
+$[ endlog ]

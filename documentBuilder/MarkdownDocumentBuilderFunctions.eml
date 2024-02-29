@@ -1,93 +1,93 @@
-$[D summary "The purpose of this template is to generate a function that will create a markdown document"]
-$[D summary "from contents of your database based on how you tag your model in the DocumentBuilder domain."]
-$[D "Markdown is an easy way to create documents with some rich elements such as heading levels,"]
-$[D "tables, code blocks, etc. If your application is such that you can assemble a Markdown"]
-$[D "document from fields of your data objects, this template makes it easy to generate code that"]
-$[D "will extract the data and structure it into a markdown document."]
-$[function buildMarkdownDocSection
-  D "This is the main function of the template that generates the code needed to construct the"
-  D "markdown document. It is intended to create methods that reside in the service classes of our"
-  D "microservice. It models the structure of based on the structure of your entity model." 
-  (entity
-   D "The entity from which to generate Markdown." 
-  )->
-  (domainEntitiesToAutowire
-   D "The created function may need require that the containing class autowire other service"
-   D "classes, so this provides a list of domain entities that reporesent those service classes." 
-  )
-]
-    $[if !entity.space.hasDomain("DocumentBuilder")]
-        $[return]
-    $[/if]
-    $[let domainEntity = entity|domain:DocumentBuilder]
-    $[let domainEntitiesToAutowire = @[]@]
-    $[let useHeadingPrefix = domainEntity.hasTag("section:prefix")]
-    $[let useNumber = domainEntity.hasAttributeTagged("section:number")]
-    $[let useTitleInHeading = domainEntity.hasAttributeTagged("section:title")]
-    $[if !useHeadingPrefix && !useNumber && !useTitleInHeading]
-        $[return]
-    $[/if]
-$[send imports]
+$[ D summary "The purpose of this template is to generate a function that will create a markdown document" 
+   D summary "from contents of your database based on how you tag your model in the DocumentBuilder domain." 
+   D "Markdown is an easy way to create documents with some rich elements such as heading levels," 
+   D "tables, code blocks, etc. If your application is such that you can assemble a Markdown" 
+   D "document from fields of your data objects, this template makes it easy to generate code that" 
+   D "will extract the data and structure it into a markdown document." 
+   function buildMarkdownDocSection
+   D "This is the main function of the template that generates the code needed to construct the"
+   D "markdown document. It is intended to create methods that reside in the service classes of our"
+   D "microservice. It models the structure of based on the structure of your entity model."
+   (entity
+    D "The entity from which to generate Markdown."
+   )->
+   (domainEntitiesToAutowire
+    D "The created function may need require that the containing class autowire other service"
+    D "classes, so this provides a list of domain entities that reporesent those service classes."
+   )
+
+       if !entity.space.hasDomain("DocumentBuilder") 
+           return 
+       endif 
+       let domainEntity = entity|domain:DocumentBuilder 
+       let domainEntitiesToAutowire = @[]@ 
+       let useHeadingPrefix = domainEntity.hasTag("section:prefix") 
+       let useNumber = domainEntity.hasAttributeTagged("section:number") 
+       let useTitleInHeading = domainEntity.hasAttributeTagged("section:title") 
+       if !useHeadingPrefix && !useNumber && !useTitleInHeading 
+           return 
+       endif 
+   send imports ]
 import ${(entity|domain:Utils).domain.namespace}.MarkdownUtils;
 import ${(entity|domain:Utils).domain.namespace}.MarkdownBuilder;
-$[/send]
+$[ endsend ]
     /**
         Builds a markdown document for a specified object that represents a level in the document.
         [Template] ${__template.name}:${__outlet.name} < ${__author.template.name}
      */
     public String buildMarkdownDocSection(final int level, final ${entity|domain:JSONDTO|name} object, final long count) throws ServiceException {
         MarkdownBuilder sectionBuilder = new MarkdownBuilder();
-    $[capture headingPrefix]$[if useHeadingPrefix]"${domainEntity|title}"$[else]"null"$[/if]$[/capture]
-    $[let numberArg = "null"]
-    $[if useNumber]
-        $[let domainAttribute = domainEntity.attributeTagged("section:number")]
-        $[capture numberArg]object.get${domainAttribute|domain:JSONDTO|name|capitalize}()$[/capture]
-        $[if domainAttribute.hasTag("if:multiple")]
-            $[if !domainAttribute.type.isIntegerType]
-                $[log fatal]The "if:number" tag can only be used on numeric attributes.$[/log]
-            $[/if]
+    $[ capture headingPrefix ]$[ if useHeadingPrefix ]"${domainEntity|title}"$[ else ]"null"$[ endif ]$[ endcapture 
+       let numberArg = "null" 
+       if useNumber 
+           let domainAttribute = domainEntity.attributeTagged("section:number") 
+           capture numberArg ]object.get${domainAttribute|domain:JSONDTO|name|capitalize}()$[ endcapture 
+           if domainAttribute.hasTag("if:multiple") 
+               if !domainAttribute.type.isIntegerType 
+                   log fatal ]The "if:number" tag can only be used on numeric attributes.$[ endlog 
+               endif ]
 
         Integer number = count != 1 ? ${numberArg} : null;
-            $[let numberArg = "number"]
-        $[/if]
-    $[/if]
-    $[let titleArg = "null"]
-    $[if useTitleInHeading]
-        $[let domainAttribute = domainEntity.attributeTagged("section:title")]
-        $[capture titleArg]object.get${domainAttribute|domain:JSONDTO|name|capitalize}()$[/capture]
-    $[/if]
-    $[if !useHeadingPrefix && !useNumber && useTitleInHeading]
+            $[ let numberArg = "number" 
+           endif 
+       endif 
+       let titleArg = "null" 
+       if useTitleInHeading 
+           let domainAttribute = domainEntity.attributeTagged("section:title") 
+           capture titleArg ]object.get${domainAttribute|domain:JSONDTO|name|capitalize}()$[ endcapture 
+       endif 
+       if !useHeadingPrefix && !useNumber && useTitleInHeading ]
         sectionBuilder.appendHeading(level, ${titleArg});
-    $[else]
+    $[ else ]
         sectionBuilder.appendHeading(level, ${headingPrefix}, ${numberArg}, ":", ${titleArg});
-    $[/if]
+    $[ endif ]
 
-    $[let sectionBodyTag = "section:body"]
-    $[if domainEntity.hasAttributeTagged(sectionBodyTag)]
-        $[foreach domainAttribute in domainEntity.attributesTagged(sectionBodyTag)]
+    $[ let sectionBodyTag = "section:body" 
+       if domainEntity.hasAttributeTagged(sectionBodyTag) 
+           foreach domainAttribute in domainEntity.attributesTagged(sectionBodyTag) ]
         sectionBuilder.appendPara(object.get${domainAttribute|domain:JSONDTO|name|capitalize}());
-        $[/foreach]
-    $[/if]
-    $[let subsectionTag = "subsection"]
-    $[if domainEntity.hasAttributeTagged(subsectionTag)]
-        $[foreach domainAttribute in domainEntity.attributesTagged(subsectionTag)]
-            $[if !domainAttribute.hasTag("untitled")]
+        $[ endforeach 
+       endif 
+       let subsectionTag = "subsection" 
+       if domainEntity.hasAttributeTagged(subsectionTag) 
+           foreach domainAttribute in domainEntity.attributesTagged(subsectionTag) 
+               if !domainAttribute.hasTag("untitled") ]
         sectionBuilder.appendHeading(level+1, "${domainAttribute|title}");
-            $[/if]
+            $[ endif ]
         sectionBuilder.appendPara(object.get${domainAttribute|domain:JSONDTO|name|capitalize}());
-        $[/foreach]
-    $[/if]
-    $[if domainEntity.hasRelationshipTagged(subsectionTag)]
-        $[foreach domainRelationship in domainEntity.relationshipsTagged(subsectionTag)]
-            $[let toEntity = domainRelationship.to.entity]
-            $[do domainEntitiesToAutowire.add(toEntity|domain:Service)]
-            $[let toEntityServiceVariable = toEntity|domain:Service|name|uncapitalize]
+        $[ endforeach 
+       endif 
+       if domainEntity.hasRelationshipTagged(subsectionTag) 
+           foreach domainRelationship in domainEntity.relationshipsTagged(subsectionTag) 
+               let toEntity = domainRelationship.to.entity 
+               do domainEntitiesToAutowire.add(toEntity|domain:Service) 
+               let toEntityServiceVariable = toEntity|domain:Service|name|uncapitalize ]
         List<${toEntity|domain:JSONDTO|name}> list = ${toEntityServiceVariable}.get${toEntity|domain:JSONDTO|name}ListBy${entity|domain:Model|name}(object.getId(), 0, 1000, true);
         for( ${toEntity|domain:JSONDTO|name} subObj : list) {
              sectionBuilder.append(${toEntityServiceVariable}.buildMarkdownDocSection(level + 1, subObj, list.size()));
         }
-        $[/foreach]
-    $[/if]
+        $[ endforeach 
+       endif ]
         return sectionBuilder.toString();
     }
-$[/function]
+$[ endfunction ]

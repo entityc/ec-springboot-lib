@@ -26,11 +26,11 @@ $[/send]
         $[let usernameAttribute = (userEntity|domain:Security).attributeTagged("login:username")]
         ${userEntity|domain:Model|name} user = userDetailsService.findBy${usernameAttribute|domain:Model|name|capitalize}(securityService.findLoggedInUsername());
         $[foreach relationship in (entity|domain:Security).relationships]
-            $[if relationship.hasTag("user:created")]
-        object.set${relationship|domain:Model|name|capitalize}Id(user.getId());
-            $[/if]
-            $[if relationship.hasTag("user:modified")]
-        object.set${relationship|domain:Model|name|capitalize}Id(user.getId());
+            $[if relationship.hasTag("user:created") || relationship.hasTag("user:modified")]
+            $[let userFieldName = relationship|domain:Model|name|capitalize]
+                $[if userFieldName != ""]
+        object.set${userFieldName}Id(user.getId());
+                $[/if]
             $[/if]
         $[/foreach]
     $[/if]

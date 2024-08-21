@@ -92,7 +92,13 @@ $[ function RowForAttribute
             $[ default ]
                 $[ capture textExpr ]${dtoVariable}.${domainAttribute.name}$[/ capture ]
         $[/ switch ]
+        $[if domainAttribute.hasTag("url")]
+        <td$[ if domainAttribute#first ] scope="row"$[/ if ] style="width:auto">
+            <a th:href="${$}{${textExpr}}" th:text="${$}{${textExpr}}" target="_blank"></a>
+        </td>
+        $[else]
             <td th:text="${$}{${textExpr}}"$[ if domainAttribute#first ] scope="row"$[/ if ] style="width:auto"></td>
+        $[/if]
     $[/ if ]
             <td style="width:1%">
     $[ call checkIfAttributeIsEditable(attribute: domainAttribute.attribute)->(editable: editable) ]

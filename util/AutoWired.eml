@@ -46,7 +46,8 @@ $[ endsend
    send memberDecl ]
     private final ${domainEntity|name} ${variableName};
 $[ endsend 
-   send constructorArgs ]${firstAutoWired ? "        ":",\n        "}${domainEntity|name} ${variableName}$[ endsend 
+   send constructorArgs ]${firstAutoWired ? "        ":",
+        "}${domainEntity|name} ${variableName}$[ endsend
    send constructorAssigns ]
         this.${variableName} = ${variableName};
 $[ endsend 

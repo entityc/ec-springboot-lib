@@ -11,7 +11,6 @@ $[ D summary, main "The authors in this template add a baseline of template code
     $[ author to outlet entityLoopTop scope = publisher phase = initial
        D "Defines some useful template variables for other authors of the service class." 
            let className = entity|domain|name
-    
            let modelName = entity|domain:Model|name 
            let modelVariableName = entity|domain:Model|name|uncapitalize 
            let repositoryClassName = entity|domain:Repository|name 
@@ -46,7 +45,6 @@ $[ endsend
     $[ author to outlet constructor
        D "Auto wiring repository object since that should be commonly used within this publisher." 
            import "util/AutoWired"
-
            call addAutoWired(domainEntity: entity|domain:Repository) 
        endauthor ]
 

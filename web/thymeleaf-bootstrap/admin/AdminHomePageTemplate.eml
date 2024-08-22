@@ -189,10 +189,17 @@ $[/ outlet ]
                     $[ else ]
                         $[ switch domainAttribute.type ]
                             $[ case date ]
-				<td th:text="${$}{#dates.format(item.${domainAttribute.name}, 'dd-MMM-yyyy')}"$[ if domainAttribute#first ] scope="row"$[/ if ]></td>
+				<td th:text="${$}{#dates.format(item.${domainAttribute.name}, 'dd-MMM-yyyy')}"$[ if domainAttribute#first ] scope="row"$[/if ]></td>
                             $[ default ]
-				<td th:text="${$}{item.${domainAttribute.name}}"$[ if domainAttribute#first ] scope="row"$[/ if ]></td>
-                        $[/ switch ]
+                                  $[ capture textExpr ]item.${domainAttribute.name}$[/capture ]
+                                  $[ if domainAttribute.hasTag("url") ]
+                <td$[ if domainAttribute#first ] scope="row"$[/if ]>
+                    <a th:href="${$}{${textExpr}}" th:text="${$}{${textExpr}}" target="_blank"></a>
+                </td>
+                                  $[ else ]
+				<td th:text="${$}{${textExpr}}"$[ if domainAttribute#first ] scope="row"$[/if ]></td>
+                                  $[/if ]
+                           $[/switch ]
                     $[/ if ]
                 $[/ if ]
             $[/ foreach ]

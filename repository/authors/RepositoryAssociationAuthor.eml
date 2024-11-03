@@ -10,31 +10,36 @@ $[ author to org.entityc.springboot.repository
            call CheckIfReleasedEntity(entity: entity)->(isReleasedEntity: isReleasedEntity) 
            if isReleasedEntity 
                return 
-           endif 
-           foreach relationship in entity.implicitRelationships 
-               if relationship.to.entity.hasTag("internal:many-to-many") 
-                   let destMMEntity = relationship.implicitToEntity 
-                   let manyToManyEntity = relationship.to.entity 
-                   let sourcePKType = entity.pkType|language 
-                   let sourcePKVarName = entity.primaryKeyAttribute|domain|name 
-                   let sourcePKDBName = entity.primaryKeyAttribute|domain:Database|name 
-                   let destPKType = destMMEntity.pkType|language 
-                   let destPKVarName = destMMEntity.primaryKeyAttribute|domain|name 
-                   let destPKDBName = destMMEntity.primaryKeyAttribute|domain:Database|name ]
+           endif
+           let destEntities = @[]@
+           foreach relationship in entity.implicitRelationships if relationship.to.entity.hasTag("internal:many-to-many")
+               let destMMEntity = relationship.implicitToEntity // the entity on the other side of the many to many
+               if destEntities.contains(destMMEntity.name)
+                   continue
+               endif
+               do destEntities.add(destMMEntity.name)
+               let manyToManyEntity = relationship.to.entity
+               let primaryTablePKDBName = entity.primaryKeyAttribute|domain:Database|name
+               let sourcePKType = entity.pkType|language
+               let sourcePKVarName = relationship.reverseRelationship|domain|name
+               let sourcePKDBName = (relationship.reverseRelationship.name + "Id")|nameas:underscoreLowercase
+               let destPKType = destMMEntity.pkType|language
+               let destPKVarName = relationship.implicitToEntityRelationship|domain|name
+               let destPKDBName = (relationship.implicitToEntityRelationship.name + "Id")|nameas:underscoreLowercase ]
     @Query(value =
             "SELECT pt.* " +
             "FROM ${entity|domain:Database|name} pt " +
-            "WHERE pt.${sourcePKDBName} IN " +
+            "WHERE pt.${primaryTablePKDBName} IN " +
               "(SELECT ${sourcePKDBName} " +
                  "FROM ${manyToManyEntity|domain:Database|name} " +
                  "WHERE ${destPKDBName} = ?1) " +
-             "ORDER BY pt.created_on DESC LIMIT ?3 OFFSET ?2", nativeQuery = true)
+             "LIMIT ?3 OFFSET ?2", nativeQuery = true)
     List<${modelName}> get${modelName}ListAssociatedWith${destMMEntity|domain:Model|name}(${destPKType} ${destPKVarName}, long start, int limit);
 
     @Query(value =
             "SELECT COUNT(pt.*) " +
             "FROM ${entity|domain:Database|name} pt " +
-            "WHERE pt.${sourcePKDBName} IN " +
+            "WHERE pt.${primaryTablePKDBName} IN " +
               "(SELECT ${sourcePKDBName} " +
                  "FROM ${manyToManyEntity|domain:Database|name} " +
                  "WHERE ${destPKDBName} = ?1) ", nativeQuery = true)
@@ -63,7 +68,6 @@ $[ author to org.entityc.springboot.repository
          "FROM ${manyToManyEntity|domain:Database|name} t WHERE t.${sourcePKDBName} = ?1 AND t.${destPKDBName} = ?2", nativeQuery = true)
     Boolean isAssociatedTo${destMMEntity|domain:Model|name}(${sourcePKType} ${sourcePKVarName}, ${destPKType} ${destPKVarName});
 
-            $[ endif 
-           endforeach 
+        $[ endforeach
        endauthor 
    endauthor ]

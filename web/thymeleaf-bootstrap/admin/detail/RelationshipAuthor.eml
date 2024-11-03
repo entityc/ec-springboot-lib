@@ -247,7 +247,7 @@ $[/ send ]
 $[ send imports ]
 import ${toEntity|domain:JSONDTO|fullname};
 $[/ send ]
-            List<${toEntity|domain:JSONDTO|name}> list = ${toEntity|domain:Service|name|uncapitalize}.get${toEntity|domain:JSONDTO|name}ListBy${filterToEntity|domain:Model|name|capitalize}($[ if isReleasedEntity ]releaseId, $[/ if ]dto.get${filterRelationship|domain:JSONDTO|name|capitalize}().get${filterToEntityPK|domain:JSONDTO|name|capitalize}(), 0, 1000, 0 /*levels*/);
+            List<${toEntity|domain:JSONDTO|name}> list = ${toEntity|domain:Service|name|uncapitalize}.get${toEntity|domain:JSONDTO|name}ListBy${filterRelationship|domain:Model|name|capitalize}($[ if isReleasedEntity ]releaseId, $[/ if ]dto.get${filterRelationship|domain:JSONDTO|name|capitalize}().get${filterToEntityPK|domain:JSONDTO|name|capitalize}(), 0, 1000, 0 /*levels*/);
             model.addAttribute("${toEntity|domain:JSONDTO|name|uncapitalize}List", list);
         }
                 $[ else ]
@@ -281,12 +281,17 @@ $[* FULL LISTS *]
         $[ foreach toEntity in toOneEntities ]
             $[ call AutoWireEntity(entity: toEntity) ]
         // Full Lists
+        // [Template] ${__template.name}:${__outlet.name} < ${__author.template.name}
         {
-            $[ if toEntity.hasParentRelationshipToEntity(entity) ]
-            List<${toEntity|domain:JSONDTO|name}> list = ${toEntity|domain:Service|name|uncapitalize}.get${toEntity|domain:JSONDTO|name}ListBy${entity|domain:Model|name}($[ if isReleasedEntity ]releaseId, $[/ if ]id, 0, 1000, 0 /*levels*/);
+            $[ let selfReferenced = toEntity.name == entity.name]
+            $[ if toEntity.hasParentRelationshipToEntity(entity) && !selfReferenced ]
+            List<${toEntity|domain:JSONDTO|name}> list = ${toEntity|domain:Service|name|uncapitalize}.get${toEntity|domain:JSONDTO|name}ListBy${relationship|domain:Model|name|capitalize}($[ if isReleasedEntity ]releaseId, $[/ if ]id, 0, 1000, 0 /*levels*/);
             $[ else ]
             List<${toEntity|domain:JSONDTO|name}> list = ${toEntity|domain:Service|name|uncapitalize}.get${toEntity|domain:JSONDTO|name}List($[ if isReleasedEntity ]releaseId, $[/ if ]0, 1000, 0 /*levels*/);
             $[/ if ]
+            $[if selfReferenced ]
+            list.remove(dto);
+            $[/if]
             model.addAttribute("${toEntity|domain:JSONDTO|name|uncapitalize}List", list);
         }
         $[/ foreach ]

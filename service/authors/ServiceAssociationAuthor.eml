@@ -6,27 +6,25 @@ $[ import "release/ReleaseFunctions"
     
            call CheckIfReleasedEntity(entity: entity)->(isReleasedEntity: isReleasedEntity) 
            call GetReleaseEntityPKAttribute(entity: entity)->(releaseEntityPKAttribute: releaseEntityPKAttribute) 
-           foreach relationship in entity.implicitRelationships 
-               if relationship.to.entity.hasTag("internal:many-to-many") 
-                   let manyToManyEntity = relationship.to.entity 
-                   let toMMEntity = null 
-                   foreach mmRel in manyToManyEntity.implicitRelationships 
-                       if mmRel.to.entity.name != entity.name 
-                           let toMMEntity = mmRel.to.entity 
-                           break 
-                       endif 
-                   endforeach 
-                   let fromModelName = modelName 
-                   let fromRepoVarName = repositoryVariableName 
-                   let toModelName = toMMEntity|domain:Model|name 
-                   let toRepoEntityName = toMMEntity|domain:Repository|name 
-                   let toRepoVarName = toRepoEntityName|uncapitalize 
-                   let fromPKType = entity.pkType|language 
-                   let fromPKVarName = entity.primaryKeyAttribute|domain|name 
-                   let toPKType = toMMEntity.pkType|language 
-                   let toPKVarName = toMMEntity.primaryKeyAttribute|domain|name 
-                   let fromDtoName = entity|domain:JSONDTO|name 
-                   let toDtoName = toMMEntity|domain:JSONDTO|name 
+           let destEntities = @[]@
+           foreach relationship in entity.implicitRelationships if relationship.to.entity.hasTag("internal:many-to-many")
+               let manyToManyEntity = relationship.to.entity
+               let toMMEntity = relationship.implicitToEntity
+               let fromModelName = modelName
+               let fromRepoVarName = repositoryVariableName
+               let toModelName = toMMEntity|domain:Model|name
+               let toRepoEntityName = toMMEntity|domain:Repository|name
+               let toRepoVarName = toRepoEntityName|uncapitalize
+               let fromPKType = entity.pkType|language
+               let fromPKVarName = "from" + entity.primaryKeyAttribute|domain|name|capitalize
+               let toPKType = toMMEntity.pkType|language
+               let toPKVarName = "to" + toMMEntity.primaryKeyAttribute|domain|name|capitalize
+               let fromDtoName = entity|domain:JSONDTO|name
+               let toDtoName = toMMEntity|domain:JSONDTO|name
+               if destEntities.contains(toModelName)
+                   continue
+               endif
+               do destEntities.add(toModelName)
    send imports ]
 import ${toMMEntity|domain:Model|fullname};
 import ${toMMEntity|domain:JSONDTO|fullname};
@@ -92,7 +90,6 @@ $[ endsend
 
         ${repositoryVariableName}.removeAllAssociationTo${toModelName}(${fromPKVarName});
     }
-            $[ endif 
-           endforeach 
+        $[ endforeach
        endauthor 
    endauthor ]
